@@ -1,0 +1,4 @@
+com\enterprise\procurement\controller\UserController.class
+com\enterprise\procurement\ProcurementApplication.class
+com\enterprise\procurement\entity\User.class
+com\enterprise\procurement\repository\UserRepository.class

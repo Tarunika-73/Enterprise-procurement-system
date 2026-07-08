@@ -186,3 +186,598 @@ Access Protected APIs
 ---
 
 **Next Module:** User Management APIs
+
+# Vendor APIs
+
+## Get All Vendors
+
+Endpoint
+
+GET /api/vendors
+
+Description
+
+Returns all vendors.
+
+## Add Vendor
+
+Endpoint
+
+POST /api/vendors
+
+Description
+
+Adds a new vendor.
+
+## Update Vendor
+
+Endpoint
+
+PUT /api/vendors/{id}
+
+Description
+
+Updates vendor details.
+
+## Delete Vendor
+
+Endpoint
+
+DELETE /api/vendors/{id}
+
+Description
+
+Deletes a vendor.
+
+# Vendor APIs
+
+The Vendor module allows administrators to manage vendor information. It provides APIs to create, retrieve, update, and deactivate vendor records used throughout the procurement process.
+
+---
+
+## 1. Add Vendor
+
+### Endpoint
+
+**POST** `/api/vendors`
+
+### Description
+
+Creates a new vendor in the system.
+
+### Request Body
+
+```json
+{
+    "vendorName": "Tech Supplies Inc.",
+    "contactName": "Tom Hardy",
+    "email": "tom@techsupplies.com",
+    "username": "techsupplies",
+    "password": "password123",
+    "phone": "9876543210",
+    "address": "123 Tech Boulevard, Chennai",
+    "gstNumber": "GST1001",
+    "createdBy": 1
+}
+```
+
+### Success Response (201 Created)
+
+```json
+{
+    "message": "Vendor created successfully.",
+    "vendorId": 101
+}
+```
+
+### Possible Error Responses
+
+**400 Bad Request**
+
+```json
+{
+    "message": "Invalid vendor details."
+}
+```
+
+**409 Conflict**
+
+```json
+{
+    "message": "Vendor email or username already exists."
+}
+```
+
+---
+
+## 2. Get All Vendors
+
+### Endpoint
+
+**GET** `/api/vendors`
+
+### Description
+
+Returns a list of all active vendors.
+
+### Success Response (200 OK)
+
+```json
+[
+    {
+        "id": 1,
+        "vendorName": "Tech Supplies Inc.",
+        "contactName": "Tom Hardy",
+        "email": "tom@techsupplies.com",
+        "phone": "9876543210",
+        "gstNumber": "GST1001",
+        "status": "Active"
+    },
+    {
+        "id": 2,
+        "vendorName": "Office Wonders",
+        "contactName": "Wanda Maximoff",
+        "email": "wanda@officewonders.com",
+        "phone": "9876543211",
+        "gstNumber": "GST1002",
+        "status": "Active"
+    }
+]
+```
+
+---
+
+## 3. Get Vendor By ID
+
+### Endpoint
+
+**GET** `/api/vendors/{id}`
+
+### Description
+
+Returns the details of a specific vendor.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Vendor ID |
+
+### Example
+
+```
+GET /api/vendors/1
+```
+
+### Success Response (200 OK)
+
+```json
+{
+    "id": 1,
+    "vendorName": "Tech Supplies Inc.",
+    "contactName": "Tom Hardy",
+    "email": "tom@techsupplies.com",
+    "username": "techsupplies",
+    "phone": "9876543210",
+    "address": "123 Tech Boulevard, Chennai",
+    "gstNumber": "GST1001",
+    "status": "Active"
+}
+```
+
+### Error Response (404 Not Found)
+
+```json
+{
+    "message": "Vendor not found."
+}
+```
+
+---
+
+## 4. Update Vendor
+
+### Endpoint
+
+**PUT** `/api/vendors/{id}`
+
+### Description
+
+Updates the information of an existing vendor.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Vendor ID |
+
+### Request Body
+
+```json
+{
+    "vendorName": "Tech Supplies India Pvt Ltd",
+    "contactName": "Tom Hardy",
+    "email": "tom@techsupplies.com",
+    "username": "techsupplies",
+    "phone": "9876543210",
+    "address": "456 Anna Salai, Chennai"
+}
+```
+
+### Success Response (200 OK)
+
+```json
+{
+    "message": "Vendor updated successfully."
+}
+```
+
+### Error Response
+
+```json
+{
+    "message": "Vendor not found."
+}
+```
+
+---
+
+## 5. Delete Vendor
+
+### Endpoint
+
+**DELETE** `/api/vendors/{id}`
+
+### Description
+
+Performs a soft delete by marking the vendor as inactive.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Vendor ID |
+
+### Success Response (200 OK)
+
+```json
+{
+    "message": "Vendor deleted successfully."
+}
+```
+
+### Error Response
+
+```json
+{
+    "message": "Vendor not found."
+}
+```
+
+---
+
+## HTTP Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Request completed successfully |
+| 201 | Vendor created successfully |
+| 400 | Invalid request data |
+| 404 | Vendor not found |
+| 409 | Duplicate vendor email or username |
+| 500 | Internal server error |
+
+# Product APIs
+
+The Product module allows administrators to manage products available for procurement. It provides APIs to create, retrieve, update, and remove products from the system.
+
+---
+
+## 1. Add Product
+
+### Endpoint
+
+**POST** `/api/products`
+
+### Description
+
+Creates a new product in the system.
+
+### Request Body
+
+```json
+{
+    "sku": "LAP-001",
+    "name": "Dell Latitude 5440",
+    "description": "14-inch Business Laptop",
+    "categoryId": 1,
+    "createdBy": 1
+}
+```
+
+### Success Response (201 Created)
+
+```json
+{
+    "message": "Product created successfully.",
+    "productId": 101
+}
+```
+
+### Possible Error Responses
+
+**400 Bad Request**
+
+```json
+{
+    "message": "Invalid product details."
+}
+```
+
+**409 Conflict**
+
+```json
+{
+    "message": "Product SKU already exists."
+}
+```
+
+---
+
+## 2. Get All Products
+
+### Endpoint
+
+**GET** `/api/products`
+
+### Description
+
+Returns a list of all active products available in the system.
+
+### Success Response (200 OK)
+
+```json
+[
+    {
+        "id": 1,
+        "sku": "LAP-001",
+        "name": "Dell Latitude 5440",
+        "description": "14-inch Business Laptop",
+        "category": "Electronics",
+        "status": "Active"
+    },
+    {
+        "id": 2,
+        "sku": "MON-001",
+        "name": "24-inch LED Monitor",
+        "description": "Full HD Monitor",
+        "category": "Electronics",
+        "status": "Active"
+    }
+]
+```
+
+---
+
+## 3. Get Product By ID
+
+### Endpoint
+
+**GET** `/api/products/{id}`
+
+### Description
+
+Returns the details of a specific product.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Product ID |
+
+### Example
+
+```
+GET /api/products/1
+```
+
+### Success Response (200 OK)
+
+```json
+{
+    "id": 1,
+    "sku": "LAP-001",
+    "name": "Dell Latitude 5440",
+    "description": "14-inch Business Laptop",
+    "categoryId": 1,
+    "categoryName": "Electronics",
+    "createdBy": 1,
+    "status": "Active"
+}
+```
+
+### Error Response (404 Not Found)
+
+```json
+{
+    "message": "Product not found."
+}
+```
+
+---
+
+## 4. Update Product
+
+### Endpoint
+
+**PUT** `/api/products/{id}`
+
+### Description
+
+Updates the information of an existing product.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Product ID |
+
+### Request Body
+
+```json
+{
+    "sku": "LAP-001",
+    "name": "Dell Latitude 5440 Plus",
+    "description": "Updated Business Laptop",
+    "categoryId": 1
+}
+```
+
+### Success Response (200 OK)
+
+```json
+{
+    "message": "Product updated successfully."
+}
+```
+
+### Error Response
+
+```json
+{
+    "message": "Product not found."
+}
+```
+
+---
+
+## 5. Delete Product
+
+### Endpoint
+
+**DELETE** `/api/products/{id}`
+
+### Description
+
+Performs a soft delete by marking the product as inactive.
+
+### Path Parameter
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | Product ID |
+
+### Success Response (200 OK)
+
+```json
+{
+    "message": "Product deleted successfully."
+}
+```
+
+### Error Response
+
+```json
+{
+    "message": "Product not found."
+}
+```
+
+---
+
+## HTTP Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Request completed successfully |
+| 201 | Product created successfully |
+| 400 | Invalid request data |
+| 404 | Product not found |
+| 409 | Duplicate product SKU |
+| 500 | Internal server error |
+
+# Category APIs
+
+POST /api/categories
+
+GET /api/categories
+
+GET /api/categories/{id}
+
+PUT /api/categories/{id}
+
+DELETE /api/categories/{id}
+
+# Purchase Order APIs
+
+POST /api/purchase-orders
+
+GET /api/purchase-orders
+
+GET /api/purchase-orders/{id}
+
+PUT /api/purchase-orders/{id}
+
+DELETE /api/purchase-orders/{id}
+
+# Vendor Estimate APIs
+
+POST /api/vendor-estimates
+
+GET /api/vendor-estimates
+
+GET /api/vendor-estimates/{id}
+
+PUT /api/vendor-estimates/{id}
+
+# Delivery APIs
+
+POST /api/deliveries
+
+GET /api/deliveries
+
+GET /api/deliveries/{id}
+
+PUT /api/deliveries/{id}
+
+# Receipt APIs
+
+POST /api/receipts
+
+GET /api/receipts
+
+GET /api/receipts/{id}
+
+# Invoice APIs
+
+POST /api/invoices
+
+GET /api/invoices
+
+GET /api/invoices/{id}
+
+PUT /api/invoices/{id}
+
+# Payment APIs
+
+POST /api/payments
+
+GET /api/payments
+
+GET /api/payments/{id}
+
+# Notification APIs
+
+GET /api/notifications
+
+PUT /api/notifications/{id}/read
+
+# Report APIs
+
+GET /api/reports/department-spending
+
+GET /api/reports/vendor-spending
+
+GET /api/reports/monthly
+
+GET /api/reports/top-vendors

@@ -1,95 +1,270 @@
 # Enterprise Procurement System Database
 
-This directory contains the database schema, sample data, functions, views, procedures, triggers, and sample queries for the Enterprise Procurement System. The database is designed for MySQL 8.0 and follows the Third Normal Form (3NF).
+This repository contains the complete database implementation for the **Enterprise Procurement System**. The database is developed using **MySQL 8.0** and follows the **Third Normal Form (3NF)** to ensure data consistency, integrity, and minimal redundancy.
 
-## Requirements
+The database supports the complete procurement lifecycle, including purchase requests, approvals, purchase orders, vendor management, deliveries, invoicing, payments, notifications, and auditing.
 
-- **Database:** MySQL 8.0+
-- **Character Set:** `utf8mb4`
-- **Collation:** `utf8mb4_unicode_ci`
-- **Engine:** `InnoDB`
+---
 
-## Folder Structure
+# Requirements
 
-The generated SQL files must be executed in a specific order to avoid foreign key dependency errors:
+- Database: MySQL 8.0+
+- Storage Engine: InnoDB
+- Character Set: utf8mb4
+- Collation: utf8mb4_unicode_ci
 
-1. `schema.sql`: Contains the database creation, table definitions, and relationships.
-2. `indexes.sql`: Contains performance indexes for optimizing common queries.
-3. `views.sql`: Contains analytical views for reporting.
-4. `functions.sql`: Contains custom functions for calculations.
-5. `procedures.sql`: Contains stored procedures handling business workflows.
-6. `triggers.sql`: Contains triggers for auditing and automated background updates.
-7. `sample_data.sql`: Contains comprehensive sample data to populate the tables.
-8. `queries.sql`: Contains example queries demonstrating usage.
+---
 
-## Database Setup & Execution Order
+# Project Structure
 
-To set up the database, you can use the MySQL command-line tool or MySQL Workbench. 
+The SQL scripts should be executed in the following order to satisfy all foreign key dependencies.
 
-### Using MySQL Workbench
+| Order | File | Description |
+|-------|------|-------------|
+| 1 | schema.sql | Creates the database, tables, constraints, and relationships |
+| 2 | indexes.sql | Creates indexes for query optimization |
+| 3 | views.sql | Creates reporting and analytical views |
+| 4 | functions.sql | Creates reusable SQL functions |
+| 5 | procedures.sql | Creates stored procedures for business operations |
+| 6 | triggers.sql | Creates triggers for automation and auditing |
+| 7 | sample_data.sql | Inserts sample records into all tables |
+| 8 | queries.sql | Contains sample SQL queries for testing |
 
-1. Open MySQL Workbench and connect to your MySQL 8.0 server.
-2. Go to **File -> Open SQL Script**.
-3. Open and execute the scripts in the following exact order:
-   - `schema.sql` (This creates the `enterprise_procurement` database)
-   - `indexes.sql`
-   - `views.sql`
-   - `functions.sql`
-   - `procedures.sql`
-   - `triggers.sql`
-   - `sample_data.sql`
-4. You can then run scripts from `queries.sql` to test the environment.
+---
 
-### Using Command Line
+# Database Setup
 
-Run the following command, replacing `<user>` with your MySQL username. You will be prompted for your password.
+## Using MySQL Workbench
 
-```bash
-mysql -u <user> -p < schema.sql
-mysql -u <user> -p enterprise_procurement < indexes.sql
-mysql -u <user> -p enterprise_procurement < views.sql
-mysql -u <user> -p enterprise_procurement < functions.sql
-mysql -u <user> -p enterprise_procurement < procedures.sql
-mysql -u <user> -p enterprise_procurement < triggers.sql
-mysql -u <user> -p enterprise_procurement < sample_data.sql
+1. Open MySQL Workbench.
+2. Connect to your MySQL Server.
+3. Open each SQL script using **File → Open SQL Script**.
+4. Execute the files in the following order:
+
+```
+schema.sql
+indexes.sql
+views.sql
+functions.sql
+procedures.sql
+triggers.sql
+sample_data.sql
+queries.sql (optional)
 ```
 
-## ER Diagram & Relationship Explanation
+---
 
-The database consists of 5 core modules:
-1. **Master Data Management:** `roles`, `departments`, `users`, `vendors`, `categories`, `products`, `vendor_products`, `supplier_performance`, `supplier_compliance`.
-2. **Workflow Engine:** `purchase_requests`, `purchase_request_items`, `approvals`, `approval_history`.
-3. **Purchase Orders:** `purchase_orders`, `purchase_order_items`, `vendor_estimates`, `deliveries`, `receipts`, `invoices`, `payments`.
-4. **Analytics:** Analytical views prefix with `vw_`.
-5. **Security:** `audit_logs`, `notifications`, `login_history`, `user_sessions`.
+## Using MySQL Command Line
 
-### Key Relationships
+Replace `<username>` with your MySQL username.
 
-- **Users & Departments/Roles:** A User belongs to 1 Department and 1 Role. Departments have 1 Manager (User).
-- **Products & Vendors:** A Category has many Products. A Vendor has many Products (managed via the `vendor_products` junction table).
-- **Requests & Workflows:** A User creates many Purchase Requests. A Purchase Request has many Items and many Approvals (to support multi-level hierarchies).
-- **Purchase Orders to Payments:**
-  - 1 Purchase Request -> 1 Purchase Order
-  - 1 Purchase Order -> Many Deliveries
-  - 1 Delivery -> Many Receipts
-  - 1 Receipt -> 1 Invoice
-  - 1 Invoice -> Many Payments (supporting partial payments)
-- **Vendors to Performance:** A Vendor has many Performance and Compliance records.
-- **Auditing:** Notifications, Audit Logs, and Sessions are tied to Users.
+```bash
+mysql -u <username> -p < schema.sql
+mysql -u <username> -p enterprise_procurement < indexes.sql
+mysql -u <username> -p enterprise_procurement < views.sql
+mysql -u <username> -p enterprise_procurement < functions.sql
+mysql -u <username> -p enterprise_procurement < procedures.sql
+mysql -u <username> -p enterprise_procurement < triggers.sql
+mysql -u <username> -p enterprise_procurement < sample_data.sql
+mysql -u <username> -p enterprise_procurement < queries.sql
+```
 
-## Hibernate / JPA Integration
+---
 
-All tables are optimized for seamless mapping with Spring Boot and Hibernate/JPA:
-- Primary keys are named `id` (`@Id`, `@GeneratedValue(strategy = GenerationType.IDENTITY)`).
-- Foreign keys use standard `table_id` formatting.
-- `created_at` and `updated_at` can be mapped using `@CreationTimestamp` and `@UpdateTimestamp`.
-- Soft deletes (`is_deleted`) can be managed using `@SQLDelete(sql = "UPDATE table SET is_deleted = true WHERE id=?")` and `@Where(clause = "is_deleted=false")`.
-- `ENUM` types can be mapped using `@Enumerated(EnumType.STRING)`.
+# Database Modules
 
-## Example Queries
+The database is organized into the following functional modules.
 
-Check `queries.sql` for pre-written commands such as:
-- Viewing department spending.
-- Retrieving top vendors.
-- Calculating outstanding invoice balances.
-- Fetching the monthly procurement report.
+## 1. Master Data Management
+
+- roles
+- departments
+- users
+- vendors
+- categories
+- products
+- vendor_products
+
+This module manages the organization's master information, including employees, vendors, products, and product categories.
+
+---
+
+## 2. Procurement Workflow
+
+- purchase_requests
+- purchase_request_items
+- approvals
+
+This module handles the creation and approval of purchase requests submitted by employees.
+
+---
+
+## 3. Purchase Order Management
+
+- purchase_orders
+- purchase_order_items
+- vendor_estimates
+- deliveries
+- receipts
+- invoices
+- payments
+
+This module manages the procurement lifecycle from approved requests to final payment.
+
+---
+
+## 4. Reporting & Analytics
+
+Database views prefixed with:
+
+```
+vw_
+```
+
+These views provide summarized reports for:
+
+- Pending Purchase Requests
+- Purchase Order Summary
+- Vendor Spending
+- Department Spending
+- Monthly Spending
+- Product Purchase Summary
+- Pending Payments
+
+---
+
+## 5. Security & Auditing
+
+- notifications
+- audit_logs
+
+This module records important system notifications and maintains audit logs for tracking database activities.
+
+---
+
+# Database Relationships
+
+The Enterprise Procurement System follows a relational design.
+
+## Users
+
+- One Role → Many Users
+- One Department → Many Users
+- One Department → One Manager (User)
+
+---
+
+## Products
+
+- One Category → Many Products
+- One Vendor → Many Products
+- One Product → Many Vendors
+
+The Vendor–Product relationship is maintained using the **vendor_products** junction table.
+
+---
+
+## Purchase Requests
+
+- One User → Many Purchase Requests
+- One Purchase Request → Many Purchase Request Items
+- One Purchase Request → Many Approval Records
+
+---
+
+## Purchase Orders
+
+- One Purchase Request → One Purchase Order
+- One Purchase Order → Many Purchase Order Items
+- One Purchase Order → Many Vendor Estimates
+- One Purchase Order → Many Deliveries
+
+---
+
+## Deliveries
+
+- One Delivery → Many Receipts
+
+---
+
+## Invoicing
+
+- One Receipt → One Invoice
+- One Invoice → Many Payments
+
+This design supports **partial payments** for invoices.
+
+---
+
+# Database Features
+
+The database includes:
+
+- Primary and Foreign Key Constraints
+- Check Constraints
+- Soft Delete Support
+- Stored Procedures
+- User-defined Functions
+- Database Triggers
+- Analytical Views
+- Performance Indexes
+- Sample Test Data
+
+---
+
+# Hibernate / Spring Boot Compatibility
+
+The schema is designed to integrate easily with Spring Boot and Hibernate.
+
+Features include:
+
+- `id` as AUTO_INCREMENT primary keys
+- Standard foreign key naming convention
+- `created_at` and `updated_at` timestamp columns
+- Soft delete using the `is_deleted` flag
+- ENUM fields compatible with `@Enumerated(EnumType.STRING)`
+
+Example annotations:
+
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+```
+
+```java
+@CreationTimestamp
+private Timestamp createdAt;
+```
+
+```java
+@UpdateTimestamp
+private Timestamp updatedAt;
+```
+
+---
+
+# Sample Queries
+
+The `queries.sql` file contains sample queries demonstrating how to use the database.
+
+Examples include:
+
+- View pending purchase requests
+- Calculate department spending
+- View vendor spending
+- View purchase order summary
+- Calculate outstanding invoice balance
+- View pending payments
+- Generate monthly procurement reports
+- Display recent audit logs
+
+---
+
+# Authors
+
+Enterprise Procurement System
+
+Developed as part of the Infosys Springboard Virtual Internship Project.
+
+```

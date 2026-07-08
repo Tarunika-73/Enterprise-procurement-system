@@ -126,17 +126,4 @@ FROM invoices i
 JOIN vendors v ON i.vendor_id = v.id
 WHERE i.status IN ('Pending', 'Partially Paid') AND i.is_deleted = FALSE;
 
--- 10. vw_supplier_performance
-CREATE OR REPLACE VIEW vw_supplier_performance AS
-SELECT 
-    v.id AS vendor_id,
-    v.vendor_name,
-    AVG(sp.quality_rating) AS avg_quality,
-    AVG(sp.delivery_rating) AS avg_delivery,
-    AVG(sp.pricing_rating) AS avg_pricing,
-    (AVG(sp.quality_rating) + AVG(sp.delivery_rating) + AVG(sp.pricing_rating)) / 3 AS overall_rating,
-    COUNT(sp.id) AS total_reviews
-FROM vendors v
-LEFT JOIN supplier_performance sp ON v.id = sp.vendor_id AND sp.is_deleted = FALSE
-WHERE v.is_deleted = FALSE
-GROUP BY v.id, v.vendor_name;
+

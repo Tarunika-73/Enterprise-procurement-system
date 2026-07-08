@@ -30,10 +30,9 @@ CREATE INDEX idx_pay_payment_ref ON payments(payment_reference);
 CREATE INDEX idx_pay_status ON payments(status);
 CREATE INDEX idx_pay_created_at ON payments(created_at);
 
--- Additional common status/created_at indexes
+-- Additional indexes
 CREATE INDEX idx_approvals_status ON approvals(status);
 CREATE INDEX idx_deliveries_status ON deliveries(status);
-CREATE INDEX idx_supplier_comp_status ON supplier_compliance(status);
 
 CREATE INDEX idx_roles_created_at ON roles(created_at);
 CREATE INDEX idx_departments_created_at ON departments(created_at);

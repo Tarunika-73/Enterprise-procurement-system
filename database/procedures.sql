@@ -38,11 +38,7 @@ BEGIN
     SET status = 'Approved' 
     WHERE id = p_request_id;
     
-    -- Insert history
-    INSERT INTO approval_history (approval_id, action_by_id, action_taken, comments)
-    SELECT id, p_approver_id, 'Approved', p_comments
-    FROM approvals 
-    WHERE purchase_request_id = p_request_id AND approver_id = p_approver_id;
+    
 END //
 
 -- 3. Reject Request
@@ -62,11 +58,6 @@ BEGIN
     SET status = 'Rejected' 
     WHERE id = p_request_id;
     
-    -- Insert history
-    INSERT INTO approval_history (approval_id, action_by_id, action_taken, comments)
-    SELECT id, p_approver_id, 'Rejected', p_comments
-    FROM approvals 
-    WHERE purchase_request_id = p_request_id AND approver_id = p_approver_id;
 END //
 
 -- 4. Generate Purchase Order
@@ -78,24 +69,71 @@ CREATE PROCEDURE sp_generate_purchase_order(
 )
 BEGIN
     DECLARE v_po_number VARCHAR(50);
-    DECLARE v_total DECIMAL(15, 2);
-    
-    -- Calculate total from request items
-    SELECT fn_calculate_request_total(p_request_id) INTO v_total;
-    
-    -- Generate PO number
-    SET v_po_number = CONCAT('PO-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', FLOOR(RAND() * 10000));
-    
-    INSERT INTO purchase_orders (purchase_order_number, purchase_request_id, vendor_id, total_amount, expected_delivery_date, status)
-    VALUES (v_po_number, p_request_id, p_vendor_id, v_total, p_expected_date, 'Created');
-    
+    DECLARE v_total DECIMAL(15,2);
+    DECLARE v_department_id BIGINT;
+
+    -- Calculate total amount from request items
+    SET v_total = fn_calculate_request_total(p_request_id);
+
+    -- Get department from the purchase request
+    SELECT department_id
+    INTO v_department_id
+    FROM purchase_requests
+    WHERE id = p_request_id;
+    IF v_department_id IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Purchase Request not found.';
+    END IF;
+
+    -- Generate Purchase Order Number
+    SET v_po_number = CONCAT(
+        'PO-',
+        DATE_FORMAT(NOW(), '%Y%m%d'),
+        '-',
+        FLOOR(RAND() * 10000)
+    );
+
+    -- Create Purchase Order
+    INSERT INTO purchase_orders (
+        purchase_order_number,
+        purchase_request_id,
+        department_id,
+        vendor_id,
+        total_amount,
+        expected_delivery_date,
+        status
+    )
+    VALUES (
+        v_po_number,
+        p_request_id,
+        v_department_id,
+        p_vendor_id,
+        v_total,
+        p_expected_date,
+        'Created'
+    );
+
+    -- Get newly created PO ID
     SET p_new_po_id = LAST_INSERT_ID();
-    
-    -- Insert PO items from Request items
-    INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, unit_price, total_price)
-    SELECT p_new_po_id, product_id, quantity, estimated_price, (quantity * estimated_price)
+
+    -- Copy Purchase Request Items to Purchase Order Items
+    INSERT INTO purchase_order_items (
+        purchase_order_id,
+        product_id,
+        quantity,
+        unit_price,
+        total_price
+    )
+    SELECT
+        p_new_po_id,
+        product_id,
+        quantity,
+        estimated_price,
+        quantity * estimated_price
     FROM purchase_request_items
-    WHERE purchase_request_id = p_request_id AND is_deleted = FALSE;
+    WHERE purchase_request_id = p_request_id
+      AND is_deleted = FALSE;
+
 END //
 
 -- 5. Create Invoice
@@ -169,7 +207,7 @@ CREATE PROCEDURE sp_generate_receipt(
     OUT p_new_receipt_id BIGINT
 )
 BEGIN
-    INSERT INTO receipts (delivery_id, receiver_id, receipt_date, condition_notes)
+    INSERT INTO receipts (delivery_id, received_by_user_id, receipt_date, condition_notes)
     VALUES (p_delivery_id, p_receiver_id, p_receipt_date, p_notes);
     
     SET p_new_receipt_id = LAST_INSERT_ID();
@@ -180,19 +218,57 @@ END //
 
 -- 9. Add Vendor
 CREATE PROCEDURE sp_add_vendor(
-    IN p_name VARCHAR(150),
-    IN p_contact VARCHAR(100),
-    IN p_email VARCHAR(100),
-    IN p_phone VARCHAR(20),
-    IN p_address TEXT,
-    IN p_gst VARCHAR(50),
-    OUT p_vendor_id BIGINT
+
+IN p_name VARCHAR(150),
+
+IN p_contact VARCHAR(100),
+
+IN p_email VARCHAR(100),
+
+IN p_username VARCHAR(50),
+
+IN p_password_hash VARCHAR(255),
+
+IN p_phone VARCHAR(20),
+
+IN p_address TEXT,
+
+IN p_gst VARCHAR(50),
+
+IN p_created_by BIGINT,
+
+OUT p_vendor_id BIGINT
 )
 BEGIN
-    INSERT INTO vendors (vendor_name, contact_name, email, phone, address, gst_number)
-    VALUES (p_name, p_contact, p_email, p_phone, p_address, p_gst);
-    
-    SET p_vendor_id = LAST_INSERT_ID();
+
+INSERT INTO vendors
+(
+vendor_name,
+contact_name,
+email,
+username,
+password_hash,
+phone,
+address,
+gst_number,
+created_by
+)
+
+VALUES
+(
+p_name,
+p_contact,
+p_email,
+p_username,
+p_password_hash,
+p_phone,
+p_address,
+p_gst,
+p_created_by
+);
+
+SET p_vendor_id=LAST_INSERT_ID();
+
 END //
 
 -- 10. Update Vendor
@@ -201,13 +277,24 @@ CREATE PROCEDURE sp_update_vendor(
     IN p_name VARCHAR(150),
     IN p_contact VARCHAR(100),
     IN p_email VARCHAR(100),
+    IN p_username VARCHAR(50),
     IN p_phone VARCHAR(20),
     IN p_address TEXT
+    IN p_gst VARCHAR(50)
 )
 BEGIN
-    UPDATE vendors
-    SET vendor_name = p_name, contact_name = p_contact, email = p_email, phone = p_phone, address = p_address
-    WHERE id = p_vendor_id;
+
+UPDATE vendors
+SET
+    vendor_name = p_name,
+    contact_name = p_contact,
+    email = p_email,
+    username = p_username,
+    phone = p_phone,
+    address = p_address,
+    gst_number = p_gst
+WHERE id = p_vendor_id;
+
 END //
 
 -- 11. Deactivate Vendor

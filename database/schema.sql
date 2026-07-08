@@ -52,14 +52,19 @@ CREATE TABLE vendors (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     vendor_name VARCHAR(150) NOT NULL,
     contact_name VARCHAR(100),
-    email VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     address TEXT,
     gst_number VARCHAR(50) UNIQUE,
+    created_by BIGINT,
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
 -- 5. categories
@@ -79,11 +84,14 @@ CREATE TABLE products (
     name VARCHAR(150) NOT NULL,
     description TEXT,
     category_id BIGINT NOT NULL,
+    created_by BIGINT,
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
 -- 7. vendor_products
@@ -150,25 +158,13 @@ CREATE TABLE approvals (
     FOREIGN KEY (approver_id) REFERENCES users(id)
 );
 
--- 11. approval_history
-CREATE TABLE approval_history (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    approval_id BIGINT NOT NULL,
-    action_by_id BIGINT NOT NULL,
-    action_taken ENUM('Approved', 'Rejected', 'Escalated') NOT NULL,
-    comments TEXT,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (approval_id) REFERENCES approvals(id),
-    FOREIGN KEY (action_by_id) REFERENCES users(id)
-);
 
--- 12. purchase_orders
+-- 11. purchase_orders
 CREATE TABLE purchase_orders (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     purchase_order_number VARCHAR(50) NOT NULL UNIQUE,
     purchase_request_id BIGINT NOT NULL UNIQUE,
+    department_id BIGINT NOT NULL,
     vendor_id BIGINT NOT NULL,
     status ENUM('Created', 'Sent', 'Accepted', 'Rejected', 'Delivered', 'Closed', 'Cancelled') NOT NULL DEFAULT 'Created',
     total_amount DECIMAL(15, 2) NOT NULL,
@@ -176,12 +172,15 @@ CREATE TABLE purchase_orders (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (purchase_request_id) REFERENCES purchase_requests(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id),
     FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+
     CONSTRAINT chk_po_total CHECK (total_amount >= 0)
 );
 
--- 13. purchase_order_items
+-- 12. purchase_order_items
 CREATE TABLE purchase_order_items (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     purchase_order_id BIGINT NOT NULL,
@@ -199,10 +198,10 @@ CREATE TABLE purchase_order_items (
     CONSTRAINT chk_poi_total_price CHECK (total_price >= 0)
 );
 
--- 14. vendor_estimates
+-- 13. vendor_estimates
 CREATE TABLE vendor_estimates (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    purchase_request_id BIGINT NOT NULL,
+    purchase_order_id BIGINT NOT NULL,
     vendor_id BIGINT NOT NULL,
     estimate_document_url VARCHAR(255),
     estimated_total DECIMAL(15, 2) NOT NULL,
@@ -211,12 +210,14 @@ CREATE TABLE vendor_estimates (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (purchase_request_id) REFERENCES purchase_requests(id),
+
+    FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id),
     FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+
     CONSTRAINT chk_ve_total CHECK (estimated_total >= 0)
 );
 
--- 15. deliveries
+-- 14. deliveries
 CREATE TABLE deliveries (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     purchase_order_id BIGINT NOT NULL,
@@ -231,21 +232,22 @@ CREATE TABLE deliveries (
     FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id)
 );
 
--- 16. receipts
+-- 15. receipts
 CREATE TABLE receipts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     delivery_id BIGINT NOT NULL,
-    receiver_id BIGINT NOT NULL,
+    received_by_user_id BIGINT NOT NULL,
     receipt_date DATE NOT NULL,
     condition_notes TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (delivery_id) REFERENCES deliveries(id),
-    FOREIGN KEY (receiver_id) REFERENCES users(id)
+    FOREIGN KEY (received_by_user_id) REFERENCES users(id)
 );
 
--- 17. invoices
+-- 16. invoices
 CREATE TABLE invoices (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     invoice_number VARCHAR(100) NOT NULL UNIQUE,
@@ -263,10 +265,10 @@ CREATE TABLE invoices (
     CONSTRAINT chk_inv_total CHECK (total_amount >= 0)
 );
 
--- 18. payments
+-- 17. payments
 CREATE TABLE payments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    invoice_id BIGINT NOT NULL UNIQUE,
+    invoice_id BIGINT NOT NULL,
     payment_reference VARCHAR(100) NOT NULL UNIQUE,
     amount_paid DECIMAL(15, 2) NOT NULL,
     payment_date DATE NOT NULL,
@@ -275,11 +277,13 @@ CREATE TABLE payments (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+
     CONSTRAINT chk_pay_amount CHECK (amount_paid >= 0)
 );
 
--- 19. notifications
+-- 18. notifications
 CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -293,7 +297,7 @@ CREATE TABLE notifications (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 20. audit_logs
+-- 19. audit_logs
 CREATE TABLE audit_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT,
@@ -308,62 +312,7 @@ CREATE TABLE audit_logs (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 21. supplier_performance
-CREATE TABLE supplier_performance (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    vendor_id BIGINT NOT NULL,
-    purchase_order_id BIGINT NOT NULL,
-    quality_rating INT CHECK (quality_rating BETWEEN 1 AND 5),
-    delivery_rating INT CHECK (delivery_rating BETWEEN 1 AND 5),
-    pricing_rating INT CHECK (pricing_rating BETWEEN 1 AND 5),
-    comments TEXT,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id)
-);
 
--- 22. supplier_compliance
-CREATE TABLE supplier_compliance (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    vendor_id BIGINT NOT NULL,
-    document_type VARCHAR(100) NOT NULL,
-    document_url VARCHAR(255) NOT NULL,
-    expiry_date DATE,
-    status VARCHAR(50) DEFAULT 'Valid',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (vendor_id) REFERENCES vendors(id)
-);
 
--- 23. login_history
-CREATE TABLE login_history (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    logout_time TIMESTAMP NULL,
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    status VARCHAR(50) NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- 24. user_sessions
-CREATE TABLE user_sessions (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    session_token VARCHAR(255) NOT NULL UNIQUE,
-    expires_at TIMESTAMP NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
 
 SET FOREIGN_KEY_CHECKS = 1;

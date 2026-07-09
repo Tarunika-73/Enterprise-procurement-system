@@ -17,30 +17,38 @@
 | Frontend | React.js |
 | Backend | Spring Boot |
 | Database | MySQL 8.0 |
-| API Style | REST API |
+| API Architecture | REST API |
 | Data Format | JSON |
 
 ---
 
 # Project Overview
 
-The Enterprise Procurement System is designed to automate and streamline the procurement process within an organization.
+The Enterprise Procurement System is a web-based application designed to automate and streamline the procurement process within an organization.
 
-The application enables employees to submit purchase requests, managers to review and approve requests, administrators to manage vendors and products, finance teams to process invoices and payments, and vendors to supply requested products.
+The system enables employees to create purchase requests, managers to review and approve requests, administrators to manage vendors, products, and categories, vendors to provide quotations and deliver products, and finance teams to process invoices and payments.
 
-The system improves transparency, reduces manual paperwork, tracks procurement activities, and provides analytical reports for better decision-making.
+The application improves procurement efficiency by reducing manual paperwork, increasing transparency, maintaining complete procurement records, and providing analytical reports to support business decision-making.
 
-This document defines the proposed REST API endpoints for all major modules of the Enterprise Procurement System.
+This document presents the proposed REST API specification for all major modules of the Enterprise Procurement System.
+
+---
+
+# Purpose
+
+This document serves as the official API specification for the Enterprise Procurement System. It provides a detailed description of the proposed REST API endpoints, including request formats, response structures, and expected behavior for each module.
+
+The API documentation acts as a reference for backend developers, frontend developers, testers, and project stakeholders during development and integration.
 
 ---
 
 # Note
 
-This API documentation is a preliminary API specification prepared based on the approved database schema, ER diagram, and procurement workflow.
+This API documentation has been prepared based on the approved database schema, ER diagram, and procurement workflow.
 
-Since backend implementation is currently under development, the API endpoints, request payloads, response structures, and authentication mechanisms described in this document are proposed designs.
+Since backend development is currently in progress, the API endpoints, request payloads, response formats, and authentication mechanisms described in this document are proposed specifications.
 
-The final implementation may include additional validations, headers, response fields, and security configurations.
+The final implementation may include additional validations, headers, response attributes, security configurations, and business rules based on project requirements.
 
 ---
 
@@ -50,13 +58,30 @@ The final implementation may include additional validations, headers, response f
 http://localhost:8080/api
 ```
 
-All API endpoints described in this document use the above Base URL.
+All REST API endpoints described in this document use the above Base URL.
 
 ---
+# Table of Contents
+
+1. Authentication APIs
+2. Vendor APIs
+3. Product APIs
+4. Category APIs
+5. Purchase Request APIs
+6. Approval APIs
+7. Purchase Order APIs
+8. Vendor Estimate APIs
+9. Delivery APIs
+10. Receipt APIs
+11. Invoice APIs
+12. Payment APIs
+13. Notification APIs
+14. Report APIs
+15. Overall API Summary
 
 # Authentication
 
-Authentication APIs are responsible for validating users and controlling secure access to the Enterprise Procurement System.
+The Authentication module is responsible for validating users and providing secure access to the Enterprise Procurement System. It ensures that only authorized users can access protected resources based on their assigned roles and permissions.
 
 ---
 
@@ -70,9 +95,9 @@ Authentication APIs are responsible for validating users and controlling secure 
 
 ### Description
 
-Authenticates a registered user using email and password.
+Authenticates a registered user using their email address and password.
 
-Upon successful authentication, the server returns an authentication token and the user's role.
+Upon successful authentication, the system generates and returns a JSON Web Token (JWT) along with the authenticated user's information and role.
 
 ### Request Body
 
@@ -91,7 +116,7 @@ Upon successful authentication, the server returns an authentication token and t
     "role": "EMPLOYEE",
     "userId": 101,
     "employeeName": "John Doe",
-    "message": "Login Successful"
+    "message": "Login successful."
 }
 ```
 
@@ -99,18 +124,18 @@ Upon successful authentication, the server returns an authentication token and t
 
 ```json
 {
-    "message": "Invalid Email or Password"
+    "message": "Invalid email or password."
 }
 ```
 
-### Status Codes
+### HTTP Status Codes
 
 | Status Code | Description |
 |-------------|-------------|
-| 200 | Login Successful |
-| 400 | Invalid Request |
-| 401 | Invalid Credentials |
-| 500 | Internal Server Error |
+| 200 | Login successful |
+| 400 | Invalid request |
+| 401 | Invalid credentials |
+| 500 | Internal server error |
 
 ---
 
@@ -124,11 +149,11 @@ Upon successful authentication, the server returns an authentication token and t
 
 ### Description
 
-Logs out the currently authenticated user and invalidates the active session or authentication token.
+Logs out the currently authenticated user by invalidating the active session or authentication token.
 
 ### Request Header
 
-```
+```text
 Authorization: Bearer <JWT_TOKEN>
 ```
 
@@ -136,41 +161,41 @@ Authorization: Bearer <JWT_TOKEN>
 
 ```json
 {
-    "message": "Logout Successful"
+    "message": "Logout successful."
 }
 ```
 
-### Status Codes
+### HTTP Status Codes
 
 | Status Code | Description |
 |-------------|-------------|
-| 200 | Logout Successful |
+| 200 | Logout successful |
 | 401 | Unauthorized |
-| 500 | Internal Server Error |
+| 500 | Internal server error |
 
 ---
 
 ## Authentication Workflow
 
-```
+```text
 User
-   │
-   ▼
+  │
+  ▼
 Enter Email & Password
-   │
-   ▼
+  │
+  ▼
 POST /api/auth/login
-   │
-   ▼
+  │
+  ▼
 Validate Credentials
-   │
-   ▼
+  │
+  ▼
 Generate JWT Token
-   │
-   ▼
-Return Token + User Role
-   │
-   ▼
+  │
+  ▼
+Return JWT Token and User Details
+  │
+  ▼
 Access Protected APIs
 ```
 
@@ -179,59 +204,17 @@ Access Protected APIs
 ## Authentication Summary
 
 | API | Method | Endpoint |
-|------|--------|----------|
+|-----|--------|----------|
 | Login | POST | `/api/auth/login` |
 | Logout | POST | `/api/auth/logout` |
 
 ---
 
-**Next Module:** User Management APIs
+**Next Module:** Vendor APIs
 
 # Vendor APIs
 
-## Get All Vendors
-
-Endpoint
-
-GET /api/vendors
-
-Description
-
-Returns all vendors.
-
-## Add Vendor
-
-Endpoint
-
-POST /api/vendors
-
-Description
-
-Adds a new vendor.
-
-## Update Vendor
-
-Endpoint
-
-PUT /api/vendors/{id}
-
-Description
-
-Updates vendor details.
-
-## Delete Vendor
-
-Endpoint
-
-DELETE /api/vendors/{id}
-
-Description
-
-Deletes a vendor.
-
-# Vendor APIs
-
-The Vendor module allows administrators to manage vendor information. It provides APIs to create, retrieve, update, and deactivate vendor records used throughout the procurement process.
+The Vendor module allows administrators to manage vendor information within the Enterprise Procurement System. It provides APIs to create, retrieve, update, and deactivate vendor records used throughout the procurement lifecycle.
 
 ---
 
@@ -239,7 +222,9 @@ The Vendor module allows administrators to manage vendor information. It provide
 
 ### Endpoint
 
-**POST** `/api/vendors`
+| Method | URL |
+|--------|-----|
+| POST | `/api/vendors` |
 
 ### Description
 
@@ -270,7 +255,7 @@ Creates a new vendor in the system.
 }
 ```
 
-### Possible Error Responses
+### Error Responses
 
 **400 Bad Request**
 
@@ -294,7 +279,9 @@ Creates a new vendor in the system.
 
 ### Endpoint
 
-**GET** `/api/vendors`
+| Method | URL |
+|--------|-----|
+| GET | `/api/vendors` |
 
 ### Description
 
@@ -331,7 +318,9 @@ Returns a list of all active vendors.
 
 ### Endpoint
 
-**GET** `/api/vendors/{id}`
+| Method | URL |
+|--------|-----|
+| GET | `/api/vendors/{id}` |
 
 ### Description
 
@@ -343,9 +332,9 @@ Returns the details of a specific vendor.
 |-----------|------|-------------|
 | id | Long | Vendor ID |
 
-### Example
+### Example Request
 
-```
+```http
 GET /api/vendors/1
 ```
 
@@ -379,7 +368,9 @@ GET /api/vendors/1
 
 ### Endpoint
 
-**PUT** `/api/vendors/{id}`
+| Method | URL |
+|--------|-----|
+| PUT | `/api/vendors/{id}` |
 
 ### Description
 
@@ -395,7 +386,7 @@ Updates the information of an existing vendor.
 
 ```json
 {
-    "vendorName": "Tech Supplies India Pvt Ltd",
+    "vendorName": "Tech Supplies India Pvt. Ltd.",
     "contactName": "Tom Hardy",
     "email": "tom@techsupplies.com",
     "username": "techsupplies",
@@ -412,7 +403,7 @@ Updates the information of an existing vendor.
 }
 ```
 
-### Error Response
+### Error Response (404 Not Found)
 
 ```json
 {
@@ -426,7 +417,9 @@ Updates the information of an existing vendor.
 
 ### Endpoint
 
-**DELETE** `/api/vendors/{id}`
+| Method | URL |
+|--------|-----|
+| DELETE | `/api/vendors/{id}` |
 
 ### Description
 
@@ -446,7 +439,7 @@ Performs a soft delete by marking the vendor as inactive.
 }
 ```
 
-### Error Response
+### Error Response (404 Not Found)
 
 ```json
 {
@@ -467,6 +460,22 @@ Performs a soft delete by marking the vendor as inactive.
 | 409 | Duplicate vendor email or username |
 | 500 | Internal server error |
 
+---
+
+## Vendor API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Add Vendor | POST | `/api/vendors` |
+| Get All Vendors | GET | `/api/vendors` |
+| Get Vendor By ID | GET | `/api/vendors/{id}` |
+| Update Vendor | PUT | `/api/vendors/{id}` |
+| Delete Vendor | DELETE | `/api/vendors/{id}` |
+
+---
+
+**Next Module:** Product APIs
+
 # Product APIs
 
 The Product module allows administrators to manage products available for procurement. It provides APIs to create, retrieve, update, and remove products from the system.
@@ -477,7 +486,9 @@ The Product module allows administrators to manage products available for procur
 
 ### Endpoint
 
-**POST** `/api/products`
+| Method | URL |
+|--------|-----|
+| POST | `/api/products` |
 
 ### Description
 
@@ -504,7 +515,7 @@ Creates a new product in the system.
 }
 ```
 
-### Possible Error Responses
+### Error Responses
 
 **400 Bad Request**
 
@@ -528,7 +539,9 @@ Creates a new product in the system.
 
 ### Endpoint
 
-**GET** `/api/products`
+| Method | URL |
+|--------|-----|
+| GET | `/api/products` |
 
 ### Description
 
@@ -563,7 +576,9 @@ Returns a list of all active products available in the system.
 
 ### Endpoint
 
-**GET** `/api/products/{id}`
+| Method | URL |
+|--------|-----|
+| GET | `/api/products/{id}` |
 
 ### Description
 
@@ -575,9 +590,9 @@ Returns the details of a specific product.
 |-----------|------|-------------|
 | id | Long | Product ID |
 
-### Example
+### Example Request
 
-```
+```http
 GET /api/products/1
 ```
 
@@ -610,7 +625,9 @@ GET /api/products/1
 
 ### Endpoint
 
-**PUT** `/api/products/{id}`
+| Method | URL |
+|--------|-----|
+| PUT | `/api/products/{id}` |
 
 ### Description
 
@@ -641,7 +658,7 @@ Updates the information of an existing product.
 }
 ```
 
-### Error Response
+### Error Response (404 Not Found)
 
 ```json
 {
@@ -655,7 +672,9 @@ Updates the information of an existing product.
 
 ### Endpoint
 
-**DELETE** `/api/products/{id}`
+| Method | URL |
+|--------|-----|
+| DELETE | `/api/products/{id}` |
 
 ### Description
 
@@ -675,7 +694,7 @@ Performs a soft delete by marking the product as inactive.
 }
 ```
 
-### Error Response
+### Error Response (404 Not Found)
 
 ```json
 {
@@ -696,88 +715,569 @@ Performs a soft delete by marking the product as inactive.
 | 409 | Duplicate product SKU |
 | 500 | Internal server error |
 
+---
+
+## Product API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Add Product | POST | `/api/products` |
+| Get All Products | GET | `/api/products` |
+| Get Product By ID | GET | `/api/products/{id}` |
+| Update Product | PUT | `/api/products/{id}` |
+| Delete Product | DELETE | `/api/products/{id}` |
+
+---
+
+**Next Module:** Category APIs
+
 # Category APIs
 
-POST /api/categories
+The Category module allows administrators to organize products into different categories for efficient procurement management.
 
-GET /api/categories
+---
 
-GET /api/categories/{id}
+## 1. Add Category
 
-PUT /api/categories/{id}
+### Endpoint
 
-DELETE /api/categories/{id}
+| Method | URL |
+|--------|-----|
+| POST | `/api/categories` |
+
+### Description
+
+Creates a new product category.
+
+### Request Body
+
+```json
+{
+    "name": "Electronics",
+    "description": "Electronic products",
+    "createdBy": 1
+}
+```
+
+### Success Response (201 Created)
+
+```json
+{
+    "message": "Category created successfully.",
+    "categoryId": 1
+}
+```
+
+---
+
+## 2. Get All Categories
+
+### Endpoint
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/categories` |
+
+### Description
+
+Returns all available product categories.
+
+---
+
+## 3. Get Category By ID
+
+### Endpoint
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/categories/{id}` |
+
+### Description
+
+Returns the details of a specific category.
+
+---
+
+## 4. Update Category
+
+### Endpoint
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/categories/{id}` |
+
+### Description
+
+Updates an existing category.
+
+---
+
+## 5. Delete Category
+
+### Endpoint
+
+| Method | URL |
+|--------|-----|
+| DELETE | `/api/categories/{id}` |
+
+### Description
+
+Performs a soft delete of a category.
+
+---
+
+## Category API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Add Category | POST | `/api/categories` |
+| Get All Categories | GET | `/api/categories` |
+| Get Category By ID | GET | `/api/categories/{id}` |
+| Update Category | PUT | `/api/categories/{id}` |
+| Delete Category | DELETE | `/api/categories/{id}` |
+
+---
 
 # Purchase Order APIs
 
-POST /api/purchase-orders
+The Purchase Order module manages the creation and tracking of purchase orders after purchase requests are approved.
 
-GET /api/purchase-orders
+---
 
-GET /api/purchase-orders/{id}
+## 1. Create Purchase Order
 
-PUT /api/purchase-orders/{id}
+| Method | URL |
+|--------|-----|
+| POST | `/api/purchase-orders` |
 
-DELETE /api/purchase-orders/{id}
+Creates a new purchase order.
+
+---
+
+## 2. Get All Purchase Orders
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/purchase-orders` |
+
+Returns all purchase orders.
+
+---
+
+## 3. Get Purchase Order By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/purchase-orders/{id}` |
+
+Returns details of a purchase order.
+
+---
+
+## 4. Update Purchase Order
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/purchase-orders/{id}` |
+
+Updates purchase order details.
+
+---
+
+## 5. Cancel Purchase Order
+
+| Method | URL |
+|--------|-----|
+| DELETE | `/api/purchase-orders/{id}` |
+
+Cancels a purchase order.
+
+---
+
+## Purchase Order API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Create Purchase Order | POST | `/api/purchase-orders` |
+| Get All Purchase Orders | GET | `/api/purchase-orders` |
+| Get Purchase Order By ID | GET | `/api/purchase-orders/{id}` |
+| Update Purchase Order | PUT | `/api/purchase-orders/{id}` |
+| Cancel Purchase Order | DELETE | `/api/purchase-orders/{id}` |
+
+---
 
 # Vendor Estimate APIs
 
-POST /api/vendor-estimates
+The Vendor Estimate module manages quotations submitted by vendors.
 
-GET /api/vendor-estimates
+---
 
-GET /api/vendor-estimates/{id}
+## 1. Create Vendor Estimate
 
-PUT /api/vendor-estimates/{id}
+| Method | URL |
+|--------|-----|
+| POST | `/api/vendor-estimates` |
+
+Creates a vendor quotation.
+
+---
+
+## 2. Get All Vendor Estimates
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/vendor-estimates` |
+
+Returns all vendor quotations.
+
+---
+
+## 3. Get Vendor Estimate By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/vendor-estimates/{id}` |
+
+Returns quotation details.
+
+---
+
+## 4. Update Vendor Estimate
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/vendor-estimates/{id}` |
+
+Updates a vendor quotation.
+
+---
+
+## Vendor Estimate API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Create Vendor Estimate | POST | `/api/vendor-estimates` |
+| Get All Vendor Estimates | GET | `/api/vendor-estimates` |
+| Get Vendor Estimate By ID | GET | `/api/vendor-estimates/{id}` |
+| Update Vendor Estimate | PUT | `/api/vendor-estimates/{id}` |
+
+---
 
 # Delivery APIs
 
-POST /api/deliveries
+The Delivery module tracks the shipment and delivery status of purchase orders.
 
-GET /api/deliveries
+---
 
-GET /api/deliveries/{id}
+## 1. Create Delivery
 
-PUT /api/deliveries/{id}
+| Method | URL |
+|--------|-----|
+| POST | `/api/deliveries` |
+
+Creates a delivery record.
+
+---
+
+## 2. Get All Deliveries
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/deliveries` |
+
+Returns all deliveries.
+
+---
+
+## 3. Get Delivery By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/deliveries/{id}` |
+
+Returns delivery information.
+
+---
+
+## 4. Update Delivery Status
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/deliveries/{id}` |
+
+Updates delivery status.
+
+---
+
+## Delivery API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Create Delivery | POST | `/api/deliveries` |
+| Get All Deliveries | GET | `/api/deliveries` |
+| Get Delivery By ID | GET | `/api/deliveries/{id}` |
+| Update Delivery Status | PUT | `/api/deliveries/{id}` |
+
+---
 
 # Receipt APIs
 
-POST /api/receipts
+The Receipt module records goods received from vendors.
 
-GET /api/receipts
+---
 
-GET /api/receipts/{id}
+## 1. Generate Receipt
+
+| Method | URL |
+|--------|-----|
+| POST | `/api/receipts` |
+
+Generates a goods receipt.
+
+---
+
+## 2. Get All Receipts
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/receipts` |
+
+Returns all receipts.
+
+---
+
+## 3. Get Receipt By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/receipts/{id}` |
+
+Returns receipt details.
+
+---
+
+## Receipt API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Generate Receipt | POST | `/api/receipts` |
+| Get All Receipts | GET | `/api/receipts` |
+| Get Receipt By ID | GET | `/api/receipts/{id}` |
+
+---
 
 # Invoice APIs
 
-POST /api/invoices
+The Invoice module manages vendor invoices for delivered goods.
 
-GET /api/invoices
+---
 
-GET /api/invoices/{id}
+## 1. Create Invoice
 
-PUT /api/invoices/{id}
+| Method | URL |
+|--------|-----|
+| POST | `/api/invoices` |
+
+Creates a vendor invoice.
+
+---
+
+## 2. Get All Invoices
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/invoices` |
+
+Returns all invoices.
+
+---
+
+## 3. Get Invoice By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/invoices/{id}` |
+
+Returns invoice details.
+
+---
+
+## 4. Update Invoice
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/invoices/{id}` |
+
+Updates invoice information.
+
+---
+
+## Invoice API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Create Invoice | POST | `/api/invoices` |
+| Get All Invoices | GET | `/api/invoices` |
+| Get Invoice By ID | GET | `/api/invoices/{id}` |
+| Update Invoice | PUT | `/api/invoices/{id}` |
+
+---
 
 # Payment APIs
 
-POST /api/payments
+The Payment module records payments made against vendor invoices.
 
-GET /api/payments
+---
 
-GET /api/payments/{id}
+## 1. Record Payment
+
+| Method | URL |
+|--------|-----|
+| POST | `/api/payments` |
+
+Records a payment.
+
+---
+
+## 2. Get All Payments
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/payments` |
+
+Returns all payments.
+
+---
+
+## 3. Get Payment By ID
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/payments/{id}` |
+
+Returns payment details.
+
+---
+
+## Payment API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Record Payment | POST | `/api/payments` |
+| Get All Payments | GET | `/api/payments` |
+| Get Payment By ID | GET | `/api/payments/{id}` |
+
+---
 
 # Notification APIs
 
-GET /api/notifications
+The Notification module manages system notifications sent to users.
 
-PUT /api/notifications/{id}/read
+---
+
+## 1. Get Notifications
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/notifications` |
+
+Returns all notifications.
+
+---
+
+## 2. Mark Notification as Read
+
+| Method | URL |
+|--------|-----|
+| PUT | `/api/notifications/{id}/read` |
+
+Marks a notification as read.
+
+---
+
+## Notification API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Get Notifications | GET | `/api/notifications` |
+| Mark Notification as Read | PUT | `/api/notifications/{id}/read` |
+
+---
 
 # Report APIs
 
-GET /api/reports/department-spending
+The Report module provides procurement analytics and management reports.
 
-GET /api/reports/vendor-spending
+---
 
-GET /api/reports/monthly
+## 1. Department Spending Report
 
-GET /api/reports/top-vendors
+| Method | URL |
+|--------|-----|
+| GET | `/api/reports/department-spending` |
+
+Returns department-wise procurement spending.
+
+---
+
+## 2. Vendor Spending Report
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/reports/vendor-spending` |
+
+Returns vendor expenditure details.
+
+---
+
+## 3. Monthly Procurement Report
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/reports/monthly` |
+
+Returns monthly procurement statistics.
+
+---
+
+## 4. Top Vendors Report
+
+| Method | URL |
+|--------|-----|
+| GET | `/api/reports/top-vendors` |
+
+Returns vendors ranked by purchase volume.
+
+---
+
+## Report API Summary
+
+| API | Method | Endpoint |
+|------|--------|----------|
+| Department Spending Report | GET | `/api/reports/department-spending` |
+| Vendor Spending Report | GET | `/api/reports/vendor-spending` |
+| Monthly Procurement Report | GET | `/api/reports/monthly` |
+| Top Vendors Report | GET | `/api/reports/top-vendors` |
+
+---
+
+## Overall API Summary
+
+| Module | Endpoints |
+|---------|-----------:|
+| Authentication | 2 |
+| Category | 5 |
+| Vendor | 5 |
+| Product | 5 |
+| Purchase Request | 5 |
+| Approval | 3 |
+| Purchase Order | 5 |
+| Vendor Estimate | 4 |
+| Delivery | 4 |
+| Receipt | 3 |
+| Invoice | 4 |
+| Payment | 3 |
+| Notification | 2 |
+| Reports | 4 |
+
+**Total REST API Endpoints:** **54**

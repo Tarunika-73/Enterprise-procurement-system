@@ -1,0 +1,3 @@
+-- Placeholder for seed/test data.
+-- Member 3 (Database) owns the actual schema/SQL scripts.
+-- To activate this file, set spring.sql.init.mode=always in application.properties.

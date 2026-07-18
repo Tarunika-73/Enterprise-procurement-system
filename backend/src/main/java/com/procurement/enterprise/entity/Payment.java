@@ -1,25 +1,60 @@
 package com.procurement.enterprise.entity;
 
+import com.procurement.enterprise.enums.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-/**
- * TODO (Member 3 - Database): define real columns, relationships,
- * and constraints for Payment. This is a placeholder so the package
- * structure matches the project plan.
- */
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "payments")
-@Data
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // TODO: add fields specific to Payment
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id", nullable = false, unique = true)
+    private Invoice invoice;
+
+    @Column(name = "payment_reference", nullable = false, unique = true, length = 100)
+    private String paymentReference;
+
+    @Column(name = "amount_paid", nullable = false, precision = 15, scale = 2)
+    private BigDecimal amountPaid;
+
+    @Column(name = "payment_date", nullable = false)
+    private LocalDate paymentDate;
+
+    @Column(name = "payment_method", nullable = false, length = 50)
+    private String paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    @Builder.Default
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

@@ -1,7 +1,6 @@
 package com.procurement.enterprise.dto.request;
 
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;

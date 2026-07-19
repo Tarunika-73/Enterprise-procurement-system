@@ -61,7 +61,7 @@ public class SecurityConfig {
 
                 // ── Public endpoints ──────────────────────────────────────
                 .requestMatchers(
-                    "/api/v1/auth/**",
+                    "/v1/auth/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
@@ -69,81 +69,82 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // ── Role management — ADMIN only ──────────────────────────
-                .requestMatchers("/api/v1/roles/**")
+                .requestMatchers("/v1/roles/**")
                     .hasRole(Constants.ROLE_ADMIN)
 
                 // ── User management — ADMIN, MANAGER ─────────────────────
-                .requestMatchers("/api/v1/users/**")
+                .requestMatchers("/v1/users/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Department management — ADMIN, MANAGER ────────────────
-                .requestMatchers("/api/v1/departments/**")
+                .requestMatchers("/v1/departments/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Vendor management — ADMIN, MANAGER ───────────────────
-                .requestMatchers("/api/v1/vendors/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/vendors/**", "/vendors/**")
+                    // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                    .permitAll()
 
                 // ── Category & Product — ADMIN, MANAGER, EMPLOYEE ────────
-                .requestMatchers("/api/v1/categories/**")
+                .requestMatchers("/v1/categories/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers(HttpMethod.GET, "/api/v1/products/**")
+                .requestMatchers(HttpMethod.GET, "/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
-                .requestMatchers("/api/v1/products/**")
+                .requestMatchers("/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Purchase Requests — ADMIN, MANAGER, EMPLOYEE ─────────
-                .requestMatchers("/api/v1/purchase-requests/**")
+                .requestMatchers("/v1/purchase-requests/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
-                .requestMatchers("/api/v1/purchase-request-items/**")
+                .requestMatchers("/v1/purchase-request-items/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
                 // ── Approvals — ADMIN, MANAGER ────────────────────────────
-                .requestMatchers("/api/v1/approvals/**")
+                .requestMatchers("/v1/approvals/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/api/v1/approval-history/**")
+                .requestMatchers("/v1/approval-history/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Purchase Orders — ADMIN, MANAGER ─────────────────────
-                .requestMatchers("/api/v1/purchase-orders/**")
+                .requestMatchers("/v1/purchase-orders/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/api/v1/purchase-order-items/**")
+                .requestMatchers("/v1/purchase-order-items/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Vendor Estimates — ADMIN, MANAGER ────────────────────
-                .requestMatchers("/api/v1/vendor-estimates/**")
+                .requestMatchers("/v1/vendor-estimates/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/api/v1/vendor-products/**")
+                .requestMatchers("/v1/vendor-products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Deliveries & Receipts — ADMIN, MANAGER ───────────────
-                .requestMatchers("/api/v1/deliveries/**")
+                .requestMatchers("/v1/deliveries/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/api/v1/receipts/**")
+                .requestMatchers("/v1/receipts/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Finance — ADMIN, FINANCE ──────────────────────────────
-                .requestMatchers("/api/v1/invoices/**")
+                .requestMatchers("/v1/invoices/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
-                .requestMatchers("/api/v1/payments/**")
+                .requestMatchers("/v1/payments/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
 
                 // ── Supplier — ADMIN, MANAGER ─────────────────────────────
-                .requestMatchers("/api/v1/supplier-performance/**")
+                .requestMatchers("/v1/supplier-performance/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/api/v1/supplier-compliance/**")
+                .requestMatchers("/v1/supplier-compliance/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Audit & Sessions — ADMIN only ─────────────────────────
-                .requestMatchers("/api/v1/audit-logs/**")
+                .requestMatchers("/v1/audit-logs/**")
                     .hasRole(Constants.ROLE_ADMIN)
-                .requestMatchers("/api/v1/login-history/**")
+                .requestMatchers("/v1/login-history/**")
                     .hasRole(Constants.ROLE_ADMIN)
-                .requestMatchers("/api/v1/user-sessions/**")
+                .requestMatchers("/v1/user-sessions/**")
                     .hasRole(Constants.ROLE_ADMIN)
 
                 // ── Notifications — any authenticated user ────────────────
-                .requestMatchers("/api/v1/notifications/**")
+                .requestMatchers("/v1/notifications/**")
                     .authenticated()
 
                 // ── Catch-all ─────────────────────────────────────────────

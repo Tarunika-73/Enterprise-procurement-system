@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     Optional<Receipt> findByIdAndIsDeletedFalse(Long id);
-    Optional<Receipt> findByDeliveryIdAndIsDeletedFalse(Long deliveryId);
+    Page<Receipt> findByDeliveryIdAndIsDeletedFalse(Long deliveryId, Pageable pageable);
     Page<Receipt> findAllByIsDeletedFalse(Pageable pageable);
     Page<Receipt> findByReceiverIdAndIsDeletedFalse(Long receiverId, Pageable pageable);
     boolean existsByDeliveryIdAndIsDeletedFalse(Long deliveryId);

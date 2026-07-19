@@ -49,4 +49,11 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> error(String message, HttpStatus status) {
         return new ApiResponse<>(false, message, null, status);
     }
+
+    /**
+     * Creates an error response with a structured error payload.
+     */
+    public static <T> ApiResponse<T> error(String message, T data, HttpStatus status) {
+        return new ApiResponse<>(false, message, data, status);
+    }
 }

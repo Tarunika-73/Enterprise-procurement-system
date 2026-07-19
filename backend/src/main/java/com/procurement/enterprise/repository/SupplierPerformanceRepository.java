@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -18,5 +19,5 @@ public interface SupplierPerformanceRepository extends JpaRepository<SupplierPer
 
     @Query("SELECT AVG((sp.qualityRating + sp.deliveryRating + sp.pricingRating) / 3.0) " +
            "FROM SupplierPerformance sp WHERE sp.vendor.id = :vendorId AND sp.isDeleted = false")
-    Double findAverageRatingByVendorId(Long vendorId);
+    Double findAverageRatingByVendorId(@Param("vendorId") Long vendorId);
 }

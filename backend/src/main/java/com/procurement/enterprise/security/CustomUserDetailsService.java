@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Custom implementation of {@link UserDetailsService} that loads users by email.
@@ -45,7 +46,19 @@ public class CustomUserDetailsService implements UserDetailsService {
                 true,
                 true,
                 true,
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
+                List.of(new SimpleGrantedAuthority(toAuthority(user.getRole().getName())))
         );
+    }
+
+    private String toAuthority(String roleName) {
+        String normalizedRole = roleName.trim().toUpperCase(Locale.ROOT);
+        return switch (normalizedRole) {
+            case "ADMIN" -> "ROLE_ADMIN";
+            case "DEPARTMENT MANAGER", "MANAGER" -> "ROLE_MANAGER";
+            case "EMPLOYEE" -> "ROLE_EMPLOYEE";
+            case "FINANCE OFFICER", "FINANCE" -> "ROLE_FINANCE";
+            case "VENDOR" -> "ROLE_VENDOR";
+            default -> "ROLE_" + normalizedRole.replaceAll("\\s+", "_");
+        };
     }
 }

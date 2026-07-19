@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     Optional<Delivery> findByIdAndIsDeletedFalse(Long id);
-    Optional<Delivery> findByPurchaseOrderIdAndIsDeletedFalse(Long purchaseOrderId);
+    Page<Delivery> findByPurchaseOrderIdAndIsDeletedFalse(Long purchaseOrderId, Pageable pageable);
     Page<Delivery> findAllByIsDeletedFalse(Pageable pageable);
     Page<Delivery> findByStatusAndIsDeletedFalse(DeliveryStatus status, Pageable pageable);
     boolean existsByPurchaseOrderIdAndIsDeletedFalse(Long purchaseOrderId);

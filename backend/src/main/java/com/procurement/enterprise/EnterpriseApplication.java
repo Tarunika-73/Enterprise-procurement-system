@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  * Enables JPA auditing for automatic population of createdAt and updatedAt fields.
  */
 @SpringBootApplication
-@EnableJpaAuditing
 public class EnterpriseApplication {
 
     public static void main(String[] args) {

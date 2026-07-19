@@ -102,7 +102,7 @@ public class GlobalExceptionHandler {
         log.warn("Validation failed: {}", errors);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.success("Validation failed", errors, HttpStatus.BAD_REQUEST));
+                .body(ApiResponse.error("Validation failed", errors, HttpStatus.BAD_REQUEST));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

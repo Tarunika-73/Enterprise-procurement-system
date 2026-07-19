@@ -1,13 +1,23 @@
 package com.procurement.enterprise.service;
 
-import org.springframework.stereotype.Service;
+import com.procurement.enterprise.dto.request.CreateCategoryRequest;
+import com.procurement.enterprise.dto.request.UpdateCategoryRequest;
+import com.procurement.enterprise.dto.response.CategoryResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-/**
- * TODO: implement business logic for CategoryService.
- * Placeholder created to match the agreed package structure.
- */
-@Service
-public class CategoryService {
+/** Service interface for Category management. */
+public interface CategoryService {
 
-    // TODO: inject the relevant repository and add methods
+    CategoryResponse create(CreateCategoryRequest request);
+
+    CategoryResponse update(Long id, UpdateCategoryRequest request);
+
+    void delete(Long id);
+
+    CategoryResponse getById(Long id);
+
+    Page<CategoryResponse> getAll(Pageable pageable);
+
+    Page<CategoryResponse> search(String name, Pageable pageable);
 }

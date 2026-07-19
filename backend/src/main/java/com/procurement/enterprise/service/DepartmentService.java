@@ -1,13 +1,23 @@
 package com.procurement.enterprise.service;
 
-import org.springframework.stereotype.Service;
+import com.procurement.enterprise.dto.request.CreateDepartmentRequest;
+import com.procurement.enterprise.dto.request.UpdateDepartmentRequest;
+import com.procurement.enterprise.dto.response.DepartmentResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-/**
- * TODO: implement business logic for DepartmentService.
- * Placeholder created to match the agreed package structure.
- */
-@Service
-public class DepartmentService {
+/** Service interface for Department management. */
+public interface DepartmentService {
 
-    // TODO: inject the relevant repository and add methods
+    DepartmentResponse create(CreateDepartmentRequest request);
+
+    DepartmentResponse update(Long id, UpdateDepartmentRequest request);
+
+    void delete(Long id);
+
+    DepartmentResponse getById(Long id);
+
+    Page<DepartmentResponse> getAll(Pageable pageable);
+
+    DepartmentResponse getByCode(String code);
 }

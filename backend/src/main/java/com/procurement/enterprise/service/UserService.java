@@ -1,13 +1,35 @@
 package com.procurement.enterprise.service;
 
-import org.springframework.stereotype.Service;
+import com.procurement.enterprise.dto.request.CreateUserRequest;
+import com.procurement.enterprise.dto.request.UpdateUserRequest;
+import com.procurement.enterprise.dto.response.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-/**
- * TODO: implement business logic for UserService.
- * Placeholder created to match the agreed package structure.
- */
-@Service
-public class UserService {
+/** Service interface for User management. */
+public interface UserService {
 
-    // TODO: inject the relevant repository and add methods
+    UserResponse create(CreateUserRequest request);
+
+    UserResponse update(Long id, UpdateUserRequest request);
+
+    void delete(Long id);
+
+    UserResponse getById(Long id);
+
+    UserResponse getByEmail(String email);
+
+    Page<UserResponse> getAll(Pageable pageable);
+
+    Page<UserResponse> getByDepartment(Long departmentId, Pageable pageable);
+
+    Page<UserResponse> getByRole(Long roleId, Pageable pageable);
+
+    Page<UserResponse> search(String name, Pageable pageable);
+
+    UserResponse activate(Long id);
+
+    UserResponse deactivate(Long id);
+
+    void changePassword(Long id, String currentPassword, String newPassword);
 }

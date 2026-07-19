@@ -1,13 +1,23 @@
 package com.procurement.enterprise.service;
 
-import org.springframework.stereotype.Service;
+import com.procurement.enterprise.dto.request.CreateVendorRequest;
+import com.procurement.enterprise.dto.request.UpdateVendorRequest;
+import com.procurement.enterprise.dto.response.VendorResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
- * TODO: implement business logic for VendorService.
- * Placeholder created to match the agreed package structure.
+ * Service contract for vendor management operations.
  */
-@Service
-public class VendorService {
+public interface VendorService {
 
-    // TODO: inject the relevant repository and add methods
+    VendorResponse createVendor(CreateVendorRequest request);
+
+    VendorResponse updateVendor(Long id, UpdateVendorRequest request);
+
+    void deleteVendor(Long id);
+
+    VendorResponse getVendorById(Long id);
+
+    Page<VendorResponse> getAllVendors(Pageable pageable);
 }

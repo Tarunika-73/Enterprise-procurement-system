@@ -77,9 +77,9 @@ public class SecurityConfig {
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Department management — ADMIN, MANAGER ────────────────
-                .requestMatchers("/v1/departments/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-
+                .requestMatchers("/v1/departments/**", "/departments/**")
+                    .permitAll()
+                    
                 // ── Vendor management — ADMIN, MANAGER ───────────────────
                 .requestMatchers("/v1/vendors/**", "/vendors/**")
                     // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)

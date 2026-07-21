@@ -88,6 +88,8 @@ public class SecurityConfig {
                 // ── Category & Product — ADMIN, MANAGER, EMPLOYEE ────────
                 .requestMatchers("/v1/categories/**", "/categories/**")
                     .permitAll()
+                .requestMatchers("/v1/supplier-compliance/**", "/supplier-compliance/**")
+                    .permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
                 .requestMatchers("/v1/products/**")

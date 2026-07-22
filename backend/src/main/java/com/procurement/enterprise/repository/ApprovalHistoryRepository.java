@@ -1,4 +1,5 @@
-package com.procurement.enterprise.repository;
+```java
+        package com.procurement.enterprise.repository;
 
 import com.procurement.enterprise.entity.ApprovalHistory;
 import com.procurement.enterprise.enums.ApprovalActionTaken;
@@ -11,19 +12,76 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for {@link ApprovalHistory} entity.
+ * Repository for ApprovalHistory entity.
  */
 @Repository
-public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory, Long> {
+public interface ApprovalHistoryRepository
+        extends JpaRepository<ApprovalHistory, Long> {
 
+    /*
+     * Find one active approval-history record by history ID.
+     */
     Optional<ApprovalHistory> findByIdAndIsDeletedFalse(Long id);
 
-    List<ApprovalHistory> findByApprovalIdAndIsDeletedFalse(Long approvalId);
+    /*
+     * Get the complete history of an approval.
+     * Latest action is returned first.
+     */
+    List<ApprovalHistory>
+    findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(Long approvalId);
 
-    Page<ApprovalHistory> findByApprovalIdAndIsDeletedFalse(Long approvalId, Pageable pageable);
+    /*
+     * Get approval history with pagination.
+     */
+    Page<ApprovalHistory>
+    findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long approvalId,
+            Pageable pageable
+    );
 
-    Page<ApprovalHistory> findByActionByIdAndIsDeletedFalse(Long actionById, Pageable pageable);
+    /*
+     * Get all actions performed by a particular user.
+     * Latest action is returned first.
+     */
+    List<ApprovalHistory>
+    findByActionByIdAndIsDeletedFalseOrderByCreatedAtDesc(Long actionById);
 
-    Page<ApprovalHistory> findByActionTakenAndIsDeletedFalse(
-            ApprovalActionTaken actionTaken, Pageable pageable);
+    /*
+     * Get actions performed by a particular user with pagination.
+     */
+    Page<ApprovalHistory>
+    findByActionByIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long actionById,
+            Pageable pageable
+    );
+
+    /*
+     * Get history records based on action type.
+     * Example: APPROVED or REJECTED.
+     */
+    Page<ApprovalHistory>
+    findByActionTakenAndIsDeletedFalseOrderByCreatedAtDesc(
+            ApprovalActionTaken actionTaken,
+            Pageable pageable
+    );
+
+    /*
+     * Check whether a user has already taken any action
+     * on the given approval.
+     */
+    boolean existsByApprovalIdAndActionByIdAndIsDeletedFalse(
+            Long approvalId,
+            Long actionById
+    );
+
+    /*
+     * Check whether a user has already performed
+     * a specific action on the given approval.
+     */
+    boolean existsByApprovalIdAndActionByIdAndActionTakenAndIsDeletedFalse(
+            Long approvalId,
+            Long actionById,
+            ApprovalActionTaken actionTaken
+    );
 }
+```

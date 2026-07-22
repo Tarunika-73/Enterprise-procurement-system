@@ -77,17 +77,19 @@ public class SecurityConfig {
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Department management — ADMIN, MANAGER ────────────────
-                .requestMatchers("/v1/departments/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-
+                .requestMatchers("/v1/departments/**", "/departments/**")
+                    .permitAll()
+                    
                 // ── Vendor management — ADMIN, MANAGER ───────────────────
                 .requestMatchers("/v1/vendors/**", "/vendors/**")
                     // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                     .permitAll()
 
                 // ── Category & Product — ADMIN, MANAGER, EMPLOYEE ────────
-                .requestMatchers("/v1/categories/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/categories/**", "/categories/**")
+                    .permitAll()
+                .requestMatchers("/v1/supplier-compliance/**", "/supplier-compliance/**")
+                    .permitAll()
                 .requestMatchers(HttpMethod.GET, "/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
                 .requestMatchers("/v1/products/**")
@@ -100,8 +102,12 @@ public class SecurityConfig {
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
                 // ── Approvals — ADMIN, MANAGER ────────────────────────────
-                .requestMatchers("/v1/approvals/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/approvals/**", "/approvals/**")
+                    // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                    .permitAll()
+                    
+                .requestMatchers("/v1/approval/**", "/approval/**")
+                    .permitAll()
                 .requestMatchers("/v1/approval-history/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
@@ -130,10 +136,13 @@ public class SecurityConfig {
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
 
                 // ── Supplier — ADMIN, MANAGER ─────────────────────────────
+                // .requestMatchers("/v1/supplier-performance/**")
+                //     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/supplier-performance/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                .requestMatchers("/v1/supplier-compliance/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                    .permitAll()
+
+                // .requestMatchers("/api/v1/supplier-performance/**")
+                //     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
                 // ── Audit & Sessions — ADMIN only ─────────────────────────
                 .requestMatchers("/v1/audit-logs/**")

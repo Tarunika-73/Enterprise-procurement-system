@@ -12,12 +12,22 @@ import java.util.Optional;
 
 @Repository
 public interface SupplierPerformanceRepository extends JpaRepository<SupplierPerformance, Long> {
+
     Optional<SupplierPerformance> findByIdAndIsDeletedFalse(Long id);
+
     Page<SupplierPerformance> findAllByIsDeletedFalse(Pageable pageable);
+
     Page<SupplierPerformance> findByVendorIdAndIsDeletedFalse(Long vendorId, Pageable pageable);
+
     Page<SupplierPerformance> findByPurchaseOrderIdAndIsDeletedFalse(Long purchaseOrderId, Pageable pageable);
 
-    @Query("SELECT AVG((sp.qualityRating + sp.deliveryRating + sp.pricingRating) / 3.0) " +
-           "FROM SupplierPerformance sp WHERE sp.vendor.id = :vendorId AND sp.isDeleted = false")
+    boolean existsByPurchaseOrderIdAndIsDeletedFalse(Long purchaseOrderId);
+
+    @Query("""
+            SELECT AVG((sp.qualityRating + sp.deliveryRating + sp.pricingRating) / 3.0)
+            FROM SupplierPerformance sp
+            WHERE sp.vendor.id = :vendorId
+            AND sp.isDeleted = false
+            """)
     Double findAverageRatingByVendorId(@Param("vendorId") Long vendorId);
 }

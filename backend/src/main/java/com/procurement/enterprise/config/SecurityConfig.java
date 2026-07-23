@@ -117,6 +117,14 @@ public class SecurityConfig {
                 .requestMatchers("/v1/purchase-order-items/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
+                // Purchase Requisitions
+                .requestMatchers(
+                        "/v1/purchase-requisitions/**",
+                        "/purchase-requisitions/**"
+                ).permitAll()
+
+                    
+
                 // ── Vendor Estimates — ADMIN, MANAGER ────────────────────
                 .requestMatchers("/v1/vendor-estimates/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)

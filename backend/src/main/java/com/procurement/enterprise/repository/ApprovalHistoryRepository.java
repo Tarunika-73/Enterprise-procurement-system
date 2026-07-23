@@ -5,25 +5,49 @@ import com.procurement.enterprise.enums.ApprovalActionTaken;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository for {@link ApprovalHistory} entity.
- */
-@Repository
-public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory, Long> {
+public interface ApprovalHistoryRepository
+        extends JpaRepository<ApprovalHistory, Long> {
 
     Optional<ApprovalHistory> findByIdAndIsDeletedFalse(Long id);
 
-    List<ApprovalHistory> findByApprovalIdAndIsDeletedFalse(Long approvalId);
+    List<ApprovalHistory>
+    findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(Long approvalId);
 
-    Page<ApprovalHistory> findByApprovalIdAndIsDeletedFalse(Long approvalId, Pageable pageable);
+    Page<ApprovalHistory>
+    findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long approvalId,
+            Pageable pageable
+    );
 
-    Page<ApprovalHistory> findByActionByIdAndIsDeletedFalse(Long actionById, Pageable pageable);
+    List<ApprovalHistory>
+    findByActionByIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long actionById
+    );
 
-    Page<ApprovalHistory> findByActionTakenAndIsDeletedFalse(
-            ApprovalActionTaken actionTaken, Pageable pageable);
+    Page<ApprovalHistory>
+    findByActionByIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long actionById,
+            Pageable pageable
+    );
+
+    Page<ApprovalHistory>
+    findByActionTakenAndIsDeletedFalseOrderByCreatedAtDesc(
+            ApprovalActionTaken actionTaken,
+            Pageable pageable
+    );
+
+    boolean existsByApprovalIdAndActionByIdAndIsDeletedFalse(
+            Long approvalId,
+            Long actionById
+    );
+
+    boolean existsByApprovalIdAndActionByIdAndActionTakenAndIsDeletedFalse(
+            Long approvalId,
+            Long actionById,
+            ApprovalActionTaken actionTaken
+    );
 }

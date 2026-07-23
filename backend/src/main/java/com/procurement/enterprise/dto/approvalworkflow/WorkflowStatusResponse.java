@@ -1,4 +1,4 @@
-package com.procurement.enterprise.dto.response;
+package com.procurement.enterprise.dto.approvalworkflow;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,19 +11,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApprovalHistoryResponse {
-
-    private Long historyId;
+public class WorkflowStatusResponse {
 
     private Long requestId;
 
-    private Long approverId;
+    private String requestStatus;
 
-    private Integer approvalLevel;
+    private Integer currentApprovalLevel;
 
-    private String actionTaken;
+    private Long currentApproverId;
 
-    private String remarks;
+    private String message;
 
     private LocalDateTime actionTime;
 }

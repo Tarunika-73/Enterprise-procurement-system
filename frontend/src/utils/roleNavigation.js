@@ -20,7 +20,9 @@ const ROLE_ALIAS_MAP = {
   'department manager': USER_ROLES.MANAGER,
   'vendor': USER_ROLES.VENDOR,
   'finance': USER_ROLES.FINANCE,
+  'finance manager': USER_ROLES.FINANCE,
   'finance officer': USER_ROLES.FINANCE,
+  'accounts executive': USER_ROLES.FINANCE,
   'procurement officer': USER_ROLES.PROCUREMENT_OFFICER,
 };
 

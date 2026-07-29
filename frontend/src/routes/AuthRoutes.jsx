@@ -14,8 +14,26 @@ import ManagerDashboard from '../pages/Dashboard/ManagerDashboard';
 import VendorDashboard from '../pages/Dashboard/VendorDashboard';
 import FinanceDashboard from '../pages/Dashboard/FinanceDashboard';
 import AdminDashboard from '../pages/Dashboard/AdminDashboard';
+import PurchaseOrdersPage from '../pages/Finance/PurchaseOrdersPage';
+import InvoiceManagementPage from '../pages/Finance/InvoiceManagementPage';
+import PaymentManagementPage from '../pages/Finance/PaymentManagementPage';
+import VendorPaymentsPage from '../pages/Finance/VendorPaymentsPage';
+import ExpenseDashboardPage from '../pages/Finance/ExpenseDashboardPage';
+import FinancialReportsPage from '../pages/Finance/FinancialReportsPage';
+import AuditLogsPage from '../pages/Finance/AuditLogsPage';
+import NotificationsPage from '../pages/Finance/NotificationsPage';
+import ProfilePage from '../pages/Finance/ProfilePage';
 import ProtectedRoute from './ProtectedRoute';
 import { USER_ROLES } from '../utils/constants';
+
+const FINANCE_ROLES = [
+  USER_ROLES.FINANCE,
+  USER_ROLES.FINANCE_MANAGER,
+  USER_ROLES.FINANCE_OFFICER,
+  USER_ROLES.ACCOUNTS_EXECUTIVE,
+  USER_ROLES.ADMIN,
+  USER_ROLES.MANAGER,
+];
 
 const AuthRoutes = () => {
   return (
@@ -63,14 +81,89 @@ const AuthRoutes = () => {
             </ProtectedRoute>
           }
         />
+        
+        {/* Finance Sub-routes */}
         <Route
           path="finance"
           element={
-            <ProtectedRoute allowedRoles={[USER_ROLES.FINANCE]}>
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
               <FinanceDashboard />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="finance/purchase-orders"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <PurchaseOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/invoices"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <InvoiceManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/payments"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <PaymentManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/vendor-payments"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <VendorPaymentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/expense-reports"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <ExpenseDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/reports"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <FinancialReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/audit-logs"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <AuditLogsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/notifications"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="finance/profile"
+          element={
+            <ProtectedRoute allowedRoles={FINANCE_ROLES}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="admin"
           element={

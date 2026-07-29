@@ -17,6 +17,9 @@ export const USER_ROLES = {
   MANAGER: 'Manager',
   VENDOR: 'Vendor',
   FINANCE: 'Finance',
+  FINANCE_MANAGER: 'Finance Manager',
+  FINANCE_OFFICER: 'Finance Officer',
+  ACCOUNTS_EXECUTIVE: 'Accounts Executive',
   PROCUREMENT_OFFICER: 'Procurement Officer',
 };
 
@@ -39,4 +42,5 @@ export const STORAGE_KEYS = {
   AUTH_TOKEN: 'eps_auth_token',
   USER: 'eps_user',
   RESET_EMAIL: 'eps_reset_email',
+  THEME: 'eps_theme_mode',
 };

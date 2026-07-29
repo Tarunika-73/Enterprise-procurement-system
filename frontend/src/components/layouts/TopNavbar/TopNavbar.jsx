@@ -1,10 +1,26 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getDisplayName, getUserInitials, formatRoleLabel } from '../../../utils/userDisplay';
+import { STORAGE_KEYS } from '../../../utils/constants';
 
 const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { user, userRole, logout } = useAuth();
+
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.THEME) === 'dark';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem(STORAGE_KEYS.THEME, 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem(STORAGE_KEYS.THEME, 'light');
+    }
+  }, [darkMode]);
 
   const displayName = getDisplayName(user);
   const initials = getUserInitials(user);
@@ -31,16 +47,30 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
         </div>
 
         <div className="d-flex align-items-center gap-2 gap-md-3">
+          {/* Dark Mode Toggle */}
+          <button
+            type="button"
+            className="dashboard-navbar-btn"
+            onClick={() => setDarkMode((prev) => !prev)}
+            aria-label="Toggle Theme Mode"
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            <i className={`bi ${darkMode ? 'bi-sun-fill text-warning' : 'bi-moon-stars'}`} />
+          </button>
+
+          {/* Notifications button */}
           <button
             type="button"
             className="dashboard-navbar-btn position-relative"
             aria-label="Notifications"
             title="Notifications"
+            onClick={() => navigate('/dashboard/finance/notifications')}
           >
             <i className="bi bi-bell" />
             <span className="dashboard-notification-badge" aria-hidden="true" />
           </button>
 
+          {/* User Profile Dropdown */}
           <div className="dropdown dashboard-user-dropdown">
             <button
               className="btn dropdown-toggle d-flex align-items-center gap-2"
@@ -69,13 +99,21 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
               </li>
               <li><hr className="dropdown-divider my-1" /></li>
               <li>
-                <button type="button" className="dropdown-item">
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={() => navigate('/dashboard/finance/profile')}
+                >
                   <i className="bi bi-person me-2" aria-hidden="true" />
                   Profile
                 </button>
               </li>
               <li>
-                <button type="button" className="dropdown-item">
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={() => navigate('/dashboard/finance/profile')}
+                >
                   <i className="bi bi-gear me-2" aria-hidden="true" />
                   Settings
                 </button>

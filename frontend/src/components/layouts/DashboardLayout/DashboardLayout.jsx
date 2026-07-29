@@ -10,6 +10,15 @@ const DASHBOARD_PAGE_TITLES = {
   '/dashboard/manager': 'Manager Dashboard',
   '/dashboard/vendor': 'Vendor Dashboard',
   '/dashboard/finance': 'Finance Dashboard',
+  '/dashboard/finance/purchase-orders': 'Purchase Orders',
+  '/dashboard/finance/invoices': 'Invoice Management',
+  '/dashboard/finance/payments': 'Payment Management',
+  '/dashboard/finance/vendor-payments': 'Vendor Payments History',
+  '/dashboard/finance/expense-reports': 'Expense Analytics & Dashboard',
+  '/dashboard/finance/reports': 'Financial Reports Generator',
+  '/dashboard/finance/audit-logs': 'System Audit Logs',
+  '/dashboard/finance/notifications': 'Notifications & Alerts',
+  '/dashboard/finance/profile': 'User Profile & Security',
   '/dashboard/admin': 'Admin Dashboard',
 };
 

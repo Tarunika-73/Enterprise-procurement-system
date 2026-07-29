@@ -8,6 +8,7 @@ import RoleDropdown from '../../components/Authentication/RoleDropdown/RoleDropd
 import Button from '../../components/Authentication/Button/Button';
 import Toast from '../../components/Authentication/Toast/Toast';
 import { register as registerApi, checkEmailExists } from '../../services/authService';
+import { getApiErrorMessage } from '../../utils/apiErrors';
 import {
   validateEmail,
   validateFullName,
@@ -128,10 +129,10 @@ const Register = () => {
       });
 
       setTimeout(() => navigate('/', { replace: true }), 2000);
-    } catch {
+    } catch (error) {
       setToast({
         show: true,
-        message: 'Registration failed. Please try again later.',
+        message: getApiErrorMessage(error, 'Registration failed. Please try again later.'),
         type: 'danger',
       });
     } finally {

@@ -1,3 +1,2 @@
--- Placeholder for seed/test data.
--- Member 3 (Database) owns the actual schema/SQL scripts.
--- To activate this file, set spring.sql.init.mode=always in application.properties.
+-- Data initialization is handled via database/sample_data.sql
+-- Run that file manually against MySQL after running database/schema.sql

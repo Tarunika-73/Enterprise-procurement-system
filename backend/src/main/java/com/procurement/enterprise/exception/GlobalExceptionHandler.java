@@ -27,9 +27,15 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /** Strips CR/LF from user-supplied strings before logging to prevent log injection. */
+    private static String sanitize(String input) {
+        if (input == null) return "null";
+        return input.replaceAll("[\r\n]", "_");
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
-        log.warn("Resource not found: {}", ex.getMessage());
+        log.warn("Resource not found: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage(), HttpStatus.NOT_FOUND));
@@ -37,7 +43,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateResource(DuplicateResourceException ex) {
-        log.warn("Duplicate resource: {}", ex.getMessage());
+        log.warn("Duplicate resource: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ex.getMessage(), HttpStatus.CONFLICT));
@@ -45,7 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(InvalidRequestException ex) {
-        log.warn("Invalid request: {}", ex.getMessage());
+        log.warn("Invalid request: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage(), HttpStatus.BAD_REQUEST));
@@ -53,7 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorized(UnauthorizedException ex) {
-        log.warn("Unauthorized access: {}", ex.getMessage());
+        log.warn("Unauthorized access: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ex.getMessage(), HttpStatus.UNAUTHORIZED));
@@ -61,7 +67,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException ex) {
-        log.warn("Forbidden: {}", ex.getMessage());
+        log.warn("Forbidden: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ex.getMessage(), HttpStatus.FORBIDDEN));
@@ -69,7 +75,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
-        log.warn("Access denied: {}", ex.getMessage());
+        log.warn("Access denied: {}", sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("Access denied: insufficient permissions", HttpStatus.FORBIDDEN));
@@ -107,7 +113,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestParameterException ex) {
-        String message = "Required parameter '" + ex.getParameterName() + "' is missing";
+        String message = "Required parameter '" + sanitize(ex.getParameterName()) + "' is missing";
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message, HttpStatus.BAD_REQUEST));
@@ -115,7 +121,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        String message = "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'";
+        String message = "Invalid value for parameter '" + sanitize(ex.getName()) + "'";
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message, HttpStatus.BAD_REQUEST));
@@ -123,7 +129,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
+        log.error("Unexpected error occurred: {}", sanitize(ex.getMessage()), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred. Please try again later.",

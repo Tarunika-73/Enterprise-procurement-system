@@ -1,51 +1,40 @@
 import { USER_ROLES } from './constants';
 
-/**
- * Maps backend user roles to dashboard routes.
- * When new modules are added, extend this map — pages remain decoupled from login logic.
- */
 const ROLE_ROUTE_MAP = {
   [USER_ROLES.EMPLOYEE]: '/dashboard/employee',
   [USER_ROLES.MANAGER]: '/dashboard/manager',
   [USER_ROLES.VENDOR]: '/dashboard/vendor',
   [USER_ROLES.FINANCE]: '/dashboard/finance',
   [USER_ROLES.ADMIN]: '/dashboard/admin',
-  [USER_ROLES.PROCUREMENT_OFFICER]: '/dashboard/procurement',
-};
-
-/** Spring Boot enum-style roles → frontend display roles */
-const BACKEND_ROLE_MAP = {
-  ADMIN: USER_ROLES.ADMIN,
-  EMPLOYEE: USER_ROLES.EMPLOYEE,
-  MANAGER: USER_ROLES.MANAGER,
-  VENDOR: USER_ROLES.VENDOR,
-  FINANCE: USER_ROLES.FINANCE,
-  PROCUREMENT_OFFICER: USER_ROLES.PROCUREMENT_OFFICER,
+  [USER_ROLES.PROCUREMENT_OFFICER]: '/dashboard/employee',
 };
 
 /**
- * Normalizes backend role strings to frontend USER_ROLES values.
- * Supports enum keys (ADMIN) and display values (Admin).
+ * Maps every possible backend role string to a frontend USER_ROLES value.
+ * Keys are lowercased for case-insensitive matching.
+ */
+const ROLE_ALIAS_MAP = {
+  'admin': USER_ROLES.ADMIN,
+  'employee': USER_ROLES.EMPLOYEE,
+  'manager': USER_ROLES.MANAGER,
+  'department manager': USER_ROLES.MANAGER,
+  'vendor': USER_ROLES.VENDOR,
+  'finance': USER_ROLES.FINANCE,
+  'finance officer': USER_ROLES.FINANCE,
+  'procurement officer': USER_ROLES.PROCUREMENT_OFFICER,
+};
+
+/**
+ * Normalizes any backend role string to a frontend USER_ROLES value.
  */
 export const normalizeRole = (role) => {
   if (!role) return null;
-
-  const enumKey = role.toUpperCase().replace(/\s+/g, '_');
-  if (BACKEND_ROLE_MAP[enumKey]) {
-    return BACKEND_ROLE_MAP[enumKey];
-  }
-
-  return (
-    Object.values(USER_ROLES).find(
-      (value) => value.toLowerCase() === role.toLowerCase()
-    ) ?? null
-  );
+  const key = role.trim().toLowerCase();
+  return ROLE_ALIAS_MAP[key] ?? null;
 };
 
 /**
  * Resolves the post-login navigation path based on the role returned by the backend.
- * @param {string} role - Role string from Spring Boot login response
- * @returns {string} Dashboard route path
  */
 export const getDashboardRouteByRole = (role) => {
   const normalizedRole = normalizeRole(role);

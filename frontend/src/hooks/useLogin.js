@@ -24,16 +24,20 @@ const useLogin = (loginType, errorFallback) => {
         loginType,
       });
 
-      if (!response?.user || !response?.token) {
+      const payload = response?.data?.data ?? response?.data ?? response;
+      const user = payload?.user;
+      const token = payload?.token;
+
+      if (!user || !token) {
         throw new Error('Invalid login response from server.');
       }
 
       loginUser({
-        user: response.user,
-        token: response.token,
+        user,
+        token,
       });
 
-      const dashboardRoute = getDashboardRouteByRole(response.user.role);
+      const dashboardRoute = getDashboardRouteByRole(user.role);
       navigate(dashboardRoute, { replace: true });
     } catch (error) {
       setToast({

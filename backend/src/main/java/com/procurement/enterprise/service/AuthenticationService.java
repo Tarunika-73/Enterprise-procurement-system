@@ -1,10 +1,16 @@
 package com.procurement.enterprise.service;
 
 import com.procurement.enterprise.dto.request.LoginRequest;
+import com.procurement.enterprise.dto.request.RegisterRequest;
 import com.procurement.enterprise.security.JwtAuthenticationResponse;
 
 /** Service interface for Authentication operations. */
 public interface AuthenticationService {
+
+    /**
+     * Registers a new user and returns JWT tokens.
+     */
+    JwtAuthenticationResponse register(RegisterRequest request);
 
     /**
      * Authenticates a user and returns JWT tokens.
@@ -30,4 +36,9 @@ public interface AuthenticationService {
      * @param sessionToken the session token to invalidate
      */
     void logout(String sessionToken);
+
+    /**
+     * Checks whether an email is already registered.
+     */
+    boolean emailExists(String email);
 }

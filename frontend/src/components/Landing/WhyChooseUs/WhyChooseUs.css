@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════════════════
+   WhyChooseUs.css  —  Trusted By marquee ticker band
+   Palette: #5B2EFF · #7C4DFF · #A855F7 · #F8F9FC
+   ═══════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════
+   Section shell
+   ══════════════════════════════ */
+.trustedby-section {
+  position: relative;
+  padding: 56px 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(91, 46, 255, 0.07);
+  border-bottom: 1px solid rgba(91, 46, 255, 0.07);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════
+   Header label
+   ══════════════════════════════ */
+.trustedby-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 0 24px;
+}
+
+.trustedby-label {
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════
+   Marquee
+   ══════════════════════════════ */
+.marquee-outer {
+  position: relative;
+  width: 100%;
+}
+
+/* Fade masks on left and right edges */
+.marquee-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marquee-fade-left {
+  left: 0;
+  background: linear-gradient(90deg, #ffffff 0%, transparent 100%);
+}
+
+.marquee-fade-right {
+  right: 0;
+  background: linear-gradient(270deg, #ffffff 0%, transparent 100%);
+}
+
+/* Clip window */
+.marquee-viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Scrolling track — width must be wide enough for all tiles */
+.marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  will-change: transform;
+}
+
+/* ── Individual tile ── */
+.marquee-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-right: 1px solid rgba(91, 46, 255, 0.07);
+  white-space: nowrap;
+  transition: background 0.22s ease;
+  cursor: default;
+}
+
+.marquee-tile:hover {
+  background: rgba(91, 46, 255, 0.04);
+}
+
+.marquee-tile-icon {
+  font-size: 1.25rem;
+  color: #5B2EFF;
+  opacity: 0.65;
+  transition: opacity 0.22s ease;
+}
+
+.marquee-tile:hover .marquee-tile-icon {
+  opacity: 1;
+}
+
+.marquee-tile-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: -0.2px;
+  transition: color 0.22s ease;
+}
+
+.marquee-tile:hover .marquee-tile-name {
+  color: #5B2EFF;
+}
+
+/* ══════════════════════════════
+   Responsive
+   ══════════════════════════════ */
+@media (max-width: 480px) {
+  .trustedby-section {
+    padding: 40px 0;
+  }
+
+  .marquee-fade {
+    width: 60px;
+  }
+
+  .marquee-tile {
+    padding: 12px 22px;
+  }
+}

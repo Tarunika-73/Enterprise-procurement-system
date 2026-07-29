@@ -1,0 +1,39 @@
+/* ═══════════════════════════════════════════════
+   LandingPage.css  —  Global layout tokens
+   ═══════════════════════════════════════════════ */
+
+/* Ensure the page never clips the fixed navbar */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Section rhythm — every direct child section gets
+   a consistent visual gap from its neighbour ── */
+.hero-section    + .about-section,
+.about-section   + .statistics-section,
+.statistics-section + .features-section,
+.features-section   + .contact-section {
+  /* sections already carry their own top padding;
+     this adds an extra visual breath between them */
+  margin-top: 0;
+}
+
+/* ── Shared max-width token used across all sections ── */
+:root {
+  --page-max-width: 1400px;
+  --page-gutter:    40px;
+}
+
+/* ── Smooth section transitions ── */
+.hero-section,
+.about-section,
+.statistics-section,
+.features-section,
+.contact-section {
+  position: relative;
+}
+
+/* ── Prevent horizontal overflow from carousel ── */
+body {
+  overflow-x: hidden;
+}

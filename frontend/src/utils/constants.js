@@ -8,7 +8,7 @@ export const APP_SHORT_NAME = 'EPS';
 export const APP_VERSION = '1.0.0';
 export const COPYRIGHT = `© ${new Date().getFullYear()} Infosys. All rights reserved.`;
 
-export const API_BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = '';
 
 /** User roles returned by the Spring Boot backend */
 export const USER_ROLES = {

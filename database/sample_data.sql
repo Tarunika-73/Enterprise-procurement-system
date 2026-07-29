@@ -19,27 +19,28 @@ INSERT INTO departments (id, name, code, manager_id) VALUES
 (5, 'Operations', 'OPS', 5);
 
 -- 3. Users (20)
+-- All users have password: Admin@1234 (BCrypt encoded)
 INSERT INTO users (id, employee_id, first_name, last_name, email, password_hash, role_id, department_id) VALUES 
-(1, 'EMP001', 'Alice', 'Smith', 'alice@example.com', 'hash', 1, 1),
-(2, 'EMP002', 'Bob', 'Jones', 'bob@example.com', 'hash', 2, 2),
-(3, 'EMP003', 'Charlie', 'Brown', 'charlie@example.com', 'hash', 2, 3),
-(4, 'EMP004', 'David', 'Miller', 'david@example.com', 'hash', 2, 4),
-(5, 'EMP005', 'Eva', 'Davis', 'eva@example.com', 'hash', 2, 5),
-(6, 'EMP006', 'Frank', 'Wilson', 'frank@example.com', 'hash', 4, 1),
-(7, 'EMP007', 'Grace', 'Taylor', 'grace@example.com', 'hash', 5, 3),
-(8, 'EMP008', 'Harry', 'Anderson', 'harry@example.com', 'hash', 3, 1),
-(9, 'EMP009', 'Ivy', 'Thomas', 'ivy@example.com', 'hash', 3, 2),
-(10, 'EMP010', 'Jack', 'Jackson', 'jack@example.com', 'hash', 3, 3),
-(11, 'EMP011', 'Karen', 'White', 'karen@example.com', 'hash', 3, 4),
-(12, 'EMP012', 'Leo', 'Harris', 'leo@example.com', 'hash', 3, 5),
-(13, 'EMP013', 'Mia', 'Martin', 'mia@example.com', 'hash', 3, 1),
-(14, 'EMP014', 'Nick', 'Thompson', 'nick@example.com', 'hash', 3, 2),
-(15, 'EMP015', 'Olivia', 'Garcia', 'olivia@example.com', 'hash', 3, 3),
-(16, 'EMP016', 'Paul', 'Martinez', 'paul@example.com', 'hash', 3, 4),
-(17, 'EMP017', 'Quinn', 'Robinson', 'quinn@example.com', 'hash', 3, 5),
-(18, 'EMP018', 'Rose', 'Clark', 'rose@example.com', 'hash', 4, 1),
-(19, 'EMP019', 'Sam', 'Rodriguez', 'sam@example.com', 'hash', 5, 3),
-(20, 'EMP020', 'Tina', 'Lewis', 'tina@example.com', 'hash', 3, 1);
+(1, 'EMP001', 'Alice', 'Smith', 'alice@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 1, 1),
+(2, 'EMP002', 'Bob', 'Jones', 'bob@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, 2),
+(3, 'EMP003', 'Charlie', 'Brown', 'charlie@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, 3),
+(4, 'EMP004', 'David', 'Miller', 'david@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, 4),
+(5, 'EMP005', 'Eva', 'Davis', 'eva@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, 5),
+(6, 'EMP006', 'Frank', 'Wilson', 'frank@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 4, 1),
+(7, 'EMP007', 'Grace', 'Taylor', 'grace@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 5, 3),
+(8, 'EMP008', 'Harry', 'Anderson', 'harry@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 1),
+(9, 'EMP009', 'Ivy', 'Thomas', 'ivy@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 2),
+(10, 'EMP010', 'Jack', 'Jackson', 'jack@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 3),
+(11, 'EMP011', 'Karen', 'White', 'karen@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 4),
+(12, 'EMP012', 'Leo', 'Harris', 'leo@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 5),
+(13, 'EMP013', 'Mia', 'Martin', 'mia@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 1),
+(14, 'EMP014', 'Nick', 'Thompson', 'nick@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 2),
+(15, 'EMP015', 'Olivia', 'Garcia', 'olivia@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 3),
+(16, 'EMP016', 'Paul', 'Martinez', 'paul@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 4),
+(17, 'EMP017', 'Quinn', 'Robinson', 'quinn@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 5),
+(18, 'EMP018', 'Rose', 'Clark', 'rose@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 4, 1),
+(19, 'EMP019', 'Sam', 'Rodriguez', 'sam@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 5, 3),
+(20, 'EMP020', 'Tina', 'Lewis', 'tina@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 1);
 
 -- 4. Vendors (10)
 INSERT INTO vendors (id, vendor_name, contact_name, email, phone, address, gst_number) VALUES 

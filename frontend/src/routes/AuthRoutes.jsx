@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import LandingPage from '../pages/Landing/LandingPage';
 import InternalLogin from '../pages/Authentication/InternalLogin';
 import VendorLogin from '../pages/Authentication/VendorLogin';
 import Register from '../pages/Authentication/Register';
@@ -13,12 +14,15 @@ import ManagerDashboard from '../pages/Dashboard/ManagerDashboard';
 import VendorDashboard from '../pages/Dashboard/VendorDashboard';
 import FinanceDashboard from '../pages/Dashboard/FinanceDashboard';
 import AdminDashboard from '../pages/Dashboard/AdminDashboard';
+import ProtectedRoute from './ProtectedRoute';
+import { USER_ROLES } from '../utils/constants';
 
 const AuthRoutes = () => {
   return (
     <Routes>
-      {/* Authentication Module Routes */}
-      <Route path="/" element={<InternalLogin />} />
+      {/* Public routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<InternalLogin />} />
       <Route path="/vendor-login" element={<VendorLogin />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -26,32 +30,54 @@ const AuthRoutes = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Dashboard Module — shared layout with nested role pages */}
-      <Route path="/dashboard" element={<DashboardLayout />}>
+      {/* Protected dashboard routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route
           path="employee"
-          element={<EmployeeDashboard />}
-          handle={{ title: 'Employee Dashboard' }}
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.EMPLOYEE]}>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="manager"
-          element={<ManagerDashboard />}
-          handle={{ title: 'Manager Dashboard' }}
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.MANAGER]}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="vendor"
-          element={<VendorDashboard />}
-          handle={{ title: 'Vendor Dashboard' }}
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="finance"
-          element={<FinanceDashboard />}
-          handle={{ title: 'Finance Dashboard' }}
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.FINANCE]}>
+              <FinanceDashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="admin"
-          element={<AdminDashboard />}
-          handle={{ title: 'Admin Dashboard' }}
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
       </Route>
 

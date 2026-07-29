@@ -154,7 +154,7 @@ CREATE TABLE approvals (
 CREATE TABLE approval_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     approval_id BIGINT NOT NULL,
-    action_by_id BIGINT NOT NULL,
+    action_by_id BIGINT NOT NULL,   
     action_taken ENUM('APPROVED', 'REJECTED', 'ESCALATED') NOT NULL,
     comments TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,

@@ -1,201 +1,196 @@
-        package com.procurement.enterprise.config;
+package com.procurement.enterprise.config;
 
-        import com.procurement.enterprise.security.JwtAuthenticationFilter;
-        import com.procurement.enterprise.util.Constants;
-        import org.springframework.context.annotation.Bean;
-        import org.springframework.context.annotation.Configuration;
-        import org.springframework.http.HttpMethod;
-        import org.springframework.security.authentication.AuthenticationManager;
-        import org.springframework.security.authentication.AuthenticationProvider;
-        import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-        import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-        import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-        import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-        import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-        import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-        import org.springframework.security.config.http.SessionCreationPolicy;
-        import org.springframework.security.core.userdetails.UserDetailsService;
-        import org.springframework.security.crypto.password.PasswordEncoder;
-        import org.springframework.security.web.SecurityFilterChain;
-        import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.procurement.enterprise.security.JwtAuthenticationFilter;
+import com.procurement.enterprise.util.Constants;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-        /**
-         * Spring Security configuration.
-         *
-         * <ul>
-         *   <li>Stateless JWT-based authentication</li>
-         *   <li>BCrypt password encoding (bean provided by {@link PasswordConfig})</li>
-         *   <li>Role-based endpoint authorization</li>
-         *   <li>Public access for auth and Swagger endpoints</li>
-         * </ul>
-         */
-        @Configuration
-        @EnableWebSecurity
-        @EnableMethodSecurity
-        public class SecurityConfig {
+import java.util.List;
 
-            private final JwtAuthenticationFilter jwtAuthenticationFilter;
-            private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-            private final UserDetailsService userDetailsService;
-            private final PasswordEncoder passwordEncoder;
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
 
-            public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                                JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                                UserDetailsService userDetailsService,
-                                PasswordEncoder passwordEncoder) {
-                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-                this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-                this.userDetailsService = userDetailsService;
-                this.passwordEncoder = passwordEncoder;
-            }
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final UserDetailsService userDetailsService;
+    private final PasswordEncoder passwordEncoder;
 
-            @Bean
-            public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http
-                    .csrf(AbstractHttpConfigurer::disable)
-                    .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                    .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                        .authorizeHttpRequests(auth -> auth
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                          UserDetailsService userDetailsService,
+                          PasswordEncoder passwordEncoder) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-                        // ── Public endpoints ──────────────────────────────────────
-                        .requestMatchers(
-                            "/v1/auth/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html",
-                            "/v3/api-docs/**",
-                            "/api-docs/**"
-                        ).permitAll()
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
 
-                        // ── Role management — ADMIN only ──────────────────────────
-                        .requestMatchers("/v1/roles/**")
-                            .hasRole(Constants.ROLE_ADMIN)
+                // ── Preflight & public auth endpoints ─────────────────────────
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(
+                    "/auth/**",
+                    "/health",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/api-docs/**"
+                ).permitAll()
 
-                        // ── User management — ADMIN, MANAGER ─────────────────────
-                        .requestMatchers("/v1/users/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Role management — ADMIN only ───────────────────────────────
+                .requestMatchers("/v1/roles/**")
+                    .hasRole(Constants.ROLE_ADMIN)
 
-                        // ── Department management — ADMIN, MANAGER ────────────────
-                        .requestMatchers("/v1/departments/**", "/departments/**")
-                            .permitAll()
-                            
-                        // ── Vendor management — ADMIN, MANAGER ───────────────────
-                        .requestMatchers("/v1/vendors/**", "/vendors/**")
-                            // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                            .permitAll()
+                // ── User management — ADMIN, MANAGER ──────────────────────────
+                .requestMatchers("/v1/users/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Category & Product — ADMIN, MANAGER, EMPLOYEE ────────
-                        .requestMatchers("/v1/categories/**", "/categories/**")
-                            .permitAll()
-                        .requestMatchers("/v1/supplier-compliance/**", "/supplier-compliance/**")
-                            .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v1/products/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
-                        .requestMatchers("/v1/products/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Department management ──────────────────────────────────────
+                .requestMatchers("/v1/departments/**")
+                    .permitAll()
 
-                        // ── Purchase Requests — ADMIN, MANAGER, EMPLOYEE ─────────
-                        .requestMatchers("/v1/purchase-requests/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
-                        .requestMatchers("/v1/purchase-request-items/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
+                // ── Vendor management ──────────────────────────────────────────
+                .requestMatchers("/v1/vendors/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Approvals — ADMIN, MANAGER ────────────────────────────
-                        .requestMatchers("/v1/approvals/**", "/approvals/**")
-                            // .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                            .permitAll()
-                            
-                        .requestMatchers("/v1/approval/**", "/approval/**")
-                            .permitAll()
-                        
-                        // Approval History
-                        // Approval History
-                        .requestMatchers(
-                                "/v1/approval-history/**",
-                                "/api/approval-history/**"
-                        )
-                        .permitAll()
+                // ── Categories ────────────────────────────────────────────────
+                .requestMatchers("/v1/categories/**")
+                    .permitAll()
 
+                // ── Supplier compliance ────────────────────────────────────────
+                .requestMatchers("/v1/supplier-compliance/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // Approval Workflow
-                        .requestMatchers(
-                                "/api/approval-workflow/**",
-                                "/api/api/approval-workflow/**"
-                        )
-                        .permitAll()
-                        // ── Purchase Orders — ADMIN, MANAGER ─────────────────────
-                        .requestMatchers("/v1/purchase-orders/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                        .requestMatchers("/v1/purchase-order-items/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Products ──────────────────────────────────────────────────
+                .requestMatchers(HttpMethod.GET, "/v1/products/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
+                .requestMatchers("/v1/products/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // Purchase Requisitions
-                        .requestMatchers(
-                                "/v1/purchase-requisitions/**",
-                                "/purchase-requisitions/**"
-                        ).permitAll()
+                // ── Purchase Requests ─────────────────────────────────────────
+                .requestMatchers("/v1/purchase-requests/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
+                .requestMatchers("/v1/purchase-request-items/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
-                            
+                // ── Approvals ─────────────────────────────────────────────────
+                .requestMatchers("/v1/approvals/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/approval-history/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/approval-workflow/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Vendor Estimates — ADMIN, MANAGER ────────────────────
-                        .requestMatchers("/v1/vendor-estimates/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                        .requestMatchers("/v1/vendor-products/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Purchase Requisitions ─────────────────────────────────────
+                .requestMatchers("/v1/purchase-requisitions/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
-                        // ── Deliveries & Receipts — ADMIN, MANAGER ───────────────
-                        .requestMatchers("/v1/deliveries/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                        .requestMatchers("/v1/receipts/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Purchase Orders ───────────────────────────────────────────
+                .requestMatchers("/v1/purchase-orders/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/purchase-order-items/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Finance — ADMIN, FINANCE ──────────────────────────────
-                        .requestMatchers("/v1/invoices/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
-                        .requestMatchers("/v1/payments/**")
-                            .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
+                // ── Vendor Estimates & Products ───────────────────────────────
+                .requestMatchers("/v1/vendor-estimates/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/vendor-products/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Supplier — ADMIN, MANAGER ─────────────────────────────
-                        // .requestMatchers("/v1/supplier-performance/**")
-                        //     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
-                        .requestMatchers("/v1/supplier-performance/**")
-                            .permitAll()
+                // ── Deliveries & Receipts ─────────────────────────────────────
+                .requestMatchers("/v1/deliveries/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                .requestMatchers("/v1/receipts/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // .requestMatchers("/api/v1/supplier-performance/**")
-                        //     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                // ── Finance ───────────────────────────────────────────────────
+                .requestMatchers("/v1/invoices/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
+                .requestMatchers("/v1/payments/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
 
-                        // ── Audit & Sessions — ADMIN only ─────────────────────────
-                        .requestMatchers("/v1/audit-logs/**")
-                            .hasRole(Constants.ROLE_ADMIN)
-                        .requestMatchers("/v1/login-history/**")
-                            .hasRole(Constants.ROLE_ADMIN)
-                        .requestMatchers("/v1/user-sessions/**")
-                            .hasRole(Constants.ROLE_ADMIN)
+                // ── Supplier Performance ──────────────────────────────────────
+                .requestMatchers("/v1/supplier-performance/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                        // ── Notifications — any authenticated user ────────────────
-                        .requestMatchers("/v1/notifications/**")
-                            .authenticated()
+                // ── Audit & Sessions — ADMIN only ─────────────────────────────
+                .requestMatchers("/v1/audit-logs/**")
+                    .hasRole(Constants.ROLE_ADMIN)
+                .requestMatchers("/v1/login-history/**")
+                    .hasRole(Constants.ROLE_ADMIN)
+                .requestMatchers("/v1/user-sessions/**")
+                    .hasRole(Constants.ROLE_ADMIN)
 
-                        // ── Catch-all ─────────────────────────────────────────────
-                        .anyRequest().authenticated()
-                    )
-                    .authenticationProvider(authenticationProvider())
-                    .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // ── Notifications — any authenticated user ────────────────────
+                .requestMatchers("/v1/notifications/**")
+                    .authenticated()
 
-                return http.build();
-            }
+                // ── Catch-all ─────────────────────────────────────────────────
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-            @Bean
-            public AuthenticationProvider authenticationProvider() {
-                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-                provider.setUserDetailsService(userDetailsService);
-                provider.setPasswordEncoder(passwordEncoder);
-                return provider;
-            }
+        return http.build();
+    }
 
-            @Bean
-            public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-                return config.getAuthenticationManager();
-            }
-        }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Allow both Vite dev server and direct browser access (Swagger UI)
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "http://localhost:8080"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Authorization"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+}

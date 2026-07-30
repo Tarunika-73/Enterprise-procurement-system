@@ -18,14 +18,16 @@ const DashboardPageContent = ({ roleLabel, description, statCards }) => {
             <h2>Welcome back, {displayName}</h2>
             <p className="text-muted mb-0">{description}</p>
           </div>
-          <span className="dashboard-placeholder-tag">Placeholder Module</span>
+          <span className="dashboard-placeholder-tag">
+    Active Module
+</span>
         </div>
       </div>
 
       <div className="dashboard-page-header">
         <h1>{roleLabel} Overview</h1>
         <p className="text-muted mb-0">
-          Key metrics and quick actions will appear here once modules are connected.
+  Manage procurement activities using the navigation menu on the left.
         </p>
       </div>
 

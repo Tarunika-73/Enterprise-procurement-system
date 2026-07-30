@@ -1,17 +1,37 @@
 import DashboardPageContent from '../../components/dashboard/DashboardPageContent';
 
 const MANAGER_STATS = [
-  { icon: 'bi-people', iconVariant: 'primary', value: '—', label: 'Team Requests' },
-  { icon: 'bi-check2-circle', iconVariant: 'warning', value: '—', label: 'Approvals Queue' },
-  { icon: 'bi-pie-chart', iconVariant: 'accent', value: '—', label: 'Budget Overview' },
-  { icon: 'bi-graph-up', iconVariant: 'success', value: '—', label: 'Department Reports' },
+  {
+    icon: 'bi-hourglass-split',
+    iconVariant: 'warning',
+    value: '15',
+    label: 'Pending Requests',
+  },
+  {
+    icon: 'bi-check2-circle',
+    iconVariant: 'success',
+    value: '32',
+    label: 'Approved Requests',
+  },
+  {
+    icon: 'bi-x-circle',
+    iconVariant: 'danger',
+    value: '4',
+    label: 'Rejected Requests',
+  },
+  {
+    icon: 'bi-building',
+    iconVariant: 'primary',
+    value: '18',
+    label: 'Department Requests',
+  },
 ];
 
 const ManagerDashboard = () => {
   return (
     <DashboardPageContent
       roleLabel="Manager Dashboard"
-      description="Review team purchase requests, approve budgets, and monitor procurement activity."
+      description="Review, approve, or reject department purchase requests."
       statCards={MANAGER_STATS}
     />
   );

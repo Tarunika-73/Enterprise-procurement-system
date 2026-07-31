@@ -1,40 +1,68 @@
-import DashboardPageContent from '../components/dashboard/DashboardPageContent';
-
-const APPROVAL_HISTORY_STATS = [
+const history = [
   {
-    icon: 'bi-check-circle',
-    iconVariant: 'success',
-    value: '32',
-    label: 'Approved',
+    id: "PR001",
+    employee: "Alice",
+    action: "Approved",
+    date: "31 Jul 2026",
+    remarks: "Budget Approved",
   },
   {
-    icon: 'bi-x-circle',
-    iconVariant: 'danger',
-    value: '4',
-    label: 'Rejected',
+    id: "PR002",
+    employee: "Bob",
+    action: "Rejected",
+    date: "30 Jul 2026",
+    remarks: "Insufficient Budget",
   },
   {
-    icon: 'bi-clock-history',
-    iconVariant: 'warning',
-    value: '12',
-    label: 'Pending',
-  },
-  {
-    icon: 'bi-calendar-event',
-    iconVariant: 'primary',
-    value: '48',
-    label: 'Total Requests',
+    id: "PR003",
+    employee: "Charlie",
+    action: "Approved",
+    date: "29 Jul 2026",
+    remarks: "Urgent Requirement",
   },
 ];
 
-const ApprovalHistory = () => {
+export default function ApprovalHistory() {
   return (
-    <DashboardPageContent
-      roleLabel="Approval History"
-      description="View all purchase request approval decisions."
-      statCards={APPROVAL_HISTORY_STATS}
-    />
-  );
-};
+    <div className="container mt-4">
+      <h2 className="mb-4">Approval History</h2>
 
-export default ApprovalHistory;
+      <table className="table table-striped table-hover shadow">
+        <thead className="table-dark">
+          <tr>
+            <th>Request ID</th>
+            <th>Employee</th>
+            <th>Decision</th>
+            <th>Date</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {history.map((item) => (
+            <tr key={item.id}>
+              <td>{item.id}</td>
+              <td>{item.employee}</td>
+
+              <td>
+                <span
+                  className={`badge ${
+                    item.action === "Approved"
+                      ? "bg-success"
+                      : "bg-danger"
+                  }`}
+                >
+                  {item.action}
+                </span>
+              </td>
+
+              <td>{item.date}</td>
+
+              <td>{item.remarks}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

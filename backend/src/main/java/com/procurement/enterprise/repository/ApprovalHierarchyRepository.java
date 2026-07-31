@@ -1,67 +1,47 @@
-package com.procurement.enterprise.entity;
+package com.procurement.enterprise.repository;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import com.procurement.enterprise.entity.ApprovalHierarchy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
-/**
- * JPA entity for the {@code approval_hierarchies} table.
- * <p>
- * Defines the ordered chain of approvers configured for a {@link Department}.
- * Example: Department (level 1: Manager) &rarr; (level 2: Finance) &rarr; (level 3: Procurement Head).
- * The {@link com.procurement.enterprise.service.RequestRoutingService} walks this chain,
- * lowest level first, to automatically route a newly created purchase request.
- */
-@Entity
-@Table(name = "approval_hierarchies")
-@EntityListeners(AuditingEntityListener.class)
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ApprovalHierarchy {
+@Repository
+public interface ApprovalHierarchyRepository extends JpaRepository<ApprovalHierarchy, Long> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Optional<ApprovalHierarchy> findByIdAndIsDeletedFalse(Long id);
+
+    Page<ApprovalHierarchy> findAllByIsDeletedFalse(Pageable pageable);
+
+    List<ApprovalHierarchy> findByDepartmentIdAndIsActiveTrueAndIsDeletedFalse(Long departmentId);
+
+    List<ApprovalHierarchy> findByDepartmentIsNullAndIsActiveTrueAndIsDeletedFalse();
 
     /**
-     * Department this hierarchy level belongs to.
-     * FK: {@code approval_hierarchies.department_id -> departments.id}
+     * Finds every active, non-deleted hierarchy whose amount range
+     * [minAmount, maxAmount] covers {@code amount}, for the given
+     * department OR the global (department = null) rules, ordered by
+     * priority (lowest first) with department-specific rules preferred
+     * over global ones at the same priority.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", nullable = false)
-    private Department department;
-
-    /**
-     * Sequence position of this approver in the department's chain.
-     * Level 1 is always the first approver assigned when a request is routed.
-     */
-    @Column(name = "level", nullable = false)
-    private Integer level;
-
-    /**
-     * The user designated as approver for this level of this department's hierarchy.
-     * FK: {@code approval_hierarchies.approver_id -> users.id}
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver_id", nullable = false)
-    private User approver;
-
-    @Column(name = "is_deleted", nullable = false)
-    @Builder.Default
-    private Boolean isDeleted = false;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Query("""
+            SELECT h FROM ApprovalHierarchy h
+            WHERE h.isDeleted = false
+              AND h.isActive = true
+              AND (h.department.id = :departmentId OR h.department IS NULL)
+              AND h.minAmount <= :amount
+              AND (h.maxAmount IS NULL OR h.maxAmount >= :amount)
+            ORDER BY h.priority ASC,
+                     CASE WHEN h.department IS NULL THEN 1 ELSE 0 END ASC
+            """)
+    List<ApprovalHierarchy> findApplicableHierarchies(
+            @Param("departmentId") Long departmentId,
+            @Param("amount") BigDecimal amount
+    );
 }

@@ -23,6 +23,10 @@ import PurchaseRequests from '../pages/PurchaseRequests';
 import PurchaseOrders from '../pages/PurchaseOrders';
 import Suppliers from '../pages/Suppliers';
 import Reports from '../pages/Reports';
+import VendorProfile from '../pages/Vendor/VendorProfile';
+import VendorCompliance from '../pages/Vendor/VendorCompliance';
+import VendorPurchaseOrders from '../pages/Vendor/VendorPurchaseOrders';
+import VendorInvoices from '../pages/Vendor/VendorInvoices';
 
 const AuthRoutes = () => {
   return (
@@ -110,6 +114,38 @@ const AuthRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
               <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendor-profile"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
+              <VendorProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendor/compliance"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
+              <VendorCompliance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendor/purchase-orders"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
+              <VendorPurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendor/invoices"
+          element={
+            <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
+              <VendorInvoices />
             </ProtectedRoute>
           }
         />

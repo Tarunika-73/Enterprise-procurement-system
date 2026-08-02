@@ -5,8 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -37,4 +40,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndIsDeletedFalse(String email);
 
     boolean existsByEmployeeIdAndIsDeletedFalse(String employeeId);
+
+    @EntityGraph(attributePaths = {"role", "department"})
+    @Query("""
+            SELECT u FROM User u
+            WHERE u.isDeleted = false
+              AND u.isActive = true
+              AND u.department.id = :departmentId
+              AND LOWER(u.role.name) IN ('department manager', 'manager')
+            """)
+    List<User> findActiveManagersByDepartmentId(@Param("departmentId") Long departmentId);
+
+    @EntityGraph(attributePaths = {"role", "department"})
+    @Query("""
+            SELECT u FROM User u
+            WHERE u.isDeleted = false
+              AND u.isActive = true
+              AND LOWER(u.role.name) = 'procurement officer'
+            """)
+    List<User> findActiveProcurementOfficers();
 }

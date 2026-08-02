@@ -32,6 +32,7 @@ public class AuthController {
         userMap.put("email", response.getEmail());
         userMap.put("fullName", response.getFullName());
         userMap.put("role", response.getRole());
+        userMap.put("employeeId", response.getEmployeeId());
         userMap.put("departmentId", response.getDepartmentId());
         userMap.put("departmentName", response.getDepartmentName());
         Map<String, Object> payload = new java.util.HashMap<>();
@@ -54,6 +55,7 @@ public class AuthController {
         userMap.put("email", response.getEmail());
         userMap.put("fullName", response.getFullName());
         userMap.put("role", response.getRole());
+        userMap.put("employeeId", response.getEmployeeId());
         userMap.put("departmentId", response.getDepartmentId());
         userMap.put("departmentName", response.getDepartmentName());
         Map<String, Object> payload = new java.util.HashMap<>();

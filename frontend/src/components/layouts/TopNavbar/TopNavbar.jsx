@@ -1,18 +1,25 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getDisplayName, getUserInitials, formatRoleLabel } from '../../../utils/userDisplay';
+import { normalizeRole } from '../../../utils/roleNavigation';
+import { USER_ROLES } from '../../../utils/constants';
 
 const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { user, userRole, logout } = useAuth();
 
   const displayName = getDisplayName(user);
-  const initials = getUserInitials(user);
-  const roleLabel = formatRoleLabel(userRole);
+  const initials    = getUserInitials(user);
+  const roleLabel   = formatRoleLabel(userRole);
+  const isVendor    = normalizeRole(userRole) === USER_ROLES.VENDOR;
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
+  };
+
+  const handleProfile = () => {
+    navigate(isVendor ? '/vendor/profile' : '#');
   };
 
   return (
@@ -36,6 +43,7 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
             className="dashboard-navbar-btn position-relative"
             aria-label="Notifications"
             title="Notifications"
+            onClick={() => navigate('/notifications')}
           >
             <i className="bi bi-bell" />
             <span className="dashboard-notification-badge" aria-hidden="true" />
@@ -59,6 +67,7 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
                 </span>
               </span>
             </button>
+
             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userProfileDropdown">
               <li>
                 <span className="dropdown-item-text px-3 py-2">
@@ -69,15 +78,9 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
               </li>
               <li><hr className="dropdown-divider my-1" /></li>
               <li>
-                <button type="button" className="dropdown-item">
+                <button type="button" className="dropdown-item" onClick={handleProfile}>
                   <i className="bi bi-person me-2" aria-hidden="true" />
                   Profile
-                </button>
-              </li>
-              <li>
-                <button type="button" className="dropdown-item">
-                  <i className="bi bi-gear me-2" aria-hidden="true" />
-                  Settings
                 </button>
               </li>
               <li><hr className="dropdown-divider my-1" /></li>

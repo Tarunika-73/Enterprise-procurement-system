@@ -79,6 +79,7 @@ const VendorLogin = () => {
             error={touched.email ? errors.email : ''}
             required
             autoComplete="email"
+            icon="bi-envelope-fill"
           />
 
           <PasswordField
@@ -90,6 +91,7 @@ const VendorLogin = () => {
             onBlur={handleBlur}
             error={touched.password ? errors.password : ''}
             required
+            icon="bi-lock-fill"
           />
 
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -123,7 +125,7 @@ const VendorLogin = () => {
 
         <p className="text-center text-muted small mb-0">
           Internal employee?{' '}
-          <AuthLink to="/">Internal Login</AuthLink>
+          <AuthLink to="/login">Internal Login</AuthLink>
         </p>
       </AuthCard>
 

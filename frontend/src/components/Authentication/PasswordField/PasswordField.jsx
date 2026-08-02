@@ -14,19 +14,23 @@ const PasswordField = ({
   disabled = false,
   autoComplete = 'current-password',
   className = '',
+  icon = 'bi-lock-fill',
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputId = id || name;
 
   return (
-    <div className={`mb-3 ${className}`}>
+    <div className={`auth-field-group ${className}`}>
       {label && (
-        <label htmlFor={inputId} className="form-label fw-medium text-secondary">
+        <label htmlFor={inputId} className="auth-field-label">
           {label}
-          {required && <span className="text-danger ms-1">*</span>}
+          {required && <span className="auth-field-required">*</span>}
         </label>
       )}
-      <div className="input-group input-group-lg">
+      <div className="auth-input-wrap has-icon has-suffix">
+        <span className="auth-input-icon" aria-hidden="true">
+          <i className={`bi ${icon}`} />
+        </span>
         <input
           id={inputId}
           type={showPassword ? 'text' : 'password'}
@@ -37,13 +41,13 @@ const PasswordField = ({
           placeholder={placeholder}
           disabled={disabled}
           autoComplete={autoComplete}
-          className={`form-control auth-input ${error ? 'is-invalid' : ''}`}
+          className={`auth-input${error ? ' is-invalid' : ''}`}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${inputId}-error` : undefined}
         />
         <button
           type="button"
-          className="btn btn-outline-secondary auth-toggle-btn"
+          className="auth-toggle-btn"
           onClick={() => setShowPassword((prev) => !prev)}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
           tabIndex={-1}

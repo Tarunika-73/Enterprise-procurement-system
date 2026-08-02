@@ -75,7 +75,7 @@ const ResetPassword = () => {
         type: 'success',
       });
 
-      setTimeout(() => navigate('/', { replace: true }), 2000);
+      setTimeout(() => navigate('/login', { replace: true }), 2000);
     } catch {
       setToast({
         show: true,
@@ -153,7 +153,7 @@ const ResetPassword = () => {
         </form>
 
         <p className="text-center text-muted mt-4 mb-0">
-          <AuthLink to="/">
+          <AuthLink to="/login">
             <i className="bi bi-arrow-left me-1" aria-hidden="true" />
             Back to Login
           </AuthLink>

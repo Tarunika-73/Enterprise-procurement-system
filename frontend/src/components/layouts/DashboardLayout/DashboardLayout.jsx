@@ -4,20 +4,43 @@ import Sidebar from '../Sidebar/Sidebar';
 import TopNavbar from '../TopNavbar/TopNavbar';
 import Footer from '../Footer/Footer';
 
-/** Page titles keyed by dashboard route — compatible with BrowserRouter */
+/** Page titles keyed by route — compatible with BrowserRouter */
 const DASHBOARD_PAGE_TITLES = {
   '/dashboard/employee': 'Employee Dashboard',
   '/dashboard/manager': 'Manager Dashboard',
   '/dashboard/vendor': 'Vendor Dashboard',
   '/dashboard/finance': 'Finance Dashboard',
   '/dashboard/admin': 'Admin Dashboard',
+  '/employee/products': 'Products',
+  '/employee/purchase-requests': 'My Requests',
+  '/employee/purchase-requests/create': 'Create Purchase Request',
+  '/notifications': 'Notifications',
+  '/vendor/purchase-orders': 'Purchase Orders',
+  '/vendor/deliveries': 'Update Delivery',
+  '/vendor/profile': 'My Profile',
+};
+
+const resolvePageTitle = (pathname) => {
+  if (DASHBOARD_PAGE_TITLES[pathname]) {
+    return DASHBOARD_PAGE_TITLES[pathname];
+  }
+  if (pathname.startsWith('/employee/purchase-requests/')) {
+    return 'Request Details';
+  }
+  if (pathname.startsWith('/manager/requests/')) {
+    return 'Request Details';
+  }
+  if (pathname.startsWith('/vendor/purchase-orders/')) {
+    return 'Purchase Order Details';
+  }
+  return 'Dashboard';
 };
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
 
-  const pageTitle = DASHBOARD_PAGE_TITLES[pathname] ?? 'Dashboard';
+  const pageTitle = resolvePageTitle(pathname);
 
   return (
     <div className="dashboard-layout">

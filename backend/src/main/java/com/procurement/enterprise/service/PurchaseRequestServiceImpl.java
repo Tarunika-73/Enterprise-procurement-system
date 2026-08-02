@@ -1,0 +1,488 @@
+package com.procurement.enterprise.service;
+
+import com.procurement.enterprise.dto.request.CreatePurchaseRequestRequest;
+import com.procurement.enterprise.dto.request.ManagerDecisionRequest;
+import com.procurement.enterprise.dto.response.EmployeeDashboardStatsResponse;
+import com.procurement.enterprise.dto.response.ManagerDashboardStatsResponse;
+import com.procurement.enterprise.dto.response.PurchaseRequestItemResponse;
+import com.procurement.enterprise.dto.response.PurchaseRequestResponse;
+import com.procurement.enterprise.dto.response.RequestTimelineEntry;
+import com.procurement.enterprise.entity.Department;
+import com.procurement.enterprise.entity.Product;
+import com.procurement.enterprise.entity.PurchaseRequest;
+import com.procurement.enterprise.entity.PurchaseRequestItem;
+import com.procurement.enterprise.entity.User;
+import com.procurement.enterprise.enums.PurchaseRequestStatus;
+import com.procurement.enterprise.exception.InvalidRequestException;
+import com.procurement.enterprise.exception.ResourceNotFoundException;
+import com.procurement.enterprise.exception.UnauthorizedException;
+import com.procurement.enterprise.repository.NotificationRepository;
+import com.procurement.enterprise.repository.ProductRepository;
+import com.procurement.enterprise.repository.PurchaseRequestItemRepository;
+import com.procurement.enterprise.repository.PurchaseRequestRepository;
+import com.procurement.enterprise.repository.UserRepository;
+import com.procurement.enterprise.util.Constants;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+
+@Service
+@RequiredArgsConstructor
+public class PurchaseRequestServiceImpl implements PurchaseRequestService {
+
+    private static final Logger log = LoggerFactory.getLogger(PurchaseRequestServiceImpl.class);
+
+    private final PurchaseRequestRepository purchaseRequestRepository;
+    private final PurchaseRequestItemRepository purchaseRequestItemRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
+
+    @Override
+    @Transactional
+    public PurchaseRequestResponse create(CreatePurchaseRequestRequest request) {
+        User requester = getCurrentUser();
+        Department department = requester.getDepartment();
+        if (department == null) {
+            throw new InvalidRequestException("Logged-in user has no department assigned.");
+        }
+
+        Product product = productRepository.findByIdAndIsDeletedFalse(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", request.getProductId()));
+
+        if (!Boolean.TRUE.equals(product.getIsActive())) {
+            throw new InvalidRequestException("Selected product is not available for procurement.");
+        }
+
+        int availableQty = product.getAvailableQuantity() != null ? product.getAvailableQuantity() : 100;
+        if (availableQty > 0 && request.getQuantity() > availableQty) {
+            throw new InvalidRequestException(
+                    "Requested quantity exceeds available stock (" + availableQty + ").");
+        }
+
+        User manager = resolveDepartmentManager(department);
+        if (manager == null) {
+            throw new InvalidRequestException(
+                    "No manager is assigned for department: " + department.getName());
+        }
+
+        BigDecimal totalAmount = request.getUnitPrice()
+                .multiply(BigDecimal.valueOf(request.getQuantity()));
+
+        PurchaseRequest purchaseRequest = PurchaseRequest.builder()
+                .requestNumber(generateRequestNumber())
+                .requester(requester)
+                .department(department)
+                .title(request.getTitle().trim())
+                .justification(request.getJustification().trim())
+                .priority(request.getPriority())
+                .expectedDeliveryDate(request.getExpectedDeliveryDate())
+                .status(PurchaseRequestStatus.PENDING)
+                .totalAmount(totalAmount)
+                .manager(manager)
+                .currentApprover(manager)
+                .isDeleted(false)
+                .build();
+
+        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+
+        PurchaseRequestItem item = PurchaseRequestItem.builder()
+                .purchaseRequest(saved)
+                .product(product)
+                .quantity(request.getQuantity())
+                .estimatedPrice(request.getUnitPrice())
+                .isDeleted(false)
+                .build();
+        purchaseRequestItemRepository.save(item);
+
+        log.info("Purchase request {} assigned to manager {}", saved.getRequestNumber(), manager.getId());
+        return mapToResponse(saved, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PurchaseRequestResponse getById(Long id) {
+        PurchaseRequest request = findActive(id);
+        ensureCanView(request);
+        return mapToResponse(request, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseRequestResponse> getMyRequests(Pageable pageable) {
+        User requester = getCurrentUser();
+        return purchaseRequestRepository
+                .findByRequesterIdAndIsDeletedFalse(requester.getId(), pageable)
+                .map(pr -> mapToResponse(pr, false));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeDashboardStatsResponse getMyDashboardStats() {
+        User requester = getCurrentUser();
+        Long userId = requester.getId();
+
+        List<PurchaseRequestResponse> recent = purchaseRequestRepository
+                .findByRequesterIdAndIsDeletedFalseOrderByCreatedAtDesc(userId, PageRequest.of(0, 5))
+                .map(pr -> mapToResponse(pr, false))
+                .getContent();
+
+        return EmployeeDashboardStatsResponse.builder()
+                .totalRequests(purchaseRequestRepository.countByRequesterIdAndIsDeletedFalse(userId))
+                .pendingRequests(purchaseRequestRepository
+                        .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.PENDING))
+                .approvedRequests(purchaseRequestRepository
+                        .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.APPROVED))
+                .rejectedRequests(purchaseRequestRepository
+                        .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.REJECTED))
+                .unreadNotifications(notificationRepository.countByUserIdAndIsReadFalseAndIsDeletedFalse(userId))
+                .recentRequests(recent)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseRequestResponse> getManagerInbox(Pageable pageable) {
+        User manager = requireManager();
+        return purchaseRequestRepository
+                .findByManagerIdAndIsDeletedFalse(manager.getId(), pageable)
+                .map(pr -> mapToResponse(pr, false));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ManagerDashboardStatsResponse getManagerDashboardStats() {
+        User manager = requireManager();
+        Long managerId = manager.getId();
+
+        List<PurchaseRequestResponse> recent = purchaseRequestRepository
+                .findByManagerIdAndIsDeletedFalseOrderByCreatedAtDesc(managerId, PageRequest.of(0, 5))
+                .map(pr -> mapToResponse(pr, false))
+                .getContent();
+
+        return ManagerDashboardStatsResponse.builder()
+                .totalAssignedRequests(purchaseRequestRepository.countByManagerIdAndIsDeletedFalse(managerId))
+                .pendingRequests(purchaseRequestRepository
+                        .countByManagerIdAndStatusAndIsDeletedFalse(managerId, PurchaseRequestStatus.PENDING))
+                .approvedRequests(purchaseRequestRepository
+                        .countByManagerIdAndStatusAndIsDeletedFalse(managerId, PurchaseRequestStatus.APPROVED))
+                .rejectedRequests(purchaseRequestRepository
+                        .countByManagerIdAndStatusAndIsDeletedFalse(managerId, PurchaseRequestStatus.REJECTED))
+                .returnedRequests(purchaseRequestRepository
+                        .countByManagerIdAndStatusAndIsDeletedFalse(
+                                managerId, PurchaseRequestStatus.RETURNED_FOR_MODIFICATION))
+                .recentRequests(recent)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public PurchaseRequestResponse approve(Long id, ManagerDecisionRequest decision) {
+        PurchaseRequest request = getManagedPendingRequest(id);
+        request.setStatus(PurchaseRequestStatus.APPROVED);
+        request.setManagerRemarks(normalizeRemarks(decision));
+        request.setApprovalDate(LocalDateTime.now());
+
+        User procurementOfficer = userRepository.findActiveProcurementOfficers().stream()
+                .findFirst()
+                .orElse(null);
+        if (procurementOfficer != null) {
+            request.setCurrentApprover(procurementOfficer);
+        }
+
+        PurchaseRequest saved = purchaseRequestRepository.save(request);
+        log.info("Manager approved request {}", saved.getRequestNumber());
+        return mapToResponse(saved, true);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseRequestResponse reject(Long id, ManagerDecisionRequest decision) {
+        requireRemarks(decision, "Remarks are required when rejecting a request.");
+        PurchaseRequest request = getManagedPendingRequest(id);
+        request.setStatus(PurchaseRequestStatus.REJECTED);
+        request.setManagerRemarks(decision.getRemarks().trim());
+        request.setApprovalDate(LocalDateTime.now());
+        PurchaseRequest saved = purchaseRequestRepository.save(request);
+        log.info("Manager rejected request {}", saved.getRequestNumber());
+        return mapToResponse(saved, true);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseRequestResponse returnForModification(Long id, ManagerDecisionRequest decision) {
+        requireRemarks(decision, "Remarks are required when returning a request for modification.");
+        PurchaseRequest request = getManagedPendingRequest(id);
+        request.setStatus(PurchaseRequestStatus.RETURNED_FOR_MODIFICATION);
+        request.setManagerRemarks(decision.getRemarks().trim());
+        request.setApprovalDate(LocalDateTime.now());
+        request.setCurrentApprover(request.getRequester());
+        PurchaseRequest saved = purchaseRequestRepository.save(request);
+        log.info("Manager returned request {} for modification", saved.getRequestNumber());
+        return mapToResponse(saved, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PurchaseRequestResponse getAssignmentPreview() {
+        User employee = getCurrentUser();
+        Department department = employee.getDepartment();
+        if (department == null) {
+            throw new InvalidRequestException("Logged-in user has no department assigned.");
+        }
+        User manager = resolveDepartmentManager(department);
+
+        return PurchaseRequestResponse.builder()
+                .requesterId(employee.getId())
+                .requesterName(employee.getFirstName() + " " + employee.getLastName())
+                .employeeCode(employee.getEmployeeId())
+                .departmentId(department.getId())
+                .departmentName(department.getName())
+                .managerId(manager != null ? manager.getId() : null)
+                .managerName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
+                .currentApproverId(manager != null ? manager.getId() : null)
+                .currentApproverName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    private PurchaseRequest getManagedPendingRequest(Long id) {
+        User manager = requireManager();
+        PurchaseRequest request = findActive(id);
+
+        Long assignedManagerId = request.getManager() != null
+                ? request.getManager().getId()
+                : (request.getCurrentApprover() != null ? request.getCurrentApprover().getId() : null);
+
+        if (!Objects.equals(assignedManagerId, manager.getId())) {
+            throw new UnauthorizedException("This request is not assigned to you.");
+        }
+        if (request.getStatus() != PurchaseRequestStatus.PENDING) {
+            throw new InvalidRequestException("Only pending requests can be actioned.");
+        }
+        return request;
+    }
+
+    private User requireManager() {
+        User user = getCurrentUser();
+        if (!isManagerRole(user.getRole() != null ? user.getRole().getName() : null)) {
+            throw new UnauthorizedException("Only department managers can access this resource.");
+        }
+        return user;
+    }
+
+    private User resolveDepartmentManager(Department department) {
+        if (department.getManager() != null
+                && Boolean.TRUE.equals(department.getManager().getIsActive())
+                && !Boolean.TRUE.equals(department.getManager().getIsDeleted())) {
+            return department.getManager();
+        }
+        return userRepository.findActiveManagersByDepartmentId(department.getId()).stream()
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void ensureCanView(PurchaseRequest request) {
+        User current = getCurrentUser();
+        String role = current.getRole() != null ? current.getRole().getName() : "";
+        boolean isOwner = request.getRequester().getId().equals(current.getId());
+        boolean isAssignedManager = request.getManager() != null
+                && Objects.equals(request.getManager().getId(), current.getId());
+        boolean isAdmin = role.equalsIgnoreCase("Admin");
+        boolean isProcurement = role.equalsIgnoreCase("Procurement Officer");
+
+        if (isOwner || isAssignedManager || isAdmin || isProcurement) {
+            return;
+        }
+
+        if (isManagerRole(role)) {
+            throw new UnauthorizedException("Managers can only view requests assigned to them.");
+        }
+
+        throw new UnauthorizedException("You are not allowed to view this purchase request.");
+    }
+
+    private boolean isManagerRole(String roleName) {
+        if (roleName == null) return false;
+        String normalized = roleName.trim().toLowerCase(Locale.ROOT);
+        return normalized.equals("manager") || normalized.equals("department manager");
+    }
+
+    private void requireRemarks(ManagerDecisionRequest decision, String message) {
+        if (decision == null || decision.getRemarks() == null || decision.getRemarks().isBlank()) {
+            throw new InvalidRequestException(message);
+        }
+    }
+
+    private String normalizeRemarks(ManagerDecisionRequest decision) {
+        if (decision == null || decision.getRemarks() == null || decision.getRemarks().isBlank()) {
+            return "Approved";
+        }
+        return decision.getRemarks().trim();
+    }
+
+    private PurchaseRequest findActive(Long id) {
+        return purchaseRequestRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Purchase Request", id));
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("Authentication required.");
+        }
+        return userRepository.findByEmailAndIsDeletedFalse(authentication.getName())
+                .orElseThrow(() -> new UnauthorizedException("Authenticated user not found."));
+    }
+
+    private String generateRequestNumber() {
+        long next = purchaseRequestRepository.count() + 1;
+        return String.format("%s%d-%04d", Constants.PR_PREFIX, Year.now().getValue(), next);
+    }
+
+    private PurchaseRequestResponse mapToResponse(PurchaseRequest request, boolean includeDetails) {
+        List<PurchaseRequestItem> items = purchaseRequestItemRepository
+                .findByPurchaseRequestIdAndIsDeletedFalse(request.getId());
+
+        PurchaseRequestItem primary = items.isEmpty() ? null : items.get(0);
+
+        List<PurchaseRequestItemResponse> itemResponses = items.stream()
+                .map(item -> PurchaseRequestItemResponse.builder()
+                        .id(item.getId())
+                        .purchaseRequestId(request.getId())
+                        .productId(item.getProduct() != null ? item.getProduct().getId() : null)
+                        .productName(item.getProduct() != null ? item.getProduct().getName() : null)
+                        .productSku(item.getProduct() != null ? item.getProduct().getSku() : null)
+                        .quantity(item.getQuantity())
+                        .estimatedPrice(item.getEstimatedPrice())
+                        .createdAt(item.getCreatedAt())
+                        .updatedAt(item.getUpdatedAt())
+                        .build())
+                .toList();
+
+        User requester = request.getRequester();
+        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
+        User approver = request.getCurrentApprover();
+        Department department = request.getDepartment();
+
+        PurchaseRequestResponse.PurchaseRequestResponseBuilder builder = PurchaseRequestResponse.builder()
+                .id(request.getId())
+                .requestNumber(request.getRequestNumber())
+                .title(request.getTitle())
+                .requesterId(requester != null ? requester.getId() : null)
+                .requesterName(requester != null ? requester.getFirstName() + " " + requester.getLastName() : null)
+                .employeeCode(requester != null ? requester.getEmployeeId() : null)
+                .departmentId(department != null ? department.getId() : null)
+                .departmentName(department != null ? department.getName() : null)
+                .justification(request.getJustification())
+                .priority(request.getPriority())
+                .expectedDeliveryDate(request.getExpectedDeliveryDate())
+                .status(request.getStatus())
+                .approvalStatus(request.getStatus())
+                .totalAmount(request.getTotalAmount())
+                .managerId(manager != null ? manager.getId() : null)
+                .managerName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
+                .currentApproverId(approver != null ? approver.getId() : null)
+                .currentApproverName(approver != null ? approver.getFirstName() + " " + approver.getLastName() : null)
+                .managerRemarks(request.getManagerRemarks())
+                .approvalDate(request.getApprovalDate())
+                .productId(primary != null && primary.getProduct() != null ? primary.getProduct().getId() : null)
+                .productName(primary != null && primary.getProduct() != null ? primary.getProduct().getName() : null)
+                .productSku(primary != null && primary.getProduct() != null ? primary.getProduct().getSku() : null)
+                .categoryName(primary != null && primary.getProduct() != null && primary.getProduct().getCategory() != null
+                        ? primary.getProduct().getCategory().getName() : null)
+                .quantity(primary != null ? primary.getQuantity() : null)
+                .unitPrice(primary != null ? primary.getEstimatedPrice() : null)
+                .createdAt(request.getCreatedAt())
+                .updatedAt(request.getUpdatedAt());
+
+        if (includeDetails) {
+            builder.items(itemResponses);
+            builder.timeline(buildTimeline(request));
+        }
+
+        return builder.build();
+    }
+
+    private List<RequestTimelineEntry> buildTimeline(PurchaseRequest request) {
+        List<RequestTimelineEntry> timeline = new ArrayList<>();
+
+        String requesterName = request.getRequester() != null
+                ? request.getRequester().getFirstName() + " " + request.getRequester().getLastName()
+                : "Employee";
+
+        timeline.add(RequestTimelineEntry.builder()
+                .stage("Request Submitted")
+                .status("COMPLETED")
+                .actorName(requesterName)
+                .remarks(request.getJustification())
+                .timestamp(request.getCreatedAt())
+                .build());
+
+        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
+        String managerName = manager != null
+                ? manager.getFirstName() + " " + manager.getLastName()
+                : "Department Manager";
+
+        PurchaseRequestStatus status = request.getStatus();
+        if (status == PurchaseRequestStatus.PENDING || status == PurchaseRequestStatus.SUBMITTED) {
+            timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("PENDING")
+                    .actorName(managerName)
+                    .remarks("Awaiting manager review")
+                    .timestamp(request.getUpdatedAt())
+                    .build());
+        } else if (status == PurchaseRequestStatus.APPROVED) {
+            timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("APPROVED")
+                    .actorName(managerName)
+                    .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Approved")
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+            timeline.add(RequestTimelineEntry.builder()
+                    .stage("Procurement Officer")
+                    .status("PENDING")
+                    .actorName(request.getCurrentApprover() != null
+                            ? request.getCurrentApprover().getFirstName() + " " + request.getCurrentApprover().getLastName()
+                            : "Procurement Officer")
+                    .remarks("Forwarded after manager approval")
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+        } else if (status == PurchaseRequestStatus.REJECTED) {
+            timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("REJECTED")
+                    .actorName(managerName)
+                    .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Rejected")
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+        } else if (status == PurchaseRequestStatus.RETURNED_FOR_MODIFICATION) {
+            timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("RETURNED_FOR_MODIFICATION")
+                    .actorName(managerName)
+                    .remarks(request.getManagerRemarks())
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+        }
+
+        return timeline;
+    }
+}

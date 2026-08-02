@@ -1,6 +1,7 @@
 package com.procurement.enterprise.entity;
 
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
+import com.procurement.enterprise.enums.RequestPriority;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -8,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -47,8 +49,19 @@ public class PurchaseRequest {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
+    @Column(name = "title", length = 200)
+    private String title;
+
     @Column(name = "justification", nullable = false, columnDefinition = "TEXT")
     private String justification;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priority", length = 20)
+    @Builder.Default
+    private RequestPriority priority = RequestPriority.NORMAL;
+
+    @Column(name = "expected_delivery_date")
+    private LocalDate expectedDeliveryDate;
 
     /**
      * Workflow status. Maps SQL ENUM('Draft','Submitted','Pending','Approved','Rejected','Cancelled','Closed').
@@ -61,6 +74,28 @@ public class PurchaseRequest {
     @Column(name = "total_amount", precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
+
+    /**
+     * Assigned department manager for approval.
+     * FK: {@code purchase_requests.manager_id → users.id}
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private User manager;
+
+    /**
+     * Current manager / approver for this request.
+     * FK: {@code purchase_requests.current_approver_id → users.id}
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_approver_id")
+    private User currentApprover;
+
+    @Column(name = "manager_remarks", columnDefinition = "TEXT")
+    private String managerRemarks;
+
+    @Column(name = "approval_date")
+    private LocalDateTime approvalDate;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

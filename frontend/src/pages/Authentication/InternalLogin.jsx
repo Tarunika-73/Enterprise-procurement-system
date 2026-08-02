@@ -79,6 +79,7 @@ const InternalLogin = () => {
             error={touched.email ? errors.email : ''}
             required
             autoComplete="email"
+            icon="bi-envelope-fill"
           />
 
           <PasswordField
@@ -90,6 +91,7 @@ const InternalLogin = () => {
             onBlur={handleBlur}
             error={touched.password ? errors.password : ''}
             required
+            icon="bi-lock-fill"
           />
 
           <div className="d-flex justify-content-between align-items-center mb-4">

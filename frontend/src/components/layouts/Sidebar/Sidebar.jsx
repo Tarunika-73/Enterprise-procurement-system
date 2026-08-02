@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <li key={item.id}>
                   <NavLink
                     to={path}
-                    end={item.id === 'dashboard'}
+                    end={item.id === 'dashboard' || item.id === 'my-requests' || item.id === 'notifications'}
                     className={({ isActive }) =>
                       `dashboard-nav-link ${isActive ? 'active' : ''}`
                     }

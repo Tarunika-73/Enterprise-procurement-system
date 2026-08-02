@@ -18,5 +18,7 @@ public class UpdateProductRequest {
 
     private Long categoryId;
 
+    private Long departmentId;
+
     private Boolean isActive;
 }

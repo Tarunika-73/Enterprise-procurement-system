@@ -14,31 +14,39 @@ const InputField = ({
   disabled = false,
   autoComplete,
   className = '',
+  icon,
 }) => {
   const inputId = id || name;
 
   return (
-    <div className={`mb-3 ${className}`}>
+    <div className={`auth-field-group ${className}`}>
       {label && (
-        <label htmlFor={inputId} className="form-label fw-medium text-secondary">
+        <label htmlFor={inputId} className="auth-field-label">
           {label}
-          {required && <span className="text-danger ms-1">*</span>}
+          {required && <span className="auth-field-required">*</span>}
         </label>
       )}
-      <input
-        id={inputId}
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        disabled={disabled}
-        autoComplete={autoComplete}
-        className={`form-control form-control-lg auth-input ${error ? 'is-invalid' : ''}`}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${inputId}-error` : undefined}
-      />
+      <div className={`auth-input-wrap${icon ? ' has-icon' : ''}`}>
+        {icon && (
+          <span className="auth-input-icon" aria-hidden="true">
+            <i className={`bi ${icon}`} />
+          </span>
+        )}
+        <input
+          id={inputId}
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          disabled={disabled}
+          autoComplete={autoComplete}
+          className={`auth-input${error ? ' is-invalid' : ''}`}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+        />
+      </div>
       <ValidationMessage id={`${inputId}-error`} message={error} />
     </div>
   );

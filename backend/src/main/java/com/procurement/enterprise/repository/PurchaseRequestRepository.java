@@ -35,4 +35,23 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
             LocalDateTime from, LocalDateTime to, Pageable pageable);
 
     boolean existsByRequestNumberAndIsDeletedFalse(String requestNumber);
+
+    long countByRequesterIdAndIsDeletedFalse(Long requesterId);
+
+    long countByRequesterIdAndStatusAndIsDeletedFalse(Long requesterId, PurchaseRequestStatus status);
+
+    Page<PurchaseRequest> findByRequesterIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long requesterId, Pageable pageable);
+
+    Page<PurchaseRequest> findByManagerIdAndIsDeletedFalse(Long managerId, Pageable pageable);
+
+    Page<PurchaseRequest> findByManagerIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long managerId, Pageable pageable);
+
+    Page<PurchaseRequest> findByManagerIdAndStatusAndIsDeletedFalse(
+            Long managerId, PurchaseRequestStatus status, Pageable pageable);
+
+    long countByManagerIdAndIsDeletedFalse(Long managerId);
+
+    long countByManagerIdAndStatusAndIsDeletedFalse(Long managerId, PurchaseRequestStatus status);
 }

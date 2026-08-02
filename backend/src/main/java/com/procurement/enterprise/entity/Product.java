@@ -43,6 +43,18 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    /**
+     * Owning department for this product catalog item.
+     * FK: {@code products.department_id → departments.id}
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @Column(name = "available_quantity")
+    @Builder.Default
+    private Integer availableQuantity = 100;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

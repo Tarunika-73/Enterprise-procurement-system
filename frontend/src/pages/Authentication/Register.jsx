@@ -5,10 +5,13 @@ import AuthCard from '../../components/Authentication/AuthCard/AuthCard';
 import InputField from '../../components/Authentication/InputField/InputField';
 import PasswordField from '../../components/Authentication/PasswordField/PasswordField';
 import RoleDropdown from '../../components/Authentication/RoleDropdown/RoleDropdown';
+import DepartmentDropdown from '../../components/Authentication/DepartmentDropdown/DepartmentDropdown';
 import Button from '../../components/Authentication/Button/Button';
 import Toast from '../../components/Authentication/Toast/Toast';
 import { register as registerApi, checkEmailExists } from '../../services/authService';
+import { getDepartments } from '../../services/departmentService';
 import { getApiErrorMessage } from '../../utils/apiErrors';
+import { getPageContent } from '../../utils/employeeHelpers';
 import {
   validateEmail,
   validateFullName,
@@ -25,6 +28,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: '',
+    departmentId: '',
   });
   const [errors, setErrors] = useState({
     fullName: '',
@@ -32,11 +36,25 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: '',
+    departmentId: '',
   });
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const response = await getDepartments();
+        setDepartments(getPageContent(response));
+      } catch {
+        setDepartments([]);
+      }
+    };
+    loadDepartments();
+  }, []);
 
   const validateForm = useCallback(() => {
     const fullNameError = validateFullName(form.fullName);
@@ -44,6 +62,7 @@ const Register = () => {
     const passwordError = validateRegistrationPassword(form.password);
     const confirmPasswordError = validateConfirmPassword(form.password, form.confirmPassword);
     const roleError = !form.role ? 'Please select a role.' : '';
+    const departmentError = !form.departmentId ? 'Please select a department.' : '';
 
     return {
       fullName: fullNameError,
@@ -51,6 +70,7 @@ const Register = () => {
       password: passwordError,
       confirmPassword: confirmPasswordError,
       role: roleError,
+      departmentId: departmentError,
     };
   }, [form]);
 
@@ -97,6 +117,7 @@ const Register = () => {
       password: true,
       confirmPassword: true,
       role: true,
+      departmentId: true,
     });
 
     const validationErrors = validateForm();
@@ -120,6 +141,7 @@ const Register = () => {
         email: form.email.trim(),
         password: form.password,
         role: form.role,
+        departmentId: Number(form.departmentId),
       });
 
       setToast({
@@ -128,7 +150,7 @@ const Register = () => {
         type: 'success',
       });
 
-      setTimeout(() => navigate('/', { replace: true }), 2000);
+      setTimeout(() => navigate('/login', { replace: true }), 2000);
     } catch (error) {
       setToast({
         show: true,
@@ -143,7 +165,7 @@ const Register = () => {
   return (
     <AuthLayout variant="internal">
       <AuthCard
-        title="Create Account"
+        title="Create Your Account"
         subtitle="Register to access the Enterprise Procurement System"
       >
         <form onSubmit={handleSubmit} noValidate>
@@ -158,6 +180,7 @@ const Register = () => {
             error={touched.fullName ? errors.fullName : ''}
             required
             autoComplete="name"
+            icon="bi-person-fill"
           />
 
           <InputField
@@ -173,6 +196,7 @@ const Register = () => {
             required
             disabled={emailChecking}
             autoComplete="email"
+            icon="bi-envelope-fill"
           />
 
           <PasswordField
@@ -186,6 +210,7 @@ const Register = () => {
             error={touched.password ? errors.password : ''}
             required
             autoComplete="new-password"
+            icon="bi-lock-fill"
           />
 
           <PasswordField
@@ -199,6 +224,7 @@ const Register = () => {
             error={touched.confirmPassword ? errors.confirmPassword : ''}
             required
             autoComplete="new-password"
+            icon="bi-lock-fill"
           />
 
           <RoleDropdown
@@ -206,6 +232,14 @@ const Register = () => {
             onChange={handleChange}
             onBlur={handleBlur}
             error={touched.role ? errors.role : ''}
+          />
+
+          <DepartmentDropdown
+            value={form.departmentId}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.departmentId ? errors.departmentId : ''}
+            departments={departments}
           />
 
           <Button
@@ -222,7 +256,7 @@ const Register = () => {
 
         <p className="text-center text-muted mb-0">
           Already have an account?{' '}
-          <AuthLink to="/">Login</AuthLink>
+          <AuthLink to="/login">Login</AuthLink>
         </p>
       </AuthCard>
 

@@ -1,0 +1,30 @@
+/* =========================================================
+   Enterprise Procurement System — Global CSS Variables
+   ========================================================= */
+
+:root {
+  /* Brand */
+  --eps-primary:          #7C6FD6;
+  --eps-primary-dark:     #5B4FC4;
+  --eps-primary-light:    #A89EE8;
+  --eps-accent:           #6EB5FF;
+
+  /* Backgrounds */
+  --eps-bg:               #F8F9FC;
+  --eps-bg-soft:          #F3F4F8;
+  --eps-bg-gradient-start:#EEF0FF;
+  --eps-bg-gradient-end:  #F0F7FF;
+
+  /* Borders & shadows */
+  --eps-border:           #E5E7EB;
+  --eps-shadow:           0 4px 16px rgba(124, 111, 214, 0.12), 0 2px 6px rgba(0,0,0,0.06);
+  --eps-shadow-sm:        0 1px 4px rgba(0,0,0,0.06);
+
+  /* Text */
+  --eps-text:             #1F2937;
+  --eps-text-muted:       #6B7280;
+
+  /* Radius */
+  --eps-radius:           12px;
+  --eps-radius-lg:        18px;
+}

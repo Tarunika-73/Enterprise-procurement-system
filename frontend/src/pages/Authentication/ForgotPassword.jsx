@@ -73,6 +73,7 @@ const ForgotPassword = () => {
             error={touched ? error || emailError : ''}
             required
             autoComplete="email"
+            icon="bi-envelope-fill"
           />
 
           <Button type="submit" isLoading={isLoading} disabled={!isFormValid} className="mb-3">
@@ -81,7 +82,7 @@ const ForgotPassword = () => {
         </form>
 
         <p className="text-center text-muted mb-0">
-          <AuthLink to="/">
+          <AuthLink to="/login">
             <i className="bi bi-arrow-left me-1" aria-hidden="true" />
             Back to Login
           </AuthLink>

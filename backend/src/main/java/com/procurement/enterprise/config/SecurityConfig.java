@@ -78,6 +78,10 @@ public class SecurityConfig {
                 .requestMatchers("/v1/departments/**")
                     .permitAll()
 
+                // ── Vendor portal (vendor-facing) ─────────────────────────────
+                .requestMatchers("/v1/vendor-portal/**")
+                    .hasRole(Constants.ROLE_VENDOR)
+
                 // ── Vendor management ──────────────────────────────────────────
                 .requestMatchers("/v1/vendors/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)

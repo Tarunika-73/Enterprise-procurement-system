@@ -10,13 +10,15 @@ INSERT INTO roles (id, name, description) VALUES
 (4, 'Procurement Officer', 'Procurement handler'),
 (5, 'Finance Officer', 'Financial controller');
 
--- 2. Departments (5)
+-- 2. Departments
 INSERT INTO departments (id, name, code, manager_id) VALUES 
-(1, 'Information Technology', 'IT', 1),
-(2, 'Human Resources', 'HR', 2),
-(3, 'Finance', 'FIN', 3),
-(4, 'Marketing', 'MKT', 4),
-(5, 'Operations', 'OPS', 5);
+(1, 'Information Technology', 'IT', NULL),
+(2, 'Human Resources', 'HR', NULL),
+(3, 'Finance', 'FIN', NULL),
+(4, 'Marketing', 'MKT', NULL),
+(5, 'Sales', 'SAL', NULL),
+(6, 'Procurement', 'PRC', NULL),
+(7, 'Administration', 'ADM', NULL);
 
 -- 3. Users (20)
 -- All users have password: Admin@1234 (BCrypt encoded)
@@ -33,7 +35,7 @@ INSERT INTO users (id, employee_id, first_name, last_name, email, password_hash,
 (10, 'EMP010', 'Jack', 'Jackson', 'jack@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 3),
 (11, 'EMP011', 'Karen', 'White', 'karen@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 4),
 (12, 'EMP012', 'Leo', 'Harris', 'leo@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 5),
-(13, 'EMP013', 'Mia', 'Martin', 'mia@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 1),
+(13, 'EMP013', 'Mia', 'Martin', 'mia@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, 1),
 (14, 'EMP014', 'Nick', 'Thompson', 'nick@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 2),
 (15, 'EMP015', 'Olivia', 'Garcia', 'olivia@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 3),
 (16, 'EMP016', 'Paul', 'Martinez', 'paul@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, 4),

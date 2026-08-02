@@ -49,8 +49,6 @@ body {
   text-align: left;
   border: none;
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
 }
 
 h1, h2, h3, h4, h5, h6 {

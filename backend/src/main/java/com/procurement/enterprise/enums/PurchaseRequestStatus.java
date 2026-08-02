@@ -10,6 +10,7 @@ public enum PurchaseRequestStatus {
     PENDING,
     APPROVED,
     REJECTED,
+    RETURNED_FOR_MODIFICATION,
     CANCELLED,
     CLOSED
 }

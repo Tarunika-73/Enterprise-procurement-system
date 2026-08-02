@@ -41,6 +41,7 @@ export const NAV_ITEMS = [
     id: 'my-requests',
     label: 'My Requests',
     icon: 'bi-file-earmark-text',
+<<<<<<< HEAD
     path: '/employee/purchase-requests',
     roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
   },
@@ -58,14 +59,41 @@ export const NAV_ITEMS = [
     path: '/purchase-requests',
     roles: [USER_ROLES.ADMIN],
     comingSoon: true,
+=======
+    path: '/dashboard/purchase-requests',
+    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER],
+    comingSoon: false,
+>>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
+  {
+  id: 'approval-history',
+  label: 'Approval History',
+  icon: 'bi-clock-history',
+  path: '/dashboard/approval-history',
+  roles: [USER_ROLES.MANAGER],
+  comingSoon: false,
+},
+{
+  id: 'department-requests',
+  label: 'Department Requests',
+  icon: 'bi-building',
+  path: '/dashboard/department-requests',
+  roles: [USER_ROLES.MANAGER],
+  comingSoon: false,
+},
   {
     id: 'purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
+<<<<<<< HEAD
     path: '/purchase-orders',
     roles: [USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER],
     comingSoon: true,
+=======
+   path: '/dashboard/purchase-orders',
+    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER, USER_ROLES.VENDOR],
+    comingSoon: false,
+>>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
   {
     id: 'vendor-purchase-orders',
@@ -100,9 +128,9 @@ export const NAV_ITEMS = [
     id: 'vendor-management',
     label: 'Vendor Management',
     icon: 'bi-building',
-    path: '/vendors',
+    path: '/dashboard/vendor-management',
     roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.PROCUREMENT_OFFICER],
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: 'finance',
@@ -116,9 +144,15 @@ export const NAV_ITEMS = [
     id: 'reports',
     label: 'Reports',
     icon: 'bi-bar-chart-line',
+<<<<<<< HEAD
     path: '/reports',
     roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.FINANCE, USER_ROLES.PROCUREMENT_OFFICER],
     comingSoon: true,
+=======
+    path: '/dashboard/reports',
+    roles: ALL_INTERNAL,
+    comingSoon: false,
+>>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
   {
     id: 'notifications',

@@ -14,6 +14,7 @@ import ManagerDashboard from '../pages/Dashboard/ManagerDashboard';
 import VendorDashboard from '../pages/Dashboard/VendorDashboard';
 import FinanceDashboard from '../pages/Dashboard/FinanceDashboard';
 import AdminDashboard from '../pages/Dashboard/AdminDashboard';
+<<<<<<< HEAD
 import ProductListPage from '../pages/Employee/ProductListPage';
 import CreatePurchaseRequestPage from '../pages/Employee/CreatePurchaseRequestPage';
 import MyRequestsPage from '../pages/Employee/MyRequestsPage';
@@ -24,8 +25,17 @@ import VendorPurchaseOrderDetailPage from '../pages/Vendor/VendorPurchaseOrderDe
 import VendorUpdateDeliveryPage from '../pages/Vendor/VendorUpdateDeliveryPage';
 import VendorProfilePage from '../pages/Vendor/VendorProfilePage';
 import VendorRegister from '../pages/Authentication/VendorRegister';
+=======
+import ProcurementOfficerDashboard from '../pages/Dashboard/ProcurementOfficerDashboard';
+>>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
 import ProtectedRoute from './ProtectedRoute';
 import { USER_ROLES } from '../utils/constants';
+import ApprovalHistory from '../pages/ApprovalHistory';
+import DepartmentRequests from '../pages/DepartmentRequests';
+import PurchaseRequests from '../pages/PurchaseRequests';
+import PurchaseOrders from '../pages/PurchaseOrders';
+import Suppliers from '../pages/Suppliers';
+import Reports from '../pages/Reports';
 
 const EMPLOYEE_ROLES = [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER];
 
@@ -69,6 +79,49 @@ const AuthRoutes = () => {
           }
         />
         <Route
+  path="procurement-officer"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+      <ProcurementOfficerDashboard />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="purchase-requests"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+      <PurchaseRequests />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="purchase-orders"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+      <PurchaseOrders />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="vendor-management"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+      <Suppliers />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="reports"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+      <Reports />
+    </ProtectedRoute>
+  }
+/>
+        <Route
           path="vendor"
           element={
             <ProtectedRoute allowedRoles={[USER_ROLES.VENDOR]}>
@@ -76,6 +129,23 @@ const AuthRoutes = () => {
             </ProtectedRoute>
           }
         />
+<Route
+  path="approval-history"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.MANAGER]}>
+      <ApprovalHistory />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="department-requests"
+  element={
+    <ProtectedRoute allowedRoles={[USER_ROLES.MANAGER]}>
+      <DepartmentRequests />
+    </ProtectedRoute>
+  }
+/>
         <Route
           path="finance"
           element={

@@ -23,6 +23,7 @@ import VendorPurchaseOrdersPage from '../pages/Vendor/VendorPurchaseOrdersPage';
 import VendorPurchaseOrderDetailPage from '../pages/Vendor/VendorPurchaseOrderDetailPage';
 import VendorUpdateDeliveryPage from '../pages/Vendor/VendorUpdateDeliveryPage';
 import VendorProfilePage from '../pages/Vendor/VendorProfilePage';
+import VendorRegister from '../pages/Authentication/VendorRegister';
 import ProtectedRoute from './ProtectedRoute';
 import { USER_ROLES } from '../utils/constants';
 
@@ -35,6 +36,7 @@ const AuthRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<InternalLogin />} />
       <Route path="/vendor-login" element={<VendorLogin />} />
+      <Route path="/vendor/register" element={<VendorRegister />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-otp" element={<OTPVerification />} />

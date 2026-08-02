@@ -11,6 +11,16 @@ export const login = async (credentials) => {
   return response.data;
 };
 
+export const vendorLogin = async (credentials) => {
+  const response = await authApi.post('/vendor/auth/login', credentials);
+  return response.data;
+};
+
+export const vendorRegister = async (data) => {
+  const response = await authApi.post('/vendor/auth/register', data);
+  return response.data;
+};
+
 export const register = async (userData) => {
   const response = await authApi.post('/auth/register', userData);
   return response.data;

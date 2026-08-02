@@ -6,12 +6,14 @@ import PasswordField from '../../components/Authentication/PasswordField/Passwor
 import Button from '../../components/Authentication/Button/Button';
 import Toast from '../../components/Authentication/Toast/Toast';
 import useLogin from '../../hooks/useLogin';
+import { vendorLogin } from '../../services/authService';
 import { validateEmail, validatePasswordRequired } from '../../utils/validation';
 
 const VendorLogin = () => {
   const { submitLogin, isLoading, toast, dismissToast } = useLogin(
     'VENDOR',
-    'Vendor login failed. Please verify your credentials or contact procurement support.'
+    'Vendor login failed. Please verify your credentials or contact procurement support.',
+    vendorLogin
   );
 
   const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
@@ -119,8 +121,8 @@ const VendorLogin = () => {
         <AuthDivider />
 
         <p className="text-center text-muted mb-2">
-          New vendor?{' '}
-          <AuthLink to="/register">Register Here</AuthLink>
+          Don't have a Vendor Account?{' '}
+          <AuthLink to="/vendor/register">Register as Vendor</AuthLink>
         </p>
 
         <p className="text-center text-muted small mb-0">

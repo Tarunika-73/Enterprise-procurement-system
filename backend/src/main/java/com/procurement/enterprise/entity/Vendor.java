@@ -35,6 +35,9 @@ public class Vendor {
     @Column(name = "email", nullable = false, length = 100)
     private String email;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
     @Column(name = "phone", length = 20)
     private String phone;
 

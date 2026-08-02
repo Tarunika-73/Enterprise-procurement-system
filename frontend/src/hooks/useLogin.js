@@ -7,9 +7,10 @@ import { getDashboardRouteByRole } from '../utils/roleNavigation';
 
 /**
  * Shared login submission flow for internal and vendor login pages.
- * Calls the backend, stores auth state in context, and navigates by role.
+ * Accepts an optional `apiFn` so vendor login can use a different endpoint
+ * while employee login continues using the default /auth/login.
  */
-const useLogin = (loginType, errorFallback) => {
+const useLogin = (loginType, errorFallback, apiFn) => {
   const navigate = useNavigate();
   const { loginUser, setIsLoading, isLoading } = useAuth();
   const [toast, setToast] = useState({ show: false, message: '', type: 'danger' });
@@ -18,24 +19,20 @@ const useLogin = (loginType, errorFallback) => {
     setIsLoading(true);
 
     try {
-      const response = await loginApi({
-        email: email.trim(),
-        password,
-        loginType,
-      });
+      const callApi = apiFn ?? loginApi;
+      const response = await callApi({ email: email.trim(), password, loginType });
 
       const payload = response?.data?.data ?? response?.data ?? response;
-      const user = payload?.user;
+
+      // Vendor response uses `vendor` key; employee response uses `user` key
+      const user  = payload?.user ?? payload?.vendor;
       const token = payload?.token;
 
       if (!user || !token) {
         throw new Error('Invalid login response from server.');
       }
 
-      loginUser({
-        user,
-        token,
-      });
+      loginUser({ user, token });
 
       const dashboardRoute = getDashboardRouteByRole(user.role);
       navigate(dashboardRoute, { replace: true });
@@ -54,12 +51,7 @@ const useLogin = (loginType, errorFallback) => {
     setToast((prev) => ({ ...prev, show: false }));
   };
 
-  return {
-    submitLogin,
-    isLoading,
-    toast,
-    dismissToast,
-  };
+  return { submitLogin, isLoading, toast, dismissToast };
 };
 
 export default useLogin;

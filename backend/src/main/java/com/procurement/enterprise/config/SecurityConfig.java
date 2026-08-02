@@ -1,6 +1,8 @@
 package com.procurement.enterprise.config;
 
+import com.procurement.enterprise.security.CompositeUserDetailsService;
 import com.procurement.enterprise.security.JwtAuthenticationFilter;
+import com.procurement.enterprise.security.CustomUserDetailsService;
 import com.procurement.enterprise.util.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +16,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -31,16 +32,16 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService employeeUserDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                          UserDetailsService userDetailsService,
+                          CustomUserDetailsService employeeUserDetailsService,
                           PasswordEncoder passwordEncoder) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.userDetailsService = userDetailsService;
+        this.employeeUserDetailsService = employeeUserDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(
                     "/auth/**",
+                    "/vendor/auth/**",
                     "/health",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
@@ -187,8 +189,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
+        // Employee DaoAuthenticationProvider uses CustomUserDetailsService (users table only).
+        // This keeps employee login isolated from the vendors table.
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+        provider.setUserDetailsService(employeeUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }

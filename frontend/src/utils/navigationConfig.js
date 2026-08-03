@@ -38,14 +38,18 @@ export const NAV_ITEMS = [
     roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
   },
   {
+    // My Requests — employee/procurement officer personal requests list.
+    // Path kept as /employee/purchase-requests (matches the /employee route group).
+    // Roles merged from both sides: Employee + Procurement Officer only
+    // (Manager and Admin have their own dedicated request views below).
     id: 'my-requests',
     label: 'My Requests',
     icon: 'bi-file-earmark-text',
-<<<<<<< HEAD
     path: '/employee/purchase-requests',
     roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
   },
   {
+    // Team Requests — manager inbox for approving department requests.
     id: 'purchase-requests',
     label: 'Team Requests',
     icon: 'bi-clipboard-check',
@@ -53,49 +57,44 @@ export const NAV_ITEMS = [
     roles: [USER_ROLES.MANAGER],
   },
   {
+    // Admin-level purchase requests view (coming soon).
     id: 'admin-purchase-requests',
     label: 'Purchase Requests',
     icon: 'bi-clipboard-check',
-    path: '/purchase-requests',
+    path: '/dashboard/purchase-requests',
     roles: [USER_ROLES.ADMIN],
     comingSoon: true,
-=======
-    path: '/dashboard/purchase-requests',
-    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER],
-    comingSoon: false,
->>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
   {
-  id: 'approval-history',
-  label: 'Approval History',
-  icon: 'bi-clock-history',
-  path: '/dashboard/approval-history',
-  roles: [USER_ROLES.MANAGER],
-  comingSoon: false,
-},
-{
-  id: 'department-requests',
-  label: 'Department Requests',
-  icon: 'bi-building',
-  path: '/dashboard/department-requests',
-  roles: [USER_ROLES.MANAGER],
-  comingSoon: false,
-},
+    id: 'approval-history',
+    label: 'Approval History',
+    icon: 'bi-clock-history',
+    path: '/dashboard/approval-history',
+    roles: [USER_ROLES.MANAGER],
+    comingSoon: false,
+  },
   {
+    id: 'department-requests',
+    label: 'Department Requests',
+    icon: 'bi-building',
+    path: '/dashboard/department-requests',
+    roles: [USER_ROLES.MANAGER],
+    comingSoon: false,
+  },
+  {
+    // Internal purchase orders — procurement officer, manager, admin.
+    // Path uses /dashboard/purchase-orders (matches AuthRoutes).
+    // comingSoon: false so it renders as a real link.
     id: 'purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
-<<<<<<< HEAD
-    path: '/purchase-orders',
+    path: '/dashboard/purchase-orders',
     roles: [USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER],
-    comingSoon: true,
-=======
-   path: '/dashboard/purchase-orders',
-    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER, USER_ROLES.VENDOR],
     comingSoon: false,
->>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
   {
+    // Vendor-specific purchase orders — separate nav item so vendor sidebar
+    // shows this while internal roles see the item above.
     id: 'vendor-purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
@@ -141,18 +140,15 @@ export const NAV_ITEMS = [
     comingSoon: true,
   },
   {
+    // Reports — path uses /dashboard/reports (matches AuthRoutes).
+    // Roles merged: original had ADMIN/MANAGER/FINANCE/PROCUREMENT_OFFICER,
+    // incoming had ALL_INTERNAL. Union = ALL_INTERNAL (superset).
     id: 'reports',
     label: 'Reports',
     icon: 'bi-bar-chart-line',
-<<<<<<< HEAD
-    path: '/reports',
-    roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.FINANCE, USER_ROLES.PROCUREMENT_OFFICER],
-    comingSoon: true,
-=======
     path: '/dashboard/reports',
     roles: ALL_INTERNAL,
     comingSoon: false,
->>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   },
   {
     id: 'notifications',

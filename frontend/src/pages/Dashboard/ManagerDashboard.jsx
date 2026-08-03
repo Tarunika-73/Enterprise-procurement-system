@@ -1,55 +1,24 @@
-<<<<<<< HEAD
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
 import StatusBadge from '../../components/employee/StatusBadge';
 import Toast from '../../components/Authentication/Toast/Toast';
-import { useAuth } from '../../context/AuthContext';
 import {
-  approvePurchaseRequest,
   getManagerDashboardStats,
   getManagerInbox,
+  approvePurchaseRequest,
   rejectPurchaseRequest,
   returnPurchaseRequest,
 } from '../../services/purchaseRequestService';
 import { getApiErrorMessage } from '../../utils/apiErrors';
+import { getDisplayName } from '../../utils/userDisplay';
 import {
+  unwrapApiData,
+  getPageContent,
   formatCurrency,
   formatDate,
-  getPageContent,
-  unwrapApiData,
 } from '../../utils/employeeHelpers';
-import { getDisplayName } from '../../utils/userDisplay';
-=======
-import DashboardPageContent from '../../components/dashboard/DashboardPageContent';
-
-const MANAGER_STATS = [
-  {
-    icon: 'bi-hourglass-split',
-    iconVariant: 'warning',
-    value: '15',
-    label: 'Pending Requests',
-  },
-  {
-    icon: 'bi-check2-circle',
-    iconVariant: 'success',
-    value: '32',
-    label: 'Approved Requests',
-  },
-  {
-    icon: 'bi-x-circle',
-    iconVariant: 'danger',
-    value: '4',
-    label: 'Rejected Requests',
-  },
-  {
-    icon: 'bi-building',
-    iconVariant: 'primary',
-    value: '18',
-    label: 'Department Requests',
-  },
-];
->>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
 
 const ManagerDashboard = () => {
   const { user } = useAuth();
@@ -150,7 +119,6 @@ const ManagerDashboard = () => {
   ];
 
   return (
-<<<<<<< HEAD
     <>
       <Toast
         show={toast.show}
@@ -290,13 +258,6 @@ const ManagerDashboard = () => {
         )}
       </div>
     </>
-=======
-    <DashboardPageContent
-      roleLabel="Manager Dashboard"
-      description="Review, approve, or reject department purchase requests."
-      statCards={MANAGER_STATS}
-    />
->>>>>>> ae6bf03a5f7d17ff2bc197903ec351234d4c78e6
   );
 };
 

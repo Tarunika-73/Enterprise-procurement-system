@@ -9,15 +9,18 @@ import com.procurement.enterprise.dto.response.PurchaseRequestResponse;
 import com.procurement.enterprise.dto.response.RequestTimelineEntry;
 import com.procurement.enterprise.entity.Department;
 import com.procurement.enterprise.entity.Product;
+import com.procurement.enterprise.entity.PurchaseOrder;
 import com.procurement.enterprise.entity.PurchaseRequest;
 import com.procurement.enterprise.entity.PurchaseRequestItem;
 import com.procurement.enterprise.entity.User;
+import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
 import com.procurement.enterprise.exception.InvalidRequestException;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
 import com.procurement.enterprise.exception.UnauthorizedException;
 import com.procurement.enterprise.repository.NotificationRepository;
 import com.procurement.enterprise.repository.ProductRepository;
+import com.procurement.enterprise.repository.PurchaseOrderRepository;
 import com.procurement.enterprise.repository.PurchaseRequestItemRepository;
 import com.procurement.enterprise.repository.PurchaseRequestRepository;
 import com.procurement.enterprise.repository.UserRepository;
@@ -52,6 +55,9 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+
+    // ── Create ─────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
@@ -113,6 +119,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         log.info("Purchase request {} assigned to manager {}", saved.getRequestNumber(), manager.getId());
         return mapToResponse(saved, true);
     }
+
+    // ── Read ───────────────────────────────────────────────────────────────────
 
     @Override
     @Transactional(readOnly = true)
@@ -190,6 +198,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .build();
     }
 
+    // ── Manager Actions ────────────────────────────────────────────────────────
+
     @Override
     @Transactional
     public PurchaseRequestResponse approve(Long id, ManagerDecisionRequest decision) {
@@ -237,6 +247,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         return mapToResponse(saved, true);
     }
 
+    // ── Assignment Preview ─────────────────────────────────────────────────────
+
     @Override
     @Transactional(readOnly = true)
     public PurchaseRequestResponse getAssignmentPreview() {
@@ -260,6 +272,276 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+    // ── Mapping ────────────────────────────────────────────────────────────────
+
+    private PurchaseRequestResponse mapToResponse(PurchaseRequest request, boolean includeDetails) {
+        List<PurchaseRequestItem> items = purchaseRequestItemRepository
+                .findByPurchaseRequestIdAndIsDeletedFalse(request.getId());
+
+        PurchaseRequestItem primary = items.isEmpty() ? null : items.get(0);
+
+        List<PurchaseRequestItemResponse> itemResponses = items.stream()
+                .map(item -> PurchaseRequestItemResponse.builder()
+                        .id(item.getId())
+                        .purchaseRequestId(request.getId())
+                        .productId(item.getProduct() != null ? item.getProduct().getId() : null)
+                        .productName(item.getProduct() != null ? item.getProduct().getName() : null)
+                        .productSku(item.getProduct() != null ? item.getProduct().getSku() : null)
+                        .quantity(item.getQuantity())
+                        .estimatedPrice(item.getEstimatedPrice())
+                        .createdAt(item.getCreatedAt())
+                        .updatedAt(item.getUpdatedAt())
+                        .build())
+                .toList();
+
+        User requester = request.getRequester();
+        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
+        User approver = request.getCurrentApprover();
+        Department department = request.getDepartment();
+
+        PurchaseRequestStatus displayStatus = request.getStatus();
+
+PurchaseOrder po = purchaseOrderRepository
+        .findByPurchaseRequestIdAndIsDeletedFalse(request.getId())
+        .orElse(null);
+
+if (po != null) {
+
+    switch (po.getStatus()) {
+
+        case CREATED,
+             SENT,
+             ACCEPTED -> displayStatus = PurchaseRequestStatus.APPROVED;
+
+        case DELIVERED,
+             CLOSED -> displayStatus = PurchaseRequestStatus.CLOSED;
+
+        case CANCELLED -> displayStatus = PurchaseRequestStatus.CANCELLED;
+
+        default -> {
+        }
+    }
+}
+
+        PurchaseRequestResponse.PurchaseRequestResponseBuilder builder = PurchaseRequestResponse.builder()
+                .id(request.getId())
+                .requestNumber(request.getRequestNumber())
+                .title(request.getTitle())
+                .requesterId(requester != null ? requester.getId() : null)
+                .requesterName(requester != null ? requester.getFirstName() + " " + requester.getLastName() : null)
+                .employeeCode(requester != null ? requester.getEmployeeId() : null)
+                .departmentId(department != null ? department.getId() : null)
+                .departmentName(department != null ? department.getName() : null)
+                .justification(request.getJustification())
+                .priority(request.getPriority())
+                .expectedDeliveryDate(request.getExpectedDeliveryDate())
+                .status(displayStatus)
+                .approvalStatus(displayStatus)
+                .totalAmount(request.getTotalAmount())
+                .managerId(manager != null ? manager.getId() : null)
+                .managerName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
+                .currentApproverId(approver != null ? approver.getId() : null)
+                .currentApproverName(approver != null ? approver.getFirstName() + " " + approver.getLastName() : null)
+                .managerRemarks(request.getManagerRemarks())
+                .approvalDate(request.getApprovalDate())
+                .productId(primary != null && primary.getProduct() != null ? primary.getProduct().getId() : null)
+                .productName(primary != null && primary.getProduct() != null ? primary.getProduct().getName() : null)
+                .productSku(primary != null && primary.getProduct() != null ? primary.getProduct().getSku() : null)
+                .categoryName(primary != null && primary.getProduct() != null && primary.getProduct().getCategory() != null
+                        ? primary.getProduct().getCategory().getName() : null)
+                .quantity(primary != null ? primary.getQuantity() : null)
+                .unitPrice(primary != null ? primary.getEstimatedPrice() : null)
+                .createdAt(request.getCreatedAt())
+                .updatedAt(request.getUpdatedAt());
+
+        if (includeDetails) {
+            builder.items(itemResponses);
+            builder.timeline(buildTimeline(request));
+        }
+
+        return builder.build();
+    }
+
+    // ── Timeline ───────────────────────────────────────────────────────────────
+
+    private List<RequestTimelineEntry> buildTimeline(PurchaseRequest request) {
+        List<RequestTimelineEntry> timeline = new ArrayList<>();
+
+        // Look up PO first so we can decide whether to show "Procurement Officer Pending"
+        PurchaseOrder po = purchaseOrderRepository
+                .findByPurchaseRequestIdAndIsDeletedFalse(request.getId())
+                .orElse(null);
+
+        // ── Stage 1: Request Submitted ─────────────────────────────────────────
+        String requesterName = request.getRequester() != null
+                ? request.getRequester().getFirstName() + " " + request.getRequester().getLastName()
+                : "Employee";
+
+        timeline.add(RequestTimelineEntry.builder()
+                .stage("Request Submitted")
+                .status("COMPLETED")
+                .actorName(requesterName)
+                .remarks(request.getJustification())
+                .timestamp(request.getCreatedAt())
+                .build());
+
+        // ── Stage 2: Manager Approval ──────────────────────────────────────────
+        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
+        String managerName = manager != null
+                ? manager.getFirstName() + " " + manager.getLastName()
+                : "Department Manager";
+
+        PurchaseRequestStatus status = request.getStatus();
+
+        switch (status) {
+            case PENDING, SUBMITTED -> timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("PENDING")
+                    .actorName(managerName)
+                    .remarks("Awaiting manager review")
+                    .timestamp(request.getUpdatedAt())
+                    .build());
+
+            case APPROVED -> {
+                timeline.add(RequestTimelineEntry.builder()
+                        .stage("Manager Approval")
+                        .status("APPROVED")
+                        .actorName(managerName)
+                        .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Approved")
+                        .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                        .build());
+
+                // Only show "Procurement Officer Pending" when no PO has been created yet
+                if (po == null) {
+                    String officerName = request.getCurrentApprover() != null
+                            ? request.getCurrentApprover().getFirstName() + " " + request.getCurrentApprover().getLastName()
+                            : "Procurement Officer";
+                    timeline.add(RequestTimelineEntry.builder()
+                            .stage("Procurement Officer")
+                            .status("PENDING")
+                            .actorName(officerName)
+                            .remarks("Forwarded after manager approval")
+                            .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                            .build());
+                }
+            }
+
+            case REJECTED -> timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("REJECTED")
+                    .actorName(managerName)
+                    .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Rejected")
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+
+            case RETURNED_FOR_MODIFICATION -> timeline.add(RequestTimelineEntry.builder()
+                    .stage("Manager Approval")
+                    .status("RETURNED_FOR_MODIFICATION")
+                    .actorName(managerName)
+                    .remarks(request.getManagerRemarks())
+                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
+                    .build());
+
+            default -> { /* no additional manager stage entry for other statuses */ }
+        }
+
+        // ── Stage 3+: Purchase Order stages (only when a PO exists) ───────────
+        if (po == null) {
+            return timeline;
+        }
+
+        PurchaseOrderStatus poStatus = po.getStatus();
+
+        // Every PO path starts with "Purchase Order Created"
+        RequestTimelineEntry poCreated = RequestTimelineEntry.builder()
+                .stage("Purchase Order Created")
+                .status("COMPLETED")
+                .actorName("Procurement Officer")
+                .remarks("Purchase Order " + po.getPurchaseOrderNumber() + " created successfully")
+                .timestamp(po.getCreatedAt())
+                .build();
+
+        RequestTimelineEntry poSent = RequestTimelineEntry.builder()
+                .stage("Purchase Order Sent")
+                .status("COMPLETED")
+                .actorName("Procurement Officer")
+                .remarks("Purchase Order sent to vendor")
+                .timestamp(po.getUpdatedAt())
+                .build();
+
+        RequestTimelineEntry vendorAccepted = RequestTimelineEntry.builder()
+                .stage("Vendor Accepted Order")
+                .status("COMPLETED")
+                .actorName("Vendor")
+                .remarks("Vendor accepted the Purchase Order")
+                .timestamp(po.getUpdatedAt())
+                .build();
+
+        RequestTimelineEntry orderDelivered = RequestTimelineEntry.builder()
+                .stage("Order Delivered")
+                .status("COMPLETED")
+                .actorName("Vendor")
+                .remarks("Items delivered successfully")
+                .timestamp(po.getUpdatedAt())
+                .build();
+
+        switch (poStatus) {
+            case CREATED -> timeline.add(poCreated);
+
+            case SENT -> {
+                timeline.add(poCreated);
+                timeline.add(poSent);
+            }
+
+            case ACCEPTED -> {
+                timeline.add(poCreated);
+                timeline.add(poSent);
+                timeline.add(vendorAccepted);
+            }
+
+            case DELIVERED -> {
+                timeline.add(poCreated);
+                timeline.add(poSent);
+                timeline.add(vendorAccepted);
+                timeline.add(orderDelivered);
+            }
+
+            case CLOSED -> {
+                timeline.add(poCreated);
+                timeline.add(poSent);
+                timeline.add(vendorAccepted);
+                timeline.add(orderDelivered);
+                timeline.add(RequestTimelineEntry.builder()
+                        .stage("Procurement Completed")
+                        .status("COMPLETED")
+                        .actorName("Procurement Officer")
+                        .remarks("Purchase Order closed successfully")
+                        .timestamp(po.getUpdatedAt())
+                        .build());
+            }
+
+            case REJECTED -> timeline.add(RequestTimelineEntry.builder()
+                    .stage("Vendor Rejected Order")
+                    .status("REJECTED")
+                    .actorName("Vendor")
+                    .remarks("Vendor rejected the Purchase Order")
+                    .timestamp(po.getUpdatedAt())
+                    .build());
+
+            case CANCELLED -> timeline.add(RequestTimelineEntry.builder()
+                    .stage("Purchase Order Cancelled")
+                    .status("CANCELLED")
+                    .actorName("Procurement Officer")
+                    .remarks("Purchase Order cancelled")
+                    .timestamp(po.getUpdatedAt())
+                    .build());
+        }
+
+        return timeline;
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private PurchaseRequest getManagedPendingRequest(Long id) {
         User manager = requireManager();
@@ -353,136 +635,5 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private String generateRequestNumber() {
         long next = purchaseRequestRepository.count() + 1;
         return String.format("%s%d-%04d", Constants.PR_PREFIX, Year.now().getValue(), next);
-    }
-
-    private PurchaseRequestResponse mapToResponse(PurchaseRequest request, boolean includeDetails) {
-        List<PurchaseRequestItem> items = purchaseRequestItemRepository
-                .findByPurchaseRequestIdAndIsDeletedFalse(request.getId());
-
-        PurchaseRequestItem primary = items.isEmpty() ? null : items.get(0);
-
-        List<PurchaseRequestItemResponse> itemResponses = items.stream()
-                .map(item -> PurchaseRequestItemResponse.builder()
-                        .id(item.getId())
-                        .purchaseRequestId(request.getId())
-                        .productId(item.getProduct() != null ? item.getProduct().getId() : null)
-                        .productName(item.getProduct() != null ? item.getProduct().getName() : null)
-                        .productSku(item.getProduct() != null ? item.getProduct().getSku() : null)
-                        .quantity(item.getQuantity())
-                        .estimatedPrice(item.getEstimatedPrice())
-                        .createdAt(item.getCreatedAt())
-                        .updatedAt(item.getUpdatedAt())
-                        .build())
-                .toList();
-
-        User requester = request.getRequester();
-        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
-        User approver = request.getCurrentApprover();
-        Department department = request.getDepartment();
-
-        PurchaseRequestResponse.PurchaseRequestResponseBuilder builder = PurchaseRequestResponse.builder()
-                .id(request.getId())
-                .requestNumber(request.getRequestNumber())
-                .title(request.getTitle())
-                .requesterId(requester != null ? requester.getId() : null)
-                .requesterName(requester != null ? requester.getFirstName() + " " + requester.getLastName() : null)
-                .employeeCode(requester != null ? requester.getEmployeeId() : null)
-                .departmentId(department != null ? department.getId() : null)
-                .departmentName(department != null ? department.getName() : null)
-                .justification(request.getJustification())
-                .priority(request.getPriority())
-                .expectedDeliveryDate(request.getExpectedDeliveryDate())
-                .status(request.getStatus())
-                .approvalStatus(request.getStatus())
-                .totalAmount(request.getTotalAmount())
-                .managerId(manager != null ? manager.getId() : null)
-                .managerName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
-                .currentApproverId(approver != null ? approver.getId() : null)
-                .currentApproverName(approver != null ? approver.getFirstName() + " " + approver.getLastName() : null)
-                .managerRemarks(request.getManagerRemarks())
-                .approvalDate(request.getApprovalDate())
-                .productId(primary != null && primary.getProduct() != null ? primary.getProduct().getId() : null)
-                .productName(primary != null && primary.getProduct() != null ? primary.getProduct().getName() : null)
-                .productSku(primary != null && primary.getProduct() != null ? primary.getProduct().getSku() : null)
-                .categoryName(primary != null && primary.getProduct() != null && primary.getProduct().getCategory() != null
-                        ? primary.getProduct().getCategory().getName() : null)
-                .quantity(primary != null ? primary.getQuantity() : null)
-                .unitPrice(primary != null ? primary.getEstimatedPrice() : null)
-                .createdAt(request.getCreatedAt())
-                .updatedAt(request.getUpdatedAt());
-
-        if (includeDetails) {
-            builder.items(itemResponses);
-            builder.timeline(buildTimeline(request));
-        }
-
-        return builder.build();
-    }
-
-    private List<RequestTimelineEntry> buildTimeline(PurchaseRequest request) {
-        List<RequestTimelineEntry> timeline = new ArrayList<>();
-
-        String requesterName = request.getRequester() != null
-                ? request.getRequester().getFirstName() + " " + request.getRequester().getLastName()
-                : "Employee";
-
-        timeline.add(RequestTimelineEntry.builder()
-                .stage("Request Submitted")
-                .status("COMPLETED")
-                .actorName(requesterName)
-                .remarks(request.getJustification())
-                .timestamp(request.getCreatedAt())
-                .build());
-
-        User manager = request.getManager() != null ? request.getManager() : request.getCurrentApprover();
-        String managerName = manager != null
-                ? manager.getFirstName() + " " + manager.getLastName()
-                : "Department Manager";
-
-        PurchaseRequestStatus status = request.getStatus();
-        if (status == PurchaseRequestStatus.PENDING || status == PurchaseRequestStatus.SUBMITTED) {
-            timeline.add(RequestTimelineEntry.builder()
-                    .stage("Manager Approval")
-                    .status("PENDING")
-                    .actorName(managerName)
-                    .remarks("Awaiting manager review")
-                    .timestamp(request.getUpdatedAt())
-                    .build());
-        } else if (status == PurchaseRequestStatus.APPROVED) {
-            timeline.add(RequestTimelineEntry.builder()
-                    .stage("Manager Approval")
-                    .status("APPROVED")
-                    .actorName(managerName)
-                    .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Approved")
-                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
-                    .build());
-            timeline.add(RequestTimelineEntry.builder()
-                    .stage("Procurement Officer")
-                    .status("PENDING")
-                    .actorName(request.getCurrentApprover() != null
-                            ? request.getCurrentApprover().getFirstName() + " " + request.getCurrentApprover().getLastName()
-                            : "Procurement Officer")
-                    .remarks("Forwarded after manager approval")
-                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
-                    .build());
-        } else if (status == PurchaseRequestStatus.REJECTED) {
-            timeline.add(RequestTimelineEntry.builder()
-                    .stage("Manager Approval")
-                    .status("REJECTED")
-                    .actorName(managerName)
-                    .remarks(request.getManagerRemarks() != null ? request.getManagerRemarks() : "Rejected")
-                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
-                    .build());
-        } else if (status == PurchaseRequestStatus.RETURNED_FOR_MODIFICATION) {
-            timeline.add(RequestTimelineEntry.builder()
-                    .stage("Manager Approval")
-                    .status("RETURNED_FOR_MODIFICATION")
-                    .actorName(managerName)
-                    .remarks(request.getManagerRemarks())
-                    .timestamp(request.getApprovalDate() != null ? request.getApprovalDate() : request.getUpdatedAt())
-                    .build());
-        }
-
-        return timeline;
     }
 }

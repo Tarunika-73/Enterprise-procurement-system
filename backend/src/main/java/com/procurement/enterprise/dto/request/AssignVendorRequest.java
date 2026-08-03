@@ -4,17 +4,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Getter
 @Setter
-public class CreatePurchaseOrderRequest {
-
-    @NotNull(message = "Purchase request ID is required")
-    private Long purchaseRequestId;
+public class AssignVendorRequest {
 
     @NotNull(message = "Vendor ID is required")
     private Long vendorId;
-
-    private LocalDate expectedDeliveryDate;
 }

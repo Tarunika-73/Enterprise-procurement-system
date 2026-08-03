@@ -45,11 +45,12 @@ public final class Constants {
     // ----------------------------------------------------------------
     // Roles
     // ----------------------------------------------------------------
-    public static final String ROLE_ADMIN    = "ADMIN";
-    public static final String ROLE_MANAGER  = "MANAGER";
-    public static final String ROLE_EMPLOYEE = "EMPLOYEE";
-    public static final String ROLE_FINANCE  = "FINANCE";
-    public static final String ROLE_VENDOR   = "VENDOR";
+    public static final String ROLE_ADMIN                = "ADMIN";
+    public static final String ROLE_MANAGER              = "MANAGER";
+    public static final String ROLE_EMPLOYEE             = "EMPLOYEE";
+    public static final String ROLE_FINANCE              = "FINANCE";
+    public static final String ROLE_VENDOR               = "VENDOR";
+    public static final String ROLE_PROCUREMENT_OFFICER  = "PROCUREMENT_OFFICER";
 
     // ----------------------------------------------------------------
     // JWT

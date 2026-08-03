@@ -2,16 +2,14 @@ package com.procurement.enterprise.service;
 
 import com.procurement.enterprise.dto.request.VendorUpdateDeliveryRequest;
 import com.procurement.enterprise.dto.response.*;
-import com.procurement.enterprise.entity.Delivery;
-import com.procurement.enterprise.entity.PurchaseOrder;
-import com.procurement.enterprise.entity.Vendor;
+import com.procurement.enterprise.entity.*;
 import com.procurement.enterprise.enums.DeliveryStatus;
+import com.procurement.enterprise.enums.InvoiceStatus;
 import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import com.procurement.enterprise.exception.InvalidRequestException;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
-import com.procurement.enterprise.repository.DeliveryRepository;
-import com.procurement.enterprise.repository.PurchaseOrderRepository;
-import com.procurement.enterprise.repository.VendorRepository;
+import com.procurement.enterprise.repository.*;
+import com.procurement.enterprise.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,10 @@ public class VendorPortalServiceImpl implements VendorPortalService {
     private final VendorRepository vendorRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final DeliveryRepository deliveryRepository;
+    private final PurchaseRequestRepository purchaseRequestRepository;
+    private final ReceiptRepository receiptRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final UserRepository userRepository;
 
     /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -103,6 +108,105 @@ public class VendorPortalServiceImpl implements VendorPortalService {
                 .createdAt(v.getCreatedAt())
                 .updatedAt(v.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * Resolves the receiver User for a Receipt.
+     * Prefers the employee who raised the linked PurchaseRequest;
+     * falls back to the first active procurement officer.
+     */
+    private User resolveReceiver(PurchaseOrder po) {
+        if (po.getPurchaseRequest() != null && po.getPurchaseRequest().getRequester() != null) {
+            return po.getPurchaseRequest().getRequester();
+        }
+        List<User> officers = userRepository.findActiveProcurementOfficers();
+        if (!officers.isEmpty()) {
+            return officers.get(0);
+        }
+        throw new ResourceNotFoundException("No suitable receiver found for receipt creation on PO: "
+                + po.getPurchaseOrderNumber());
+    }
+
+    /**
+     * Generates a unique invoice number in the format INV-YYYYMMDD-XXXXXXXX.
+     */
+    private String generateInvoiceNumber() {
+        String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String uniquePart = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return Constants.INV_PREFIX + datePart + "-" + uniquePart;
+    }
+
+    /**
+     * Creates a Receipt for the given Delivery if one does not already exist.
+     * Returns the existing or newly created Receipt.
+     */
+    private Receipt createReceiptIfAbsent(Delivery savedDelivery, PurchaseOrder po) {
+        log.info("Inside createReceiptIfAbsent()");
+        try {
+            log.info("Checking whether receipt already exists for delivery id: {}", savedDelivery.getId());
+            if (receiptRepository.existsByDeliveryIdAndIsDeletedFalse(savedDelivery.getId())) {
+                log.info("Receipt already exists for delivery id: {}, returning existing record", savedDelivery.getId());
+                return receiptRepository
+                        .findByDeliveryIdAndIsDeletedFalse(savedDelivery.getId(), Pageable.unpaged())
+                        .getContent().get(0);
+            }
+
+            LocalDate receiptDate = savedDelivery.getDeliveryDate() != null
+                    ? savedDelivery.getDeliveryDate()
+                    : LocalDate.now();
+
+            log.info("Creating new Receipt object...");
+            Receipt receipt = Receipt.builder()
+                    .delivery(savedDelivery)
+                    .receiver(resolveReceiver(po))
+                    .receiptDate(receiptDate)
+                    .isDeleted(false)
+                    .build();
+
+            log.info("Receiver ID: {}", receipt.getReceiver().getId());
+            log.info("Delivery ID: {}", receipt.getDelivery().getId());
+            log.info("Receipt Date: {}", receipt.getReceiptDate());
+            log.info("Saving Receipt into database...");
+            Receipt savedReceipt = receiptRepository.save(receipt);
+            receiptRepository.flush();
+            log.info("Receipt saved successfully with ID: {}", savedReceipt.getId());
+            return savedReceipt;
+        } catch (Exception ex) {
+            log.error("Receipt creation failed", ex);
+            throw ex;
+        }
+    }
+
+    /**
+     * Creates an Invoice for the given Receipt if one does not already exist.
+     */
+    private void createInvoiceIfAbsent(Receipt receipt, PurchaseOrder po) {
+        if (invoiceRepository.existsByReceiptIdAndIsDeletedFalse(receipt.getId())) {
+            log.info("Invoice already exists for receipt id: {}", receipt.getId());
+            return;
+        }
+
+        String invoiceNumber = generateInvoiceNumber();
+        while (invoiceRepository.existsByInvoiceNumberAndIsDeletedFalse(invoiceNumber)) {
+            invoiceNumber = generateInvoiceNumber();
+        }
+
+        LocalDate invoiceDate = LocalDate.now();
+        BigDecimal totalAmount = po.getTotalAmount() != null ? po.getTotalAmount() : BigDecimal.ZERO;
+
+        Invoice invoice = Invoice.builder()
+                .invoiceNumber(invoiceNumber)
+                .receipt(receipt)
+                .vendor(po.getVendor())
+                .invoiceDate(invoiceDate)
+                .dueDate(invoiceDate.plusDays(30))
+                .totalAmount(totalAmount)
+                .status(InvoiceStatus.PENDING)
+                .isDeleted(false)
+                .build();
+
+        invoiceRepository.save(invoice);
+        log.info("Invoice {} created for PO {}", invoiceNumber, po.getPurchaseOrderNumber());
     }
 
     /* ── dashboard ───────────────────────────────────────────────── */
@@ -210,7 +314,7 @@ public class VendorPortalServiceImpl implements VendorPortalService {
             throw new InvalidRequestException("Order must be accepted before updating delivery");
         }
 
-        // Validate dispatch number required for non-PREPARING statuses
+        // Validate dispatch number required for non-PENDING statuses
         if (request.getDeliveryStatus() != DeliveryStatus.PENDING
                 && (request.getDispatchNumber() == null || request.getDispatchNumber().isBlank())) {
             throw new InvalidRequestException("Dispatch number is required after shipment");
@@ -245,14 +349,35 @@ public class VendorPortalServiceImpl implements VendorPortalService {
         delivery.setDeliveryDate(request.getExpectedDeliveryDate());
         delivery.setCarrier(request.getRemarks());
 
-        // Sync PO status
-        if (request.getDeliveryStatus() == DeliveryStatus.DELIVERED) {
-            po.setStatus(PurchaseOrderStatus.DELIVERED);
-            purchaseOrderRepository.save(po);
-        }
-
         Delivery saved = deliveryRepository.save(delivery);
         log.info("Vendor {} updated delivery for PO {}", vendor.getId(), po.getPurchaseOrderNumber());
+
+        // When delivery is confirmed, advance the procurement workflow
+        if (request.getDeliveryStatus() == DeliveryStatus.DELIVERED) {
+
+            log.info("STEP 1 - Delivery marked as DELIVERED");
+
+            try {
+                // 1. Update Purchase Order status → DELIVERED
+                po.setStatus(PurchaseOrderStatus.DELIVERED);
+                purchaseOrderRepository.save(po);
+
+                log.info("STEP 2 - Purchase Order saved successfully");
+
+                // 2. Create Receipt if absent
+                Receipt receipt = createReceiptIfAbsent(saved, po);
+
+                log.info("STEP 3 - Receipt creation completed");
+
+                // 3. Create Invoice if absent
+                createInvoiceIfAbsent(receipt, po);
+
+                log.info("STEP 4 - Invoice creation completed");
+            } catch (Exception ex) {
+                log.error("Error during DELIVERED workflow", ex);
+                throw ex;
+            }
+        }
 
         return DeliveryResponse.builder()
                 .id(saved.getId())

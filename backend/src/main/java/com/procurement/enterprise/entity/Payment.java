@@ -41,6 +41,9 @@ public class Payment {
     @Column(name = "payment_method", nullable = false, length = 50)
     private String paymentMethod;
 
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default

@@ -1,6 +1,5 @@
 package com.procurement.enterprise.dto.response;
 
-import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,17 +9,18 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class PurchaseOrderResponse {
-    private Long id;
+public class PendingPaymentResponse {
+
+    private Long purchaseOrderId;
     private String purchaseOrderNumber;
-    private Long purchaseRequestId;
     private String requestNumber;
     private Long vendorId;
     private String vendorName;
     private String vendorEmail;
-    private PurchaseOrderStatus status;
+    private String departmentName;
     private BigDecimal totalAmount;
     private LocalDate expectedDeliveryDate;
+    private LocalDate deliveryDate;
+    private String invoiceNumber;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

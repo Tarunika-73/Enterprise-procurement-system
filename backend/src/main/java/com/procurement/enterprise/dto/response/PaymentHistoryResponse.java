@@ -10,35 +10,20 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class PaymentResponse {
+public class PaymentHistoryResponse {
 
     private Long id;
     private String paymentReference;
-
-    // Invoice
-    private Long invoiceId;
-    private String invoiceNumber;
-
-    // Purchase Order (via Invoice → Receipt → Delivery → PurchaseOrder)
     private Long purchaseOrderId;
     private String purchaseOrderNumber;
     private String requestNumber;
-
-    // Vendor
     private Long vendorId;
     private String vendorName;
-    private String vendorEmail;
-
-    // Department
-    private String departmentName;
-
-    // Payment details
+    private String invoiceNumber;
     private BigDecimal amountPaid;
     private LocalDate paymentDate;
     private String paymentMethod;
     private String remarks;
     private PaymentStatus status;
-
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

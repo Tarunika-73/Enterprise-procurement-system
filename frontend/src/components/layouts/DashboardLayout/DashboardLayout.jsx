@@ -10,6 +10,10 @@ const DASHBOARD_PAGE_TITLES = {
   '/dashboard/manager': 'Manager Dashboard',
   '/dashboard/vendor': 'Vendor Dashboard',
   '/dashboard/finance': 'Finance Dashboard',
+  '/finance': 'Finance Dashboard',
+  '/finance/pending-payments': 'Pending Payments',
+  '/finance/payment-history': 'Payment History',
+  '/finance/reports': 'Financial Reports',
   '/dashboard/admin': 'Admin Dashboard',
   '/employee/products': 'Products',
   '/employee/purchase-requests': 'My Requests',
@@ -32,6 +36,9 @@ const resolvePageTitle = (pathname) => {
   }
   if (pathname.startsWith('/vendor/purchase-orders/')) {
     return 'Purchase Order Details';
+  }
+  if (pathname.startsWith('/finance/payments/')) {
+    return 'Payment Details';
   }
   return 'Dashboard';
 };

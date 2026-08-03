@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
 
-                // ── Preflight & public auth endpoints ─────────────────────────
+                // Preflight & public auth endpoints
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(
                     "/auth/**",
@@ -68,47 +68,51 @@ public class SecurityConfig {
                     "/api-docs/**"
                 ).permitAll()
 
-                // ── Role management — ADMIN only ───────────────────────────────
+                // Role management - ADMIN only
                 .requestMatchers("/v1/roles/**")
                     .hasRole(Constants.ROLE_ADMIN)
 
-                // ── User management — ADMIN, MANAGER ──────────────────────────
+                // User management - ADMIN, MANAGER
                 .requestMatchers("/v1/users/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Department management ──────────────────────────────────────
+                // Department management
                 .requestMatchers("/v1/departments/**")
                     .permitAll()
 
-                // ── Vendor portal (vendor-facing) ─────────────────────────────
+                // Vendor portal (vendor-facing)
                 .requestMatchers("/v1/vendor-portal/**")
                     .hasRole(Constants.ROLE_VENDOR)
 
-                // ── Vendor management ──────────────────────────────────────────
+                // Procurement Officer module
+                .requestMatchers("/v1/procurement/**")
+                    .hasAnyRole(Constants.ROLE_PROCUREMENT_OFFICER, Constants.ROLE_ADMIN)
+
+                // Vendor management
                 .requestMatchers("/v1/vendors/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Categories ────────────────────────────────────────────────
+                // Categories
                 .requestMatchers("/v1/categories/**")
                     .permitAll()
 
-                // ── Supplier compliance ────────────────────────────────────────
+                // Supplier compliance
                 .requestMatchers("/v1/supplier-compliance/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Products ──────────────────────────────────────────────────
+                // Products
                 .requestMatchers(HttpMethod.GET, "/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
                 .requestMatchers("/v1/products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Purchase Requests ─────────────────────────────────────────
+                // Purchase Requests
                 .requestMatchers("/v1/purchase-requests/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
                 .requestMatchers("/v1/purchase-request-items/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
-                // ── Approvals ─────────────────────────────────────────────────
+                // Approvals
                 .requestMatchers("/v1/approvals/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/approval-history/**")
@@ -116,39 +120,41 @@ public class SecurityConfig {
                 .requestMatchers("/v1/approval-workflow/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Purchase Requisitions ─────────────────────────────────────
+                // Purchase Requisitions
                 .requestMatchers("/v1/purchase-requisitions/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_EMPLOYEE)
 
-                // ── Purchase Orders ───────────────────────────────────────────
+                // Purchase Orders
                 .requestMatchers("/v1/purchase-orders/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/purchase-order-items/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Vendor Estimates & Products ───────────────────────────────
+                // Vendor Estimates & Products
                 .requestMatchers("/v1/vendor-estimates/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/vendor-products/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Deliveries & Receipts ─────────────────────────────────────
+                // Deliveries & Receipts
                 .requestMatchers("/v1/deliveries/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/receipts/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Finance ───────────────────────────────────────────────────
+                // Finance
+                .requestMatchers("/v1/finance/**")
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
                 .requestMatchers("/v1/invoices/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
                 .requestMatchers("/v1/payments/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_FINANCE)
 
-                // ── Supplier Performance ──────────────────────────────────────
+                // Supplier Performance
                 .requestMatchers("/v1/supplier-performance/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
 
-                // ── Audit & Sessions — ADMIN only ─────────────────────────────
+                // Audit & Sessions - ADMIN only
                 .requestMatchers("/v1/audit-logs/**")
                     .hasRole(Constants.ROLE_ADMIN)
                 .requestMatchers("/v1/login-history/**")
@@ -156,11 +162,11 @@ public class SecurityConfig {
                 .requestMatchers("/v1/user-sessions/**")
                     .hasRole(Constants.ROLE_ADMIN)
 
-                // ── Notifications — any authenticated user ────────────────────
+                // Notifications - any authenticated user
                 .requestMatchers("/v1/notifications/**")
                     .authenticated()
 
-                // ── Catch-all ─────────────────────────────────────────────────
+                // Catch-all
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
@@ -172,7 +178,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow both Vite dev server and direct browser access (Swagger UI)
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "http://localhost:8080"
@@ -189,8 +194,6 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        // Employee DaoAuthenticationProvider uses CustomUserDetailsService (users table only).
-        // This keeps employee login isolated from the vendors table.
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(employeeUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder);

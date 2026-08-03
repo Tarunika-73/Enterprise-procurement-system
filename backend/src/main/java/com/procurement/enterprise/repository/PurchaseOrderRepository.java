@@ -37,4 +37,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     boolean existsByPurchaseOrderNumberAndIsDeletedFalse(String purchaseOrderNumber);
 
     boolean existsByPurchaseRequestIdAndIsDeletedFalse(Long purchaseRequestId);
+
+    long countByIsDeletedFalse();
 }

@@ -1,12 +1,6 @@
 import { USER_ROLES } from './constants';
 import { getDashboardRouteByRole, normalizeRole } from './roleNavigation';
 
-/**
- * Sidebar navigation configuration.
- * Extend this file when new modules (Purchase Requests, Vendors, etc.) are added.
- * Role filtering is applied at render time — no hardcoded sidebar per role.
- */
-
 const ALL_INTERNAL = [
   USER_ROLES.ADMIN,
   USER_ROLES.EMPLOYEE,
@@ -28,25 +22,21 @@ export const NAV_ITEMS = [
     label: 'Products',
     icon: 'bi-box-seam',
     path: '/employee/products',
-    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [USER_ROLES.EMPLOYEE],
   },
   {
     id: 'create-request',
     label: 'Create Request',
     icon: 'bi-plus-circle',
     path: '/employee/purchase-requests/create',
-    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [USER_ROLES.EMPLOYEE],
   },
   {
-    // My Requests — employee/procurement officer personal requests list.
-    // Path kept as /employee/purchase-requests (matches the /employee route group).
-    // Roles merged from both sides: Employee + Procurement Officer only
-    // (Manager and Admin have their own dedicated request views below).
     id: 'my-requests',
     label: 'My Requests',
     icon: 'bi-file-earmark-text',
     path: '/employee/purchase-requests',
-    roles: [USER_ROLES.EMPLOYEE, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [USER_ROLES.EMPLOYEE],
   },
   {
     // Team Requests — manager inbox for approving department requests.
@@ -66,6 +56,15 @@ export const NAV_ITEMS = [
     comingSoon: true,
   },
   {
+    // Procurement Officer — approved requests to process
+    id: 'procurement-purchase-requests',
+    label: 'Purchase Requests',
+    icon: 'bi-clipboard-check',
+    path: '/dashboard/purchase-requests',
+    roles: [USER_ROLES.PROCUREMENT_OFFICER],
+    comingSoon: false,
+  },
+  {
     id: 'approval-history',
     label: 'Approval History',
     icon: 'bi-clock-history',
@@ -82,9 +81,6 @@ export const NAV_ITEMS = [
     comingSoon: false,
   },
   {
-    // Internal purchase orders — procurement officer, manager, admin.
-    // Path uses /dashboard/purchase-orders (matches AuthRoutes).
-    // comingSoon: false so it renders as a real link.
     id: 'purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
@@ -93,8 +89,6 @@ export const NAV_ITEMS = [
     comingSoon: false,
   },
   {
-    // Vendor-specific purchase orders — separate nav item so vendor sidebar
-    // shows this while internal roles see the item above.
     id: 'vendor-purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
@@ -137,12 +131,30 @@ export const NAV_ITEMS = [
     icon: 'bi-currency-dollar',
     path: '/finance',
     roles: [USER_ROLES.FINANCE, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
-    comingSoon: true,
+    comingSoon: false,
   },
   {
-    // Reports — path uses /dashboard/reports (matches AuthRoutes).
-    // Roles merged: original had ADMIN/MANAGER/FINANCE/PROCUREMENT_OFFICER,
-    // incoming had ALL_INTERNAL. Union = ALL_INTERNAL (superset).
+    id: 'finance-pending',
+    label: 'Pending Payments',
+    icon: 'bi-hourglass-split',
+    path: '/finance/pending-payments',
+    roles: [USER_ROLES.FINANCE],
+  },
+  {
+    id: 'finance-history',
+    label: 'Payment History',
+    icon: 'bi-clock-history',
+    path: '/finance/payment-history',
+    roles: [USER_ROLES.FINANCE],
+  },
+  {
+    id: 'finance-reports',
+    label: 'Finance Reports',
+    icon: 'bi-bar-chart-line',
+    path: '/finance/reports',
+    roles: [USER_ROLES.FINANCE],
+  },
+  {
     id: 'reports',
     label: 'Reports',
     icon: 'bi-bar-chart-line',
@@ -175,27 +187,15 @@ export const NAV_ITEMS = [
   },
 ];
 
-/**
- * Returns navigation items visible to the given user role.
- * @param {string|null} role
- * @returns {Array}
- */
 export const getNavItemsForRole = (role) => {
   if (!role) return NAV_ITEMS.filter((item) => item.id === 'dashboard');
-
   const normalizedRole = normalizeRole(role);
-
   return NAV_ITEMS.filter((item) =>
     item.roles.some((allowedRole) => allowedRole === normalizedRole)
   );
 };
 
-/**
- * Resolves the href for a navigation item based on user role.
- */
 export const resolveNavItemPath = (item, role) => {
-  if (item.resolvePath) {
-    return item.resolvePath(role);
-  }
+  if (item.resolvePath) return item.resolvePath(role);
   return item.path;
 };

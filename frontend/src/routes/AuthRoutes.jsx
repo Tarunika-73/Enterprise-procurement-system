@@ -32,6 +32,11 @@ import VendorPurchaseOrderDetailPage from '../pages/Vendor/VendorPurchaseOrderDe
 import VendorUpdateDeliveryPage from '../pages/Vendor/VendorUpdateDeliveryPage';
 import VendorProfilePage from '../pages/Vendor/VendorProfilePage';
 
+import PendingPaymentsPage from '../pages/Finance/PendingPaymentsPage';
+import PaymentDetailsPage from '../pages/Finance/PaymentDetailsPage';
+import PaymentHistoryPage from '../pages/Finance/PaymentHistoryPage';
+import FinanceReportsPage from '../pages/Finance/FinanceReportsPage';
+
 import ApprovalHistory from '../pages/ApprovalHistory';
 import DepartmentRequests from '../pages/DepartmentRequests';
 import PurchaseRequests from '../pages/PurchaseRequests';
@@ -43,7 +48,6 @@ import { USER_ROLES } from '../utils/constants';
 
 const EMPLOYEE_ROLES = [
   USER_ROLES.EMPLOYEE,
-  USER_ROLES.PROCUREMENT_OFFICER,
 ];
 
 const AuthRoutes = () => {
@@ -260,6 +264,23 @@ const AuthRoutes = () => {
           path="profile"
           element={<VendorProfilePage />}
         />
+      </Route>
+
+      {/* ================= FINANCE ================= */}
+
+      <Route
+        path="/finance"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.FINANCE]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<FinanceDashboard />} />
+        <Route path="pending-payments" element={<PendingPaymentsPage />} />
+        <Route path="payments/:purchaseOrderId" element={<PaymentDetailsPage />} />
+        <Route path="payment-history" element={<PaymentHistoryPage />} />
+        <Route path="reports" element={<FinanceReportsPage />} />
       </Route>
 
       {/* ================= NOTIFICATIONS ================= */}

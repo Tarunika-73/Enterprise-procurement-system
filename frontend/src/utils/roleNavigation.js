@@ -4,7 +4,7 @@ const ROLE_ROUTE_MAP = {
   [USER_ROLES.EMPLOYEE]: '/dashboard/employee',
   [USER_ROLES.MANAGER]: '/dashboard/manager',
   [USER_ROLES.VENDOR]: '/dashboard/vendor',
-  [USER_ROLES.FINANCE]: '/dashboard/finance',
+  [USER_ROLES.FINANCE]: '/finance',
   [USER_ROLES.ADMIN]: '/dashboard/admin',
   [USER_ROLES.PROCUREMENT_OFFICER]: '/dashboard/procurement-officer',
 };

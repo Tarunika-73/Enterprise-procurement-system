@@ -29,4 +29,10 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
     boolean existsByEmailAndIsDeletedFalse(String email);
 
     boolean existsByGstNumberAndIsDeletedFalse(String gstNumber);
+
+    /* ── reporting ───────────────────────────────────────────────── */
+
+    long countByIsDeletedFalse();
+
+    long countByIsActiveTrueAndIsDeletedFalse();
 }

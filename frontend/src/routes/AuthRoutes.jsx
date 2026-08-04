@@ -50,6 +50,14 @@ const EMPLOYEE_ROLES = [
   USER_ROLES.EMPLOYEE,
 ];
 
+const ALL_INTERNAL_ROLES = [
+  USER_ROLES.ADMIN,
+  USER_ROLES.EMPLOYEE,
+  USER_ROLES.MANAGER,
+  USER_ROLES.FINANCE,
+  USER_ROLES.PROCUREMENT_OFFICER,
+];
+
 const AuthRoutes = () => {
   return (
     <Routes>
@@ -137,7 +145,7 @@ const AuthRoutes = () => {
         <Route
           path="reports"
           element={
-            <ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}>
+            <ProtectedRoute allowedRoles={ALL_INTERNAL_ROLES}>
               <Reports />
             </ProtectedRoute>
           }

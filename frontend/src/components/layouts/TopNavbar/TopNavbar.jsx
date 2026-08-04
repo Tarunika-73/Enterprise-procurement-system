@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { getUnreadCount } from '../../../services/notificationService';
 import { getDisplayName, getUserInitials, formatRoleLabel } from '../../../utils/userDisplay';
 import { normalizeRole } from '../../../utils/roleNavigation';
 import { USER_ROLES } from '../../../utils/constants';
@@ -7,11 +9,30 @@ import { USER_ROLES } from '../../../utils/constants';
 const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { user, userRole, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const displayName = getDisplayName(user);
   const initials    = getUserInitials(user);
   const roleLabel   = formatRoleLabel(userRole);
   const isVendor    = normalizeRole(userRole) === USER_ROLES.VENDOR;
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchUnread = async () => {
+      try {
+        const response = await getUnreadCount();
+        if (isMounted && response?.data?.unreadCount !== undefined) {
+          setUnreadCount(response.data.unreadCount);
+        }
+      } catch (err) {
+        // Silently handle if unauthenticated or error
+      }
+    };
+    fetchUnread();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -46,7 +67,15 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
             onClick={() => navigate('/notifications')}
           >
             <i className="bi bi-bell" />
-            <span className="dashboard-notification-badge" aria-hidden="true" />
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{ fontSize: '0.65rem' }}
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+                <span className="visually-hidden">unread notifications</span>
+              </span>
+            )}
           </button>
 
           <div className="dropdown dashboard-user-dropdown">

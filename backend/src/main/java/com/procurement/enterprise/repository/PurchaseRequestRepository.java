@@ -54,4 +54,19 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
     long countByManagerIdAndIsDeletedFalse(Long managerId);
 
     long countByManagerIdAndStatusAndIsDeletedFalse(Long managerId, PurchaseRequestStatus status);
+
+    /* ── reporting ───────────────────────────────────────────────── */
+
+    long countByIsDeletedFalse();
+
+    long countByStatusAndIsDeletedFalse(PurchaseRequestStatus status);
+
+    long countByDepartmentIdAndIsDeletedFalse(Long departmentId);
+
+    long countByDepartmentIdAndStatusAndIsDeletedFalse(Long departmentId, PurchaseRequestStatus status);
+
+    Page<PurchaseRequest> findByDepartmentIdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long departmentId, Pageable pageable);
+
+    Page<PurchaseRequest> findAllByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
 }

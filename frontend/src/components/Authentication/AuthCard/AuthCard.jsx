@@ -9,7 +9,12 @@ const AuthCard = ({ title, subtitle, children, footer, className = '' }) => (
   >
     {(title || subtitle) && (
       <div className="auth-card-header">
-        {title    && <h1 className="auth-card-title">{title}</h1>}
+
+  <div className="auth-login-logo">
+    <i className="bi bi-building-fill-check"></i>
+  </div>
+
+  {title && <h1 className="auth-card-title">{title}</h1>}
         {subtitle && <p className="auth-card-subtitle">{subtitle}</p>}
         <div className="auth-card-divider" aria-hidden="true" />
       </div>

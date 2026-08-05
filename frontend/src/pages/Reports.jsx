@@ -1,196 +1,225 @@
-const recentActivities = [
-  {
-    id: 1,
-    activity: "Purchase Order PO001 Approved",
-    time: "Today",
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { USER_ROLES } from "../utils/constants";
+import { normalizeRole } from "../utils/roleNavigation";
+import { getReportSummary, downloadReport } from "../services/reportService";
+import { formatCurrency, formatDateTime, unwrapApiData } from "../utils/employeeHelpers";
+import { getApiErrorMessage } from "../utils/apiErrors";
+
+const ROLE_COPY = {
+  [USER_ROLES.EMPLOYEE]: {
+    title: "My Reports",
+    subtitle: "A summary of your purchase request activity.",
   },
-  {
-    id: 2,
-    activity: "Vendor Dell Technologies Added",
-    time: "Yesterday",
+  [USER_ROLES.MANAGER]: {
+    title: "Team Reports",
+    subtitle: "Approvals, spend, and activity for your department.",
   },
-  {
-    id: 3,
-    activity: "Budget Updated for IT Department",
-    time: "2 Days Ago",
+  [USER_ROLES.PROCUREMENT_OFFICER]: {
+    title: "Procurement Reports",
+    subtitle: "Purchase requests, orders, and vendor activity across the organization.",
   },
-];
+  [USER_ROLES.FINANCE]: {
+    title: "Finance Reports",
+    subtitle: "Spend and activity across the organization.",
+  },
+  [USER_ROLES.ADMIN]: {
+    title: "Organization Reports",
+    subtitle: "A high-level view across all departments.",
+  },
+};
+
+const DEFAULT_COPY = {
+  title: "Reports",
+  subtitle: "An overview of recent procurement activity.",
+};
+
+const PROGRESS_COLORS = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-danger", "bg-secondary"];
 
 export default function Reports() {
+  const { userRole } = useAuth();
+  const role = normalizeRole(userRole);
+  const { title, subtitle } = ROLE_COPY[role] ?? DEFAULT_COPY;
+
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getReportSummary();
+      setSummary(unwrapApiData(res));
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to load reports."));
+      setSummary(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleDownload = useCallback(async () => {
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      await downloadReport();
+    } catch (err) {
+      setDownloadError(getApiErrorMessage(err, "Failed to download report."));
+    } finally {
+      setDownloading(false);
+    }
+  }, []);
+
+  const departmentBreakdown = summary?.departmentBreakdown ?? [];
+  const recentActivity = summary?.recentActivity ?? [];
+
   return (
     <div className="container-fluid mt-4">
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Procurement Reports</h2>
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <h2>{title}</h2>
 
-        <button className="btn btn-success">
-          Download Report
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-primary"
+            onClick={handleDownload}
+            disabled={downloading || loading || !summary}
+          >
+            {downloading ? "Downloading…" : "Download Report"}
+          </button>
+          <button className="btn btn-success" onClick={load} disabled={loading}>
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </div>
 
-      {/* KPI Cards */}
+      <p className="text-muted mb-4">{subtitle}</p>
 
-      <div className="row mb-4">
+      {error && <div className="alert alert-danger">{error}</div>}
+      {downloadError && <div className="alert alert-danger">{downloadError}</div>}
 
-        <div className="col-md-3">
-
-          <div className="card shadow border-0">
-
-            <div className="card-body text-center">
-
-              <h2>152</h2>
-
-              <p>Total Requests</p>
-
-            </div>
-
+      {loading && !summary ? (
+        <div className="d-flex justify-content-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading…</span>
           </div>
-
         </div>
+      ) : (
+        <>
+          {/* KPI Cards */}
 
-        <div className="col-md-3">
+          <div className="row mb-4">
 
-          <div className="card shadow border-0">
-
-            <div className="card-body text-center">
-
-              <h2>98</h2>
-
-              <p>Approved</p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-3">
-
-          <div className="card shadow border-0">
-
-            <div className="card-body text-center">
-
-              <h2>41</h2>
-
-              <p>Purchase Orders</p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-3">
-
-          <div className="card shadow border-0">
-
-            <div className="card-body text-center">
-
-              <h2>28</h2>
-
-              <p>Active Vendors</p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="row">
-
-        {/* Budget */}
-
-        <div className="col-lg-6">
-
-          <div className="card shadow mb-4">
-
-            <div className="card-header bg-primary text-white">
-              Budget Utilization
-            </div>
-
-            <div className="card-body">
-
-              <h6>IT Department</h6>
-
-              <div className="progress mb-3">
-
-                <div
-                  className="progress-bar bg-success"
-                  style={{ width: "75%" }}
-                >
-                  75%
+            <div className="col-md-3">
+              <div className="card shadow border-0">
+                <div className="card-body text-center">
+                  <h2>{summary?.totalRequests ?? 0}</h2>
+                  <p>Total Requests</p>
                 </div>
-
               </div>
+            </div>
 
-              <h6>Finance Department</h6>
-
-              <div className="progress mb-3">
-
-                <div
-                  className="progress-bar bg-warning"
-                  style={{ width: "58%" }}
-                >
-                  58%
+            <div className="col-md-3">
+              <div className="card shadow border-0">
+                <div className="card-body text-center">
+                  <h2>{summary?.approvedRequests ?? 0}</h2>
+                  <p>Approved</p>
                 </div>
-
               </div>
+            </div>
 
-              <h6>HR Department</h6>
-
-              <div className="progress">
-
-                <div
-                  className="progress-bar bg-info"
-                  style={{ width: "82%" }}
-                >
-                  82%
+            <div className="col-md-3">
+              <div className="card shadow border-0">
+                <div className="card-body text-center">
+                  <h2>{summary?.purchaseOrders ?? 0}</h2>
+                  <p>Purchase Orders</p>
                 </div>
-
               </div>
+            </div>
 
+            <div className="col-md-3">
+              <div className="card shadow border-0">
+                <div className="card-body text-center">
+                  <h2>{summary?.activeVendors ?? 0}</h2>
+                  <p>Active Vendors</p>
+                </div>
+              </div>
             </div>
 
           </div>
 
-        </div>
+          <div className="row">
 
-        {/* Activity */}
+            {/* Spend by Department */}
 
-        <div className="col-lg-6">
-
-          <div className="card shadow mb-4">
-
-            <div className="card-header bg-success text-white">
-              Recent Activity
-            </div>
-
-            <div className="card-body">
-
-              {recentActivities.map((item) => (
-
-                <div
-                  key={item.id}
-                  className="d-flex justify-content-between border-bottom py-2"
-                >
-
-                  <span>{item.activity}</span>
-
-                  <small className="text-muted">{item.time}</small>
-
+            <div className="col-lg-6">
+              <div className="card shadow mb-4">
+                <div className="card-header bg-primary text-white">
+                  {departmentBreakdown.length > 1 ? "Spend by Department" : "Department Spend"}
                 </div>
 
-              ))}
+                <div className="card-body">
+                  {departmentBreakdown.length === 0 ? (
+                    <p className="text-muted mb-0">No purchase request activity yet.</p>
+                  ) : (
+                    departmentBreakdown.map((dept, idx) => (
+                      <div key={dept.departmentId ?? dept.departmentName} className={idx > 0 ? "mt-3" : ""}>
+                        <div className="d-flex justify-content-between">
+                          <h6 className="mb-1">{dept.departmentName}</h6>
+                          <small className="text-muted">
+                            {formatCurrency(dept.totalSpend)} · {dept.requestCount} request
+                            {dept.requestCount === 1 ? "" : "s"}
+                          </small>
+                        </div>
+                        <div className="progress">
+                          <div
+                            className={`progress-bar ${PROGRESS_COLORS[idx % PROGRESS_COLORS.length]}`}
+                            style={{ width: `${Math.max(dept.relativePercent, dept.totalSpend > 0 ? 4 : 0)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
 
+            {/* Activity */}
+
+            <div className="col-lg-6">
+              <div className="card shadow mb-4">
+                <div className="card-header bg-success text-white">
+                  Recent Activity
+                </div>
+
+                <div className="card-body">
+                  {recentActivity.length === 0 ? (
+                    <p className="text-muted mb-0">No recent activity.</p>
+                  ) : (
+                    recentActivity.map((item, idx) => (
+                      <div
+                        key={`${item.description}-${idx}`}
+                        className="d-flex justify-content-between border-bottom py-2"
+                      >
+                        <span>{item.description}</span>
+                        <small className="text-muted">{formatDateTime(item.timestamp)}</small>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
           </div>
-
-        </div>
-
-      </div>
+        </>
+      )}
 
     </div>
   );

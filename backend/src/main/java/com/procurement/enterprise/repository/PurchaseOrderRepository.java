@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,4 +40,18 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     boolean existsByPurchaseRequestIdAndIsDeletedFalse(Long purchaseRequestId);
 
     long countByIsDeletedFalse();
+
+    /* ── reporting ───────────────────────────────────────────────── */
+
+    long countByPurchaseRequest_Requester_IdAndIsDeletedFalse(Long requesterId);
+
+    long countByPurchaseRequest_Department_IdAndIsDeletedFalse(Long departmentId);
+
+    List<PurchaseOrder> findTop5ByIsDeletedFalseOrderByCreatedAtDesc();
+
+    List<PurchaseOrder> findTop5ByPurchaseRequest_Requester_IdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long requesterId);
+
+    List<PurchaseOrder> findTop5ByPurchaseRequest_Department_IdAndIsDeletedFalseOrderByCreatedAtDesc(
+            Long departmentId);
 }

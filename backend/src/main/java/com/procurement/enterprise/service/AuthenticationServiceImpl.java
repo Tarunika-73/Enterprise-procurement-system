@@ -59,12 +59,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         Role role = resolveRole(request.getRole());
 
-        if (request.getDepartmentId() == null) {
-            throw new InvalidRequestException("Department is required");
-        }
-
-        Department department = departmentRepository.findByIdAndIsDeletedFalse(request.getDepartmentId())
-                .orElseThrow(() -> new InvalidRequestException("Invalid department selected"));
+        Department department = departmentRepository.findAllByIsDeletedFalse().stream()
+                .findFirst()
+                .orElseThrow(() -> new InvalidRequestException("No departments found. Please contact the administrator."));
 
         User user = User.builder()
                 .employeeId(generateEmployeeId())
@@ -79,12 +76,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         user = userRepository.save(user);
-
-        // If a manager registers and the department has no manager, assign them.
-        if (isManagerRole(role.getName()) && department.getManager() == null) {
-            department.setManager(user);
-            departmentRepository.save(department);
-        }
 
         String token = jwtUtil.generateToken(org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
                 .password(user.getPasswordHash())
@@ -103,7 +94,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())
                 .role(role.getName())
-                .employeeId(user.getEmployeeId())
                 .departmentId(department.getId())
                 .departmentName(department.getName())
                 .build();
@@ -144,7 +134,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())
                 .role(user.getRole().getName())
-                .employeeId(user.getEmployeeId())
                 .departmentId(user.getDepartment().getId())
                 .departmentName(user.getDepartment().getName())
                 .build();
@@ -228,11 +217,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private String generateEmployeeId() {
         long count = userRepository.count();
         return "EMP" + String.format("%03d", count + 1);
-    }
-
-    private boolean isManagerRole(String roleName) {
-        if (roleName == null) return false;
-        String normalized = roleName.trim().toLowerCase(Locale.ROOT);
-        return normalized.equals("manager") || normalized.equals("department manager");
     }
 }

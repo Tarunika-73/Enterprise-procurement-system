@@ -58,6 +58,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         Role role = resolveRole(request.getRole());
+        if (Constants.ROLE_ADMIN.equalsIgnoreCase(role.getName())) {
+            throw new InvalidRequestException("Administrator accounts cannot be created through self-registration.");
+        }
 
         Department department = departmentRepository.findAllByIsDeletedFalse().stream()
                 .findFirst()

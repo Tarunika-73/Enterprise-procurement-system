@@ -44,23 +44,23 @@ public class ReportController {
     }
 
     /**
-     * Downloads the current, role-scoped Reports page data as a CSV file.
+     * Downloads the current, role-scoped Reports page data as an Excel-compatible report.
      */
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadReport() {
         log.info("Report download requested");
 
-        String csv = reportService.generateReportCsv();
-        byte[] body = csv.getBytes(StandardCharsets.UTF_8);
+        String report = reportService.generateReportCsv();
+        byte[] body = report.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
-        String filename = "report_" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + ".csv";
+        String filename = "EPS_Procurement_Report_" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + ".xls";
         ContentDisposition disposition = ContentDisposition.attachment()
                 .filename(filename, StandardCharsets.UTF_8)
                 .build();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDisposition(disposition);
-        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel; charset=UTF-8"));
 
         return ResponseEntity.ok()
                 .headers(headers)

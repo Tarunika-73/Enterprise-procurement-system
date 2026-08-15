@@ -4,13 +4,14 @@ import {
   createPurchaseOrder,
   getActiveVendors,
 } from '../services/procurementService';
+import { recommendVendorForRequest } from '../services/vendorRecommendationService';
 import {
   getPageContent,
   getPageMeta,
   formatCurrency,
   formatDate,
-  getStatusBadgeClass,
   formatStatusLabel,
+  unwrapApiData,
 } from '../utils/employeeHelpers';
 import { getApiErrorMessage } from '../utils/apiErrors';
 
@@ -33,6 +34,11 @@ export default function PurchaseRequests() {
   const [modalError, setModalError] = useState('');
   const [createdPOs, setCreatedPOs] = useState(new Set());
 
+  // AI recommendation state
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [aiError, setAiError] = useState('');
+
   const load = useCallback((page = 0) => {
     setLoading(true);
     setError('');
@@ -52,9 +58,25 @@ export default function PurchaseRequests() {
     setVendorId('');
     setDeliveryDate('');
     setModalError('');
+    setAiResult(null);
+    setAiError('');
     setShowModal(true);
     if (vendors.length === 0) {
       getActiveVendors().then((res) => setVendors(getPageContent(res))).catch(() => {});
+    }
+  };
+
+  const handleAiRecommend = async () => {
+    setAiLoading(true);
+    setAiError('');
+    setAiResult(null);
+    try {
+      const res = unwrapApiData(await recommendVendorForRequest(selected.id));
+      setAiResult(res);
+    } catch (err) {
+      setAiError(getApiErrorMessage(err, 'Unable to generate recommendation.'));
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -151,10 +173,10 @@ export default function PurchaseRequests() {
                         <td>{formatDate(r.approvalDate)}</td>
                         <td>
                           {hasPO ? (
-                            <span className="badge bg-success">PO Created</span>
+                            <span className="badge bg-success">Created PO</span>
                           ) : (
                             <button
-                              className="btn btn-success btn-sm"
+                              className="btn btn-primary btn-sm"
                               onClick={() => openModal(r)}
                             >
                               Create PO
@@ -195,7 +217,7 @@ export default function PurchaseRequests() {
       {/* Create PO Modal */}
       {showModal && (
         <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.4)' }}>
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Create Purchase Order</h5>
@@ -204,21 +226,45 @@ export default function PurchaseRequests() {
               <div className="modal-body">
                 {modalError && <div className="alert alert-danger py-2">{modalError}</div>}
                 <p className="text-muted mb-3">
-                  Request: <strong>{selected?.requestNumber}</strong> &mdash; {selected?.productName || selected?.title}
+                  Request: <strong>{selected?.requestNumber}</strong> &mdash;{' '}
+                  <strong>{selected?.productName || selected?.title}</strong>
+                  {selected?.quantity ? <> &mdash; Qty: <strong>{selected.quantity}</strong></> : null}
                 </p>
+
+                {/* Vendor selection + AI button */}
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">Assign Vendor <span className="text-danger">*</span></label>
-                  <select
-                    className="form-select"
-                    value={vendorId}
-                    onChange={(e) => setVendorId(e.target.value)}
-                  >
-                    <option value="">— Select Vendor —</option>
-                    {vendors.map((v) => (
-                      <option key={v.id} value={v.id}>{v.vendorName}</option>
-                    ))}
-                  </select>
+                  <label className="form-label fw-semibold">
+                    Assign Vendor <span className="text-danger">*</span>
+                  </label>
+                  <div className="d-flex gap-2 align-items-center">
+                    <select
+                      className="form-select"
+                      value={vendorId}
+                      onChange={(e) => setVendorId(e.target.value)}
+                    >
+                      <option value="">— Select Vendor —</option>
+                      {vendors.map((v) => (
+                        <option key={v.id} value={v.id}>{v.vendorName}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary text-nowrap"
+                      onClick={handleAiRecommend}
+                      disabled={aiLoading}
+                      title="Get AI vendor recommendation based on price, availability, quality and history"
+                    >
+                      {aiLoading
+                        ? <><span className="spinner-border spinner-border-sm me-1" />Analyzing…</>
+                        : '🤖 AI Recommend'}
+                    </button>
+                  </div>
                 </div>
+
+                {/* AI recommendation result */}
+                {aiError && <div className="alert alert-warning py-2">{aiError}</div>}
+                {aiResult && <AiRecommendationPanel result={aiResult} onUse={(id) => setVendorId(String(id))} />}
+
                 <div className="mb-3">
                   <label className="form-label fw-semibold">Expected Delivery Date</label>
                   <input
@@ -243,6 +289,112 @@ export default function PurchaseRequests() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Inline AI recommendation panel — shown inside the modal after clicking AI Recommend. */
+function AiRecommendationPanel({ result, onUse }) {
+  if (!result) return null;
+
+  if (!result.recommendedVendor) {
+    return (
+      <div className="alert alert-warning mb-3">
+        <strong>🤖 AI Vendor Recommendation</strong>
+        <p className="mb-0 mt-1">{result.message}</p>
+        {result.ineligibleVendors?.length > 0 && (
+          <div className="mt-2">
+            <small className="text-muted">Vendors with insufficient quantity:</small>
+            <ul className="mb-0 mt-1">
+              {result.ineligibleVendors.map((v) => (
+                <li key={v.vendorId}>
+                  <strong>{v.vendorName}</strong> — {v.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const top = result.recommendedVendor;
+  return (
+    <div className="border rounded p-3 mb-3 bg-light">
+      <div className="d-flex justify-content-between align-items-start mb-2">
+        <strong>🤖 AI Vendor Recommendation</strong>
+        <span className="badge bg-primary fs-6">{top.overallScore}%</span>
+      </div>
+
+      <div className="mb-2">
+        <span className="text-muted small">Recommended Vendor</span>
+        <div className="fw-bold fs-5">{top.vendorName}</div>
+      </div>
+
+      <div className="row g-2 mb-2 text-center">
+        <div className="col">
+          <div className="text-muted small">Price</div>
+          <div className="fw-semibold">{formatCurrency(top.unitPrice)}</div>
+        </div>
+        <div className="col">
+          <div className="text-muted small">Available</div>
+          <div className="fw-semibold">{top.availableQuantity} units</div>
+        </div>
+        <div className="col">
+          <div className="text-muted small">Quality</div>
+          <div className="fw-semibold">{top.qualityScore}%</div>
+        </div>
+        <div className="col">
+          <div className="text-muted small">Delivery</div>
+          <div className="fw-semibold">{top.deliveryScore}%</div>
+        </div>
+        <div className="col">
+          <div className="text-muted small">History</div>
+          <div className="fw-semibold">{top.successfulOrders}/{top.historicalOrders} orders</div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="btn btn-sm btn-primary mb-2"
+        onClick={() => onUse(top.vendorId)}
+      >
+        ✓ Use Recommendation
+      </button>
+
+      {result.rankings?.length > 1 && (
+        <div className="mt-2">
+          <small className="text-muted">Other eligible vendors:</small>
+          <ol className="mb-0 mt-1" start={2}>
+            {result.rankings.slice(1).map((v) => (
+              <li key={v.vendorId}>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 text-start"
+                  onClick={() => onUse(v.vendorId)}
+                >
+                  {v.vendorName}
+                </button>
+                {' '}— {v.overallScore}% &nbsp;
+                <span className="text-muted small">({formatCurrency(v.unitPrice)}, {v.availableQuantity} units)</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {result.ineligibleVendors?.length > 0 && (
+        <div className="mt-2">
+          <small className="text-muted">Vendors with insufficient quantity (excluded):</small>
+          <ul className="mb-0 mt-1">
+            {result.ineligibleVendors.map((v) => (
+              <li key={v.vendorId} className="text-muted small">
+                {v.vendorName} — {v.reason}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ const RequestTable = ({
   requests = [],
   loading = false,
   onViewDetails,
+  onEdit,
   emptyMessage = 'No purchase requests found.',
 }) => {
   if (loading) {
@@ -63,13 +64,24 @@ const RequestTable = ({
                 {request.managerRemarks || '—'}
               </td>
               <td>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => onViewDetails?.(request.id)}
-                >
-                  View Details
-                </button>
+                <div className="d-flex gap-1">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => onViewDetails?.(request.id)}
+                  >
+                    View Details
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    disabled={request.status !== 'PENDING'}
+                    title={request.status === 'PENDING' ? 'Edit request' : 'Requests can only be edited before manager approval'}
+                    onClick={() => onEdit?.(request.id)}
+                  >
+                    Edit
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

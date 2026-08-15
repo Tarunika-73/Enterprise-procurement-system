@@ -63,7 +63,7 @@ const VendorLogin = () => {
   };
 
   return (
-    <AuthLayout variant="vendor">
+    <AuthLayout variant="vendor" template="reference">
       <AuthCard
         title="Vendor Portal"
         subtitle="Sign in to manage orders, invoices, and deliveries"

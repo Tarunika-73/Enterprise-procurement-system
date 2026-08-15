@@ -4,6 +4,7 @@ import com.procurement.enterprise.dto.response.ApprovalHistoryResponse;
 import com.procurement.enterprise.service.ApprovalHistoryService;
 import com.procurement.enterprise.util.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,12 @@ import java.util.List;
 public class ApprovalHistoryController {
 
     private final ApprovalHistoryService approvalHistoryService;
+
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ApiResponse<List<ApprovalHistoryResponse>> getMyHistory() {
+        return ApiResponse.success("Manager approval history fetched successfully.", approvalHistoryService.getMyHistory());
+    }
 
 
     /**

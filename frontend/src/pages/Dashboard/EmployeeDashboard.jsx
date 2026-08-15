@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
+import DashboardAnalytics from '../../components/dashboard/DashboardAnalytics';
 import QuickActions from '../../components/employee/QuickActions';
 import RequestTable from '../../components/employee/RequestTable';
 import { getEmployeeDashboardStats } from '../../services/purchaseRequestService';
@@ -107,6 +108,8 @@ const EmployeeDashboard = () => {
           </div>
         ))}
       </div>
+
+      <DashboardAnalytics />
 
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">

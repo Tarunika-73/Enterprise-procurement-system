@@ -68,6 +68,10 @@ public class SecurityConfig {
                     "/api-docs/**"
                 ).permitAll()
 
+                // Admin module - ADMIN only
+                .requestMatchers("/v1/admin/**")
+                    .hasRole(Constants.ROLE_ADMIN)
+
                 // Role management - ADMIN only
                 .requestMatchers("/v1/roles/**")
                     .hasRole(Constants.ROLE_ADMIN)
@@ -140,7 +144,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/deliveries/**")
                     .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
                 .requestMatchers("/v1/receipts/**")
-                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER)
+                    .hasAnyRole(Constants.ROLE_ADMIN, Constants.ROLE_MANAGER, Constants.ROLE_PROCUREMENT_OFFICER)
 
                 // Finance
                 .requestMatchers("/v1/finance/**")

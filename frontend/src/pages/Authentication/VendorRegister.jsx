@@ -118,7 +118,7 @@ const VendorRegister = () => {
   };
 
   return (
-    <AuthLayout variant="vendor">
+    <AuthLayout variant="vendor" template="reference" copyVariant="register">
       <AuthCard
         title="Vendor Registration"
         subtitle="Create your vendor account to access the procurement portal"

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getMyNotifications,
   markAsRead,
@@ -9,6 +10,7 @@ import { getApiErrorMessage } from '../../utils/apiErrors';
 import { formatDateTime, getPageContent } from '../../utils/employeeHelpers';
 
 const NotificationsPage = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -65,6 +67,13 @@ const NotificationsPage = () => {
       setNotifications((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       setError(getApiErrorMessage(err, 'Failed to delete notification.'));
+    }
+  };
+
+  const handleOpen = async (item) => {
+    if (!item.isRead) await handleMarkAsRead(item.id);
+    if (item.referenceType === 'GOODS_RECEIPT_DELIVERY' && item.referenceId) {
+      navigate(`/dashboard/goods-receipts?deliveryId=${item.referenceId}`);
     }
   };
 
@@ -135,8 +144,8 @@ const NotificationsPage = () => {
                 className={`list-group-item px-4 py-3 ${
                   item.isRead ? '' : 'employee-notification-unread'
                 } d-flex justify-content-between align-items-start gap-3`}
-                style={{ cursor: item.isRead ? 'default' : 'pointer' }}
-                onClick={() => !item.isRead && handleMarkAsRead(item.id)}
+                style={{ cursor: item.referenceType === 'GOODS_RECEIPT_DELIVERY' || !item.isRead ? 'pointer' : 'default' }}
+                onClick={() => handleOpen(item)}
               >
                 <div className="flex-grow-1">
                   <div className="d-flex justify-content-between gap-3 flex-wrap">
@@ -153,6 +162,7 @@ const NotificationsPage = () => {
                     <span className="text-muted small">{formatDateTime(item.createdAt)}</span>
                   </div>
                   <p className="mb-0 mt-1 text-muted">{item.message}</p>
+                  {item.referenceType === 'GOODS_RECEIPT_DELIVERY' && <small className="text-primary d-block mt-2">Open goods receipt <i className="bi bi-arrow-right" /></small>}
                 </div>
 
                 <div className="d-flex align-items-center gap-1">

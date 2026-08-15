@@ -12,6 +12,8 @@ public interface PurchaseRequestService {
 
     PurchaseRequestResponse create(CreatePurchaseRequestRequest request);
 
+    PurchaseRequestResponse updatePendingRequest(Long id, CreatePurchaseRequestRequest request);
+
     PurchaseRequestResponse getById(Long id);
 
     Page<PurchaseRequestResponse> getMyRequests(Pageable pageable);

@@ -11,24 +11,28 @@ import com.procurement.enterprise.entity.PurchaseOrderItem;
 import com.procurement.enterprise.entity.PurchaseRequest;
 import com.procurement.enterprise.entity.PurchaseRequestItem;
 import com.procurement.enterprise.entity.Vendor;
+import com.procurement.enterprise.entity.User;
+import com.procurement.enterprise.enums.NotificationType;
 import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
 import com.procurement.enterprise.exception.DuplicateResourceException;
 import com.procurement.enterprise.exception.InvalidRequestException;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
-import com.procurement.enterprise.repository.DeliveryRepository;
 import com.procurement.enterprise.repository.PurchaseOrderItemRepository;
 import com.procurement.enterprise.repository.PurchaseOrderRepository;
 import com.procurement.enterprise.repository.PurchaseRequestItemRepository;
 import com.procurement.enterprise.repository.PurchaseRequestRepository;
+import com.procurement.enterprise.repository.VendorProductRepository;
 import com.procurement.enterprise.repository.VendorRepository;
+import com.procurement.enterprise.repository.UserRepository;
+import com.procurement.enterprise.service.AuditLogService;
+import com.procurement.enterprise.service.NotificationService;
 import com.procurement.enterprise.util.ApiResponse;
 import com.procurement.enterprise.util.Constants;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -52,6 +56,10 @@ public class ProcurementOfficerController {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderItemRepository purchaseOrderItemRepository;
     private final VendorRepository vendorRepository;
+    private final VendorProductRepository vendorProductRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     // ── Dashboard Stats ────────────────────────────────────────────────────────
 
@@ -113,6 +121,7 @@ public class ProcurementOfficerController {
     // ── Purchase Orders ────────────────────────────────────────────────────────
 
     @PostMapping("/purchase-orders")
+    @Transactional
     public ResponseEntity<ApiResponse<PurchaseOrderResponse>> createPurchaseOrder(
             @Valid @RequestBody CreatePurchaseOrderRequest request) {
 
@@ -152,12 +161,32 @@ public class ProcurementOfficerController {
 
         PurchaseOrder saved = purchaseOrderRepository.save(po);
 
-        // Copy items from purchase request to PO
+        // Copy items from purchase request to PO and reduce vendor inventory
         List<PurchaseRequestItem> requestItems = purchaseRequestItemRepository
                 .findByPurchaseRequestIdAndIsDeletedFalse(purchaseRequest.getId());
 
         for (PurchaseRequestItem item : requestItems) {
             BigDecimal unitPrice = item.getEstimatedPrice() != null ? item.getEstimatedPrice() : BigDecimal.ZERO;
+
+            // Use vendor's actual price if a VendorProduct record exists
+            var vendorProductOpt = vendorProductRepository
+                    .findByVendorIdAndProductIdAndIsDeletedFalse(vendor.getId(), item.getProduct().getId());
+            if (vendorProductOpt.isPresent()) {
+                var vp = vendorProductOpt.get();
+                unitPrice = vp.getPrice();
+
+                // Validate and reduce inventory atomically
+                int currentQty = vp.getAvailableQuantity() != null ? vp.getAvailableQuantity() : 0;
+                if (currentQty < item.getQuantity()) {
+                    throw new InvalidRequestException(
+                            "Insufficient stock for " + item.getProduct().getName() +
+                            ". Vendor currently has " + currentQty +
+                            " units available, but the request requires " + item.getQuantity() + " units.");
+                }
+                vp.setAvailableQuantity(currentQty - item.getQuantity());
+                vendorProductRepository.save(vp);
+            }
+
             BigDecimal total = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
             PurchaseOrderItem poItem = PurchaseOrderItem.builder()
                     .purchaseOrder(saved)
@@ -169,6 +198,12 @@ public class ProcurementOfficerController {
                     .build();
             purchaseOrderItemRepository.save(poItem);
         }
+        if (purchaseRequest.getRequester() != null) notificationService.createNotification(purchaseRequest.getRequester(), NotificationType.SYSTEM,
+                "Purchase order created", "Purchase order " + saved.getPurchaseOrderNumber() + " has been created.");
+        for (User finance : userRepository.findActiveFinanceOfficers()) notificationService.createNotification(finance, NotificationType.SYSTEM,
+                "Purchase order created", "Purchase order " + saved.getPurchaseOrderNumber() + " was created for " + vendor.getVendorName() + ".");
+        auditLogService.record("CREATE", "purchase_orders", saved.getId(), null,
+                "vendorId=" + vendor.getId() + "; purchaseRequestId=" + purchaseRequest.getId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Purchase Order created successfully.", mapOrder(saved), HttpStatus.CREATED));
@@ -214,8 +249,10 @@ public class ProcurementOfficerController {
             throw new InvalidRequestException("Selected vendor is not active.");
         }
 
+        Long previousVendorId = po.getVendor() == null ? null : po.getVendor().getId();
         po.setVendor(vendor);
         PurchaseOrder saved = purchaseOrderRepository.save(po);
+        auditLogService.record("ASSIGN_VENDOR", "purchase_orders", saved.getId(), "vendorId=" + previousVendorId, "vendorId=" + vendor.getId());
         return ResponseEntity.ok(ApiResponse.success("Vendor assigned successfully.", mapOrder(saved)));
     }
 
@@ -230,6 +267,7 @@ public class ProcurementOfficerController {
 
         po.setStatus(PurchaseOrderStatus.SENT);
         PurchaseOrder saved = purchaseOrderRepository.save(po);
+        auditLogService.record("SEND", "purchase_orders", saved.getId(), "status=CREATED", "status=SENT");
         return ResponseEntity.ok(ApiResponse.success("Purchase Order sent to vendor.", mapOrder(saved)));
     }
 

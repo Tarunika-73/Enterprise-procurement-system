@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface SupplierPerformanceRepository extends JpaRepository<SupplierPerformance, Long> {
@@ -30,4 +31,7 @@ public interface SupplierPerformanceRepository extends JpaRepository<SupplierPer
             AND sp.isDeleted = false
             """)
     Double findAverageRatingByVendorId(@Param("vendorId") Long vendorId);
+
+    @Query("SELECT sp.vendor.id, AVG((sp.qualityRating + sp.pricingRating) / 2.0), AVG(sp.deliveryRating) FROM SupplierPerformance sp WHERE sp.vendor.id IN :vendorIds AND sp.isDeleted = false GROUP BY sp.vendor.id")
+    List<Object[]> findRecommendationRatingsByVendorIds(@Param("vendorIds") List<Long> vendorIds);
 }

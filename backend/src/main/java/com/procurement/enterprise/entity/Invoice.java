@@ -61,4 +61,12 @@ public class Invoice {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public String getInvoiceNumber() { return this.invoiceNumber; }
+    public Receipt getReceipt() { return this.receipt; }
+    public Vendor getVendor() { return this.vendor; }
+    public java.math.BigDecimal getTotalAmount() { return this.totalAmount; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

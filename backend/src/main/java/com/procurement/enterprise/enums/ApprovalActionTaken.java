@@ -7,5 +7,6 @@ package com.procurement.enterprise.enums;
 public enum ApprovalActionTaken {
     APPROVED,
     REJECTED,
+    RETURNED,
     ESCALATED
 }

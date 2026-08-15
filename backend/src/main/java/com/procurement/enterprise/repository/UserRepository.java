@@ -29,6 +29,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findByDepartmentIdAndIsDeletedFalse(Long departmentId, Pageable pageable);
 
+    boolean existsByDepartmentIdAndIsDeletedFalse(Long departmentId);
+
     Page<User> findByRoleIdAndIsDeletedFalse(Long roleId, Pageable pageable);
 
     Page<User> findByIsActiveAndIsDeletedFalse(Boolean isActive, Pageable pageable);
@@ -59,4 +61,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
               AND LOWER(u.role.name) = 'procurement officer'
             """)
     List<User> findActiveProcurementOfficers();
+
+    @EntityGraph(attributePaths = {"role", "department"})
+    @Query("SELECT u FROM User u WHERE u.isDeleted = false AND u.isActive = true AND LOWER(u.role.name) = 'finance officer'")
+    List<User> findActiveFinanceOfficers();
+
+    long countByIsDeletedFalse();
 }

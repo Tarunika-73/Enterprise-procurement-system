@@ -54,6 +54,11 @@ public class VendorProduct {
     @Column(name = "lead_time_days")
     private Integer leadTimeDays;
 
+    /** Stock available for procurement. Used by the vendor recommendation engine. */
+    @Column(name = "available_quantity")
+    @Builder.Default
+    private Integer availableQuantity = 0;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

@@ -342,9 +342,20 @@
   color: var(--eps-text-muted);
 }
 
+/* ---------- Dashboard Analytics ---------- */
+
+.analytics-dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+.analytics-chart-card { min-width: 0; padding: 1.25rem; background: #fff; border: 1px solid var(--eps-border); border-radius: var(--eps-radius); box-shadow: 0 4px 18px rgba(52, 58, 64, 0.04); }
+.analytics-chart-title { margin: 0 0 1rem; font-size: 1rem; font-weight: 700; color: #212529; }
+.analytics-loading, .analytics-empty { min-height: 180px; display: flex; align-items: center; justify-content: center; color: var(--eps-text-muted); font-size: 0.9rem; }
+.vendor-recommendation { margin-top: 1.5rem; padding: 1.25rem; background: #fff; border: 1px solid var(--eps-border); border-radius: var(--eps-radius); }
+.recommendation-winner { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .85rem 1rem; border-radius: .75rem; background: rgba(124,111,214,.09); color: var(--eps-primary-dark); }
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 991.98px) {
+  .analytics-dashboard { grid-template-columns: 1fr; }
+
   .dashboard-sidebar {
     transform: translateX(-100%);
   }
@@ -536,6 +547,50 @@
   padding: 1.25rem;
 }
 
+:root[data-theme='dark'] .dashboard-layout,
+:root[data-theme='dark'] .dashboard-content { color: var(--eps-text); }
+:root[data-theme='dark'] .dashboard-sidebar,
+:root[data-theme='dark'] .dashboard-navbar,
+:root[data-theme='dark'] .dashboard-footer,
+:root[data-theme='dark'] .dashboard-stat-card,
+:root[data-theme='dark'] .employee-table-card,
+:root[data-theme='dark'] .employee-form-card,
+:root[data-theme='dark'] .employee-detail-card,
+:root[data-theme='dark'] .employee-filter-bar,
+:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .modal-content,
+:root[data-theme='dark'] .dropdown-menu { background-color: #222837; color: var(--eps-text); }
+:root[data-theme='dark'] .dashboard-sidebar,
+:root[data-theme='dark'] .dashboard-navbar,
+:root[data-theme='dark'] .dashboard-footer,
+:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .modal-content,
+:root[data-theme='dark'] .dropdown-menu,
+:root[data-theme='dark'] .table > :not(caption) > * > * { border-color: var(--eps-border); }
+:root[data-theme='dark'] .dashboard-navbar-title,
+:root[data-theme='dark'] .dashboard-page-header h1,
+:root[data-theme='dark'] .dashboard-stat-value,
+:root[data-theme='dark'] .dashboard-welcome-banner h2,
+:root[data-theme='dark'] .employee-detail-list dd,
+:root[data-theme='dark'] .dashboard-user-name,
+:root[data-theme='dark'] h1, :root[data-theme='dark'] h2, :root[data-theme='dark'] h3,
+:root[data-theme='dark'] h4, :root[data-theme='dark'] h5, :root[data-theme='dark'] h6 { color: var(--eps-text) !important; }
+:root[data-theme='dark'] .dashboard-navbar-btn,
+:root[data-theme='dark'] .dashboard-user-dropdown .dropdown-toggle,
+:root[data-theme='dark'] .form-control,
+:root[data-theme='dark'] .form-select,
+:root[data-theme='dark'] .form-control:focus,
+:root[data-theme='dark'] .form-select:focus { background-color: #1b202c; color: var(--eps-text); border-color: var(--eps-border); }
+:root[data-theme='dark'] .form-control::placeholder { color: #8994a8; }
+:root[data-theme='dark'] .table { --bs-table-bg: transparent; --bs-table-color: var(--eps-text); --bs-table-border-color: var(--eps-border); }
+:root[data-theme='dark'] .table-light { --bs-table-bg: #2a3142; --bs-table-color: var(--eps-text); }
+:root[data-theme='dark'] .text-muted { color: var(--eps-text-muted) !important; }
+:root[data-theme='dark'] .dropdown-item { color: var(--eps-text); }
+:root[data-theme='dark'] .dropdown-item:hover { background-color: #30394d; }
+:root[data-theme='dark'] .recharts-text { fill: var(--eps-text-muted); }
+:root[data-theme='dark'] .recharts-default-tooltip { background-color: #222837 !important; border-color: var(--eps-border) !important; }
+.report-chart { min-height: 280px; }
+
 .vendor-po-actions {
   display: flex;
   gap: 0.75rem;
@@ -543,4 +598,64 @@
   margin-top: 1.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--eps-border);
+}
+
+/* ---------- Procurement Assistant ---------- */
+
+.procurement-assistant {
+  position: fixed;
+  right: 25px;
+  bottom: 80px;
+  z-index: 1050;
+}
+
+.procurement-assistant-toggle {
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, var(--eps-primary), var(--eps-accent));
+  box-shadow: 0 8px 24px rgba(92, 75, 184, 0.35);
+  font-size: 1.35rem;
+}
+
+.procurement-assistant-panel {
+  width: min(360px, calc(100vw - 2.5rem));
+  height: 430px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--eps-border);
+  border-radius: 1rem;
+  box-shadow: var(--eps-shadow-lg);
+}
+
+.procurement-assistant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  color: #fff;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--eps-primary), var(--eps-accent));
+}
+
+.procurement-assistant-messages { flex: 1; overflow-y: auto; padding: 1rem; background: var(--eps-bg-soft); }
+.assistant-intro { color: var(--eps-text-muted); font-size: 0.875rem; }
+.assistant-message { max-width: 88%; margin-bottom: 0.65rem; padding: 0.65rem 0.8rem; border-radius: 0.75rem; font-size: 0.875rem; line-height: 1.45; }
+.assistant-message.user { margin-left: auto; color: #fff; background: var(--eps-primary); border-bottom-right-radius: 0.2rem; }
+.assistant-message.assistant { color: #343a40; background: #fff; border: 1px solid var(--eps-border); border-bottom-left-radius: 0.2rem; }
+.procurement-assistant-form { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid var(--eps-border); }
+.procurement-assistant-form input { min-width: 0; flex: 1; border: 1px solid var(--eps-border); border-radius: 0.5rem; padding: 0.55rem 0.7rem; outline-color: var(--eps-primary); }
+
+@media (max-width: 991.98px) {
+  .procurement-assistant { right: 20px; bottom: 75px; }
+}
+
+@media (max-width: 575.98px) {
+  .procurement-assistant { right: 15px; bottom: 70px; }
+  .procurement-assistant-panel { height: min(430px, calc(100svh - 6.5rem)); }
 }

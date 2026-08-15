@@ -13,9 +13,12 @@ import com.procurement.enterprise.entity.PurchaseOrder;
 import com.procurement.enterprise.entity.PurchaseRequest;
 import com.procurement.enterprise.entity.PurchaseRequestItem;
 import com.procurement.enterprise.entity.User;
+import com.procurement.enterprise.entity.ApprovalHistory;
+import com.procurement.enterprise.enums.ApprovalActionTaken;
 import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
 import com.procurement.enterprise.exception.InvalidRequestException;
+import com.procurement.enterprise.exception.ForbiddenException;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
 import com.procurement.enterprise.exception.UnauthorizedException;
 import com.procurement.enterprise.repository.NotificationRepository;
@@ -24,6 +27,7 @@ import com.procurement.enterprise.repository.PurchaseOrderRepository;
 import com.procurement.enterprise.repository.PurchaseRequestItemRepository;
 import com.procurement.enterprise.repository.PurchaseRequestRepository;
 import com.procurement.enterprise.repository.UserRepository;
+import com.procurement.enterprise.repository.ApprovalHistoryRepository;
 import com.procurement.enterprise.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -56,6 +60,9 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
+    private final ApprovalHistoryRepository approvalHistoryRepository;
 
     // ── Create ─────────────────────────────────────────────────────────────────
 
@@ -116,7 +123,53 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .build();
         purchaseRequestItemRepository.save(item);
 
+        notificationService.createNotification(manager, com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                "Purchase request submitted", "Purchase request " + saved.getRequestNumber() + " requires your approval.");
+        auditLogService.record("CREATE", "purchase_requests", saved.getId(), null, "status=PENDING");
+
         log.info("Purchase request {} assigned to manager {}", saved.getRequestNumber(), manager.getId());
+        return mapToResponse(saved, true);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseRequestResponse updatePendingRequest(Long id, CreatePurchaseRequestRequest request) {
+        User requester = getCurrentUser();
+        PurchaseRequest purchaseRequest = findActive(id);
+        if (!Objects.equals(purchaseRequest.getRequester().getId(), requester.getId())) {
+            throw new ForbiddenException("You can only edit your own purchase requests.");
+        }
+        if (purchaseRequest.getStatus() != PurchaseRequestStatus.PENDING) {
+            throw new InvalidRequestException("Only requests awaiting manager approval can be edited.");
+        }
+
+        Product product = productRepository.findByIdAndIsDeletedFalse(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", request.getProductId()));
+        if (!Boolean.TRUE.equals(product.getIsActive())) {
+            throw new InvalidRequestException("Selected product is not available for procurement.");
+        }
+        int availableQty = product.getAvailableQuantity() != null ? product.getAvailableQuantity() : 100;
+        if (availableQty > 0 && request.getQuantity() > availableQty) {
+            throw new InvalidRequestException("Requested quantity exceeds available stock (" + availableQty + ").");
+        }
+
+        purchaseRequest.setTitle(request.getTitle().trim());
+        purchaseRequest.setJustification(request.getJustification().trim());
+        purchaseRequest.setPriority(request.getPriority());
+        purchaseRequest.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
+        purchaseRequest.setTotalAmount(request.getUnitPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+
+        PurchaseRequestItem item = purchaseRequestItemRepository
+                .findByPurchaseRequestIdAndIsDeletedFalse(purchaseRequest.getId()).stream()
+                .findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Purchase request item was not found."));
+        item.setProduct(product);
+        item.setQuantity(request.getQuantity());
+        item.setEstimatedPrice(request.getUnitPrice());
+        purchaseRequestItemRepository.save(item);
+
+        PurchaseRequest saved = purchaseRequestRepository.save(purchaseRequest);
+        auditLogService.record("UPDATE", "purchase_requests", saved.getId(), null, "status=PENDING");
         return mapToResponse(saved, true);
     }
 
@@ -204,6 +257,7 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     @Transactional
     public PurchaseRequestResponse approve(Long id, ManagerDecisionRequest decision) {
         PurchaseRequest request = getManagedPendingRequest(id);
+        User manager = requireManager();
         request.setStatus(PurchaseRequestStatus.APPROVED);
         request.setManagerRemarks(normalizeRemarks(decision));
         request.setApprovalDate(LocalDateTime.now());
@@ -216,6 +270,12 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
         }
 
         PurchaseRequest saved = purchaseRequestRepository.save(request);
+        saveManagerApprovalHistory(saved, manager, ApprovalActionTaken.APPROVED, saved.getManagerRemarks());
+        notificationService.createNotification(saved.getRequester(), com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                "Purchase request approved", "Your request " + saved.getRequestNumber() + " was approved.");
+        for (User officer : userRepository.findActiveProcurementOfficers()) notificationService.createNotification(officer,
+                com.procurement.enterprise.enums.NotificationType.SYSTEM, "Approved request ready", saved.getRequestNumber() + " is ready for purchase order creation.");
+        auditLogService.record("APPROVE", "purchase_requests", saved.getId(), "status=PENDING", "status=APPROVED");
         log.info("Manager approved request {}", saved.getRequestNumber());
         return mapToResponse(saved, true);
     }
@@ -225,10 +285,15 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     public PurchaseRequestResponse reject(Long id, ManagerDecisionRequest decision) {
         requireRemarks(decision, "Remarks are required when rejecting a request.");
         PurchaseRequest request = getManagedPendingRequest(id);
+        User manager = requireManager();
         request.setStatus(PurchaseRequestStatus.REJECTED);
         request.setManagerRemarks(decision.getRemarks().trim());
         request.setApprovalDate(LocalDateTime.now());
         PurchaseRequest saved = purchaseRequestRepository.save(request);
+        saveManagerApprovalHistory(saved, manager, ApprovalActionTaken.REJECTED, saved.getManagerRemarks());
+        notificationService.createNotification(saved.getRequester(), com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                "Purchase request rejected", "Your request " + saved.getRequestNumber() + " was rejected.");
+        auditLogService.record("REJECT", "purchase_requests", saved.getId(), "status=PENDING", "status=REJECTED");
         log.info("Manager rejected request {}", saved.getRequestNumber());
         return mapToResponse(saved, true);
     }
@@ -238,11 +303,16 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     public PurchaseRequestResponse returnForModification(Long id, ManagerDecisionRequest decision) {
         requireRemarks(decision, "Remarks are required when returning a request for modification.");
         PurchaseRequest request = getManagedPendingRequest(id);
+        User manager = requireManager();
         request.setStatus(PurchaseRequestStatus.RETURNED_FOR_MODIFICATION);
         request.setManagerRemarks(decision.getRemarks().trim());
         request.setApprovalDate(LocalDateTime.now());
         request.setCurrentApprover(request.getRequester());
         PurchaseRequest saved = purchaseRequestRepository.save(request);
+        saveManagerApprovalHistory(saved, manager, ApprovalActionTaken.RETURNED, saved.getManagerRemarks());
+        notificationService.createNotification(saved.getRequester(), com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                "Purchase request returned", "Your request " + saved.getRequestNumber() + " was returned for modification.");
+        auditLogService.record("RETURN", "purchase_requests", saved.getId(), "status=PENDING", "status=RETURNED_FOR_MODIFICATION");
         log.info("Manager returned request {} for modification", saved.getRequestNumber());
         return mapToResponse(saved, true);
     }
@@ -552,12 +622,19 @@ if (po != null) {
                 : (request.getCurrentApprover() != null ? request.getCurrentApprover().getId() : null);
 
         if (!Objects.equals(assignedManagerId, manager.getId())) {
-            throw new UnauthorizedException("This request is not assigned to you.");
+            throw new ForbiddenException("This request is not assigned to you.");
         }
         if (request.getStatus() != PurchaseRequestStatus.PENDING) {
             throw new InvalidRequestException("Only pending requests can be actioned.");
         }
         return request;
+    }
+
+    private void saveManagerApprovalHistory(PurchaseRequest request, User manager,
+                                            ApprovalActionTaken action, String remarks) {
+        approvalHistoryRepository.save(ApprovalHistory.builder()
+                .purchaseRequest(request).actionBy(manager).actionTaken(action)
+                .approvalLevel(1).remarks(remarks).isDeleted(false).build());
     }
 
     private User requireManager() {

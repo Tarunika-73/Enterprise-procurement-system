@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
+import DashboardAnalytics from '../../components/dashboard/DashboardAnalytics';
 import VendorQuickActions from '../../components/vendor/VendorQuickActions';
 import VendorPOTable from '../../components/vendor/VendorPOTable';
 import { getVendorDashboard } from '../../services/vendorService';
@@ -98,6 +99,8 @@ const VendorDashboard = () => {
           </div>
         ))}
       </div>
+
+      <DashboardAnalytics />
 
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">

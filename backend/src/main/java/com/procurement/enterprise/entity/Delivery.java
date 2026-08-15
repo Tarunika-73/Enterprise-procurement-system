@@ -56,4 +56,10 @@ public class Delivery {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public PurchaseOrder getPurchaseOrder() { return this.purchaseOrder; }
+    public LocalDate getDeliveryDate() { return this.deliveryDate; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

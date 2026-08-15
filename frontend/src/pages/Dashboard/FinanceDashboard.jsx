@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getFinanceDashboard } from '../../services/financeService';
 import { formatCurrency } from '../../utils/employeeHelpers';
 import { getApiErrorMessage } from '../../utils/apiErrors';
+import DashboardAnalytics from '../../components/dashboard/DashboardAnalytics';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -79,6 +80,8 @@ const FinanceDashboard = () => {
           </div>
         ))}
       </div>
+
+      <DashboardAnalytics />
 
       <div className="row g-3">
         <div className="col-12 col-md-6">

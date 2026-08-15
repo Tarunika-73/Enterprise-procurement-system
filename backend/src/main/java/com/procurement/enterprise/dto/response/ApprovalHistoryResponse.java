@@ -16,6 +16,8 @@ public class ApprovalHistoryResponse {
     private Long historyId;
 
     private Long requestId;
+    private String requestNumber;
+    private String employeeName;
 
     private Long approverId;
 

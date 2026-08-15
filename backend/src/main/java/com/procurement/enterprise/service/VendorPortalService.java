@@ -5,6 +5,7 @@ import com.procurement.enterprise.dto.response.DeliveryResponse;
 import com.procurement.enterprise.dto.response.VendorDashboardResponse;
 import com.procurement.enterprise.dto.response.VendorPurchaseOrderResponse;
 import com.procurement.enterprise.dto.response.VendorResponse;
+import com.procurement.enterprise.dto.response.VendorInvoiceResponse;
 import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,4 +31,6 @@ public interface VendorPortalService {
     VendorResponse getProfile(String vendorEmail);
 
     VendorResponse updateProfile(String vendorEmail, String contactName, String phone, String address);
+
+    Page<VendorInvoiceResponse> getInvoices(String vendorEmail, Pageable pageable);
 }

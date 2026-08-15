@@ -24,6 +24,11 @@ export const getPurchaseRequestById = async (id) => {
   return response.data;
 };
 
+export const updatePurchaseRequest = async (id, payload) => {
+  const response = await api.put(`/v1/purchase-requests/${id}`, payload);
+  return response.data;
+};
+
 export const getEmployeeDashboardStats = async () => {
   const response = await api.get('/v1/purchase-requests/dashboard-stats');
   return response.data;
@@ -69,6 +74,7 @@ export default {
   createPurchaseRequest,
   getMyPurchaseRequests,
   getPurchaseRequestById,
+  updatePurchaseRequest,
   getEmployeeDashboardStats,
   getAssignmentPreview,
   getManagerDashboardStats,

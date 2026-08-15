@@ -45,6 +45,12 @@ public class FinanceController {
                 financeService.getPaymentHistory(pageable)));
     }
 
+    @GetMapping("/invoices")
+    public ResponseEntity<ApiResponse<Page<FinanceInvoiceResponse>>> getInvoices(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Invoices fetched", financeService.getInvoices(pageable)));
+    }
+
     @GetMapping("/payments/{id}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Payment fetched", financeService.getPaymentById(id)));

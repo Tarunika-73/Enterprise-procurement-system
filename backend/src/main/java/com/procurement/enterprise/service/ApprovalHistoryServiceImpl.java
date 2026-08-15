@@ -4,11 +4,15 @@ import com.procurement.enterprise.dto.response.ApprovalHistoryResponse;
 import com.procurement.enterprise.entity.ApprovalHistory;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
 import com.procurement.enterprise.repository.ApprovalHistoryRepository;
+import com.procurement.enterprise.repository.UserRepository;
+import com.procurement.enterprise.entity.User;
+import com.procurement.enterprise.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,7 @@ public class ApprovalHistoryServiceImpl
 
 
     private final ApprovalHistoryRepository approvalHistoryRepository;
+    private final UserRepository userRepository;
 
 
     @Override
@@ -32,7 +37,7 @@ public class ApprovalHistoryServiceImpl
 
         List<ApprovalHistory> historyList =
                 approvalHistoryRepository
-                        .findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(
+                        .findByPurchaseRequestIdAndIsDeletedFalseOrderByCreatedAtDesc(
                                 requestId
                         );
 
@@ -73,18 +78,17 @@ public class ApprovalHistoryServiceImpl
                         );
 
 
-        if (historyList.isEmpty()) {
-
-            throw new ResourceNotFoundException(
-                    "No approval history found for approver ID: "
-                            + approverId
-            );
-        }
-
-
         return historyList.stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    @Override
+    public List<ApprovalHistoryResponse> getMyHistory() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByEmailAndIsDeletedFalse(email)
+                .orElseThrow(() -> new UnauthorizedException("Authenticated user not found."));
+        return getHistoryByApprover(currentUser.getId());
     }
 
 
@@ -99,7 +103,16 @@ public class ApprovalHistoryServiceImpl
         /*
          * Approval entity contains PurchaseRequest relation.
          */
-        if (history.getApproval() != null &&
+        String requestNumber = null;
+        String employeeName = null;
+        if (history.getPurchaseRequest() != null) {
+            requestId = history.getPurchaseRequest().getId();
+            requestNumber = history.getPurchaseRequest().getRequestNumber();
+            if (history.getPurchaseRequest().getRequester() != null) {
+                employeeName = history.getPurchaseRequest().getRequester().getFirstName() + " "
+                        + history.getPurchaseRequest().getRequester().getLastName();
+            }
+        } else if (history.getApproval() != null &&
                 history.getApproval().getPurchaseRequisition() != null) {
 
 
@@ -145,6 +158,10 @@ public class ApprovalHistoryServiceImpl
                 .requestId(
                         requestId
                 )
+
+                .requestNumber(requestNumber)
+
+                .employeeName(employeeName)
 
                 .approverId(
                         approverId

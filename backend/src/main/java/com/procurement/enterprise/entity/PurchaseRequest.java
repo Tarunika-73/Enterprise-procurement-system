@@ -108,4 +108,13 @@ public class PurchaseRequest {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public String getRequestNumber() { return this.requestNumber; }
+    public Department getDepartment() { return this.department; }
+    public com.procurement.enterprise.enums.PurchaseRequestStatus getStatus() { return this.status; }
+    public void setStatus(com.procurement.enterprise.enums.PurchaseRequestStatus status) { this.status = status; }
+    public java.math.BigDecimal getTotalAmount() { return this.totalAmount; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

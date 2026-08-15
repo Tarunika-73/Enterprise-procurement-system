@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,6 +41,16 @@ public class PurchaseRequestController {
                         "Purchase request created successfully.",
                         response,
                         HttpStatus.CREATED));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<ApiResponse<PurchaseRequestResponse>> updatePendingRequest(
+            @PathVariable Long id,
+            @Valid @RequestBody CreatePurchaseRequestRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Purchase request updated successfully.",
+                purchaseRequestService.updatePendingRequest(id, request)));
     }
 
     @GetMapping("/my")
@@ -82,6 +93,7 @@ public class PurchaseRequestController {
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<PurchaseRequestResponse>> approve(
             @PathVariable Long id,
             @RequestBody(required = false) ManagerDecisionRequest request) {
@@ -92,6 +104,7 @@ public class PurchaseRequestController {
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<PurchaseRequestResponse>> reject(
             @PathVariable Long id,
             @Valid @RequestBody ManagerDecisionRequest request) {
@@ -102,6 +115,7 @@ public class PurchaseRequestController {
     }
 
     @PostMapping("/{id}/return")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ApiResponse<PurchaseRequestResponse>> returnForModification(
             @PathVariable Long id,
             @Valid @RequestBody ManagerDecisionRequest request) {

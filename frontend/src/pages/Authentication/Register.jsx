@@ -163,7 +163,7 @@ const Register = () => {
   };
 
   return (
-    <AuthLayout variant="internal">
+    <AuthLayout variant="internal" template="reference" copyVariant="register">
       <AuthCard
         title="Create Your Account"
         subtitle="Register to access the Enterprise Procurement System"

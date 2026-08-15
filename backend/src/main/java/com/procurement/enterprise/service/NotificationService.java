@@ -25,4 +25,7 @@ public interface NotificationService {
     void deleteNotification(Long notificationId);
 
     Notification createNotification(User user, NotificationType type, String subject, String message);
+
+    Notification createNotification(User user, NotificationType type, String subject, String message,
+                                    String referenceType, Long referenceId);
 }

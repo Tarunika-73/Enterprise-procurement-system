@@ -37,9 +37,14 @@ public class ApprovalHistory {
     /**
      * Approval record associated with this history.
      */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "approval_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approval_id")
     private Approval approval;
+
+    /** The active Manager workflow operates on purchase_requests, not legacy requisitions. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchase_request_id")
+    private PurchaseRequest purchaseRequest;
 
     /**
      * User who performed the action.

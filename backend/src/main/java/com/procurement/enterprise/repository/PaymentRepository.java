@@ -37,4 +37,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("SELECT COALESCE(SUM(p.amountPaid), 0) FROM Payment p WHERE p.isDeleted = false")
     BigDecimal sumTotalAmountByIsDeletedFalse();
+
+    @Query("SELECT COALESCE(SUM(p.amountPaid), 0) FROM Payment p WHERE p.status = 'PAID' AND p.isDeleted = false")
+    BigDecimal sumPaidAmount();
 }

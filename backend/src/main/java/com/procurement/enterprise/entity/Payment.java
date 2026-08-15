@@ -60,4 +60,16 @@ public class Payment {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public Invoice getInvoice() { return this.invoice; }
+    public String getPaymentReference() { return this.paymentReference; }
+    public java.math.BigDecimal getAmountPaid() { return this.amountPaid; }
+    public LocalDate getPaymentDate() { return this.paymentDate; }
+    public String getPaymentMethod() { return this.paymentMethod; }
+    public String getRemarks() { return this.remarks; }
+    public com.procurement.enterprise.enums.PaymentStatus getStatus() { return this.status; }
+    public void setStatus(com.procurement.enterprise.enums.PaymentStatus status) { this.status = status; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

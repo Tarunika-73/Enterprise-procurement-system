@@ -8,6 +8,8 @@ const PurchaseRequestForm = ({
   products = [],
   initialProductId = '',
   assignmentPreview = null,
+  initialValues = null,
+  submitLabel = 'Submit Request',
   submitting = false,
   onSubmit,
   onCancel,
@@ -29,6 +31,19 @@ const PurchaseRequestForm = ({
     }
   }, [initialProductId]);
 
+  useEffect(() => {
+    if (!initialValues) return;
+    setValues((prev) => ({
+      ...prev,
+      productId: initialValues.productId ? String(initialValues.productId) : prev.productId,
+      quantity: initialValues.quantity ?? prev.quantity,
+      title: initialValues.title ?? prev.title,
+      justification: initialValues.justification ?? prev.justification,
+      expectedDeliveryDate: initialValues.expectedDeliveryDate ?? prev.expectedDeliveryDate,
+      priority: initialValues.priority ?? prev.priority,
+    }));
+  }, [initialValues]);
+
   const selectedProduct = useMemo(
     () => products.find((product) => String(product.id) === String(values.productId)),
     [products, values.productId]
@@ -46,7 +61,10 @@ const PurchaseRequestForm = ({
   const handleChange = (event) => {
     const { name, value } = event.target;
     setValues((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: name === 'quantity' && Number(value) > 100 ? 'Quantity cannot exceed 100.' : undefined,
+    }));
   };
 
   const handleSubmit = (event) => {
@@ -241,7 +259,7 @@ const PurchaseRequestForm = ({
 
       <div className="d-flex flex-wrap gap-2 mt-4">
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'Submitting...' : 'Submit Request'}
+          {submitting ? 'Saving...' : submitLabel}
         </button>
         <button
           type="button"

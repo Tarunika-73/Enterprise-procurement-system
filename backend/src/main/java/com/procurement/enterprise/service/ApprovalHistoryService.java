@@ -24,4 +24,6 @@ public interface ApprovalHistoryService {
      * @return approval-history records handled by the approver
      */
     List<ApprovalHistoryResponse> getHistoryByApprover(Long approverId);
+
+    List<ApprovalHistoryResponse> getMyHistory();
 }

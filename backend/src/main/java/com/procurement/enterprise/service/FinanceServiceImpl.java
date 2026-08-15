@@ -33,6 +33,9 @@ public class FinanceServiceImpl implements FinanceService {
     private final InvoiceRepository invoiceRepository;
     private final DeliveryRepository deliveryRepository;
     private final ReceiptRepository receiptRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -58,6 +61,17 @@ public class FinanceServiceImpl implements FinanceService {
         return invoiceRepository.findByReceiptIdAndIsDeletedFalse(receipt.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No invoice found for receipt id: " + receipt.getId()));
+    }
+
+    private Invoice requirePayableInvoice(PurchaseOrder po) {
+        Delivery delivery = deliveryRepository.findByPurchaseOrderIdAndIsDeletedFalse(po.getId(), Pageable.unpaged())
+                .getContent().stream().findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Payment cannot be approved because the delivery has not been created."));
+        Receipt receipt = receiptRepository.findByDeliveryIdAndIsDeletedFalse(delivery.getId(), Pageable.unpaged())
+                .getContent().stream().findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Payment cannot be approved because the Goods Receipt has not been created."));
+        return invoiceRepository.findByReceiptIdAndIsDeletedFalse(receipt.getId())
+                .orElseThrow(() -> new InvalidRequestException("Payment cannot be approved because the invoice has not been created."));
     }
 
     private String generatePaymentReference() {
@@ -101,18 +115,15 @@ public class FinanceServiceImpl implements FinanceService {
     @Override
     @Transactional(readOnly = true)
     public FinanceDashboardResponse getDashboardStats() {
-        long pending = paymentRepository.countByStatusAndIsDeletedFalse(PaymentStatus.PENDING);
+        var eligibleInvoices = invoiceRepository.findEligibleForPayment(PurchaseOrderStatus.DELIVERED,
+                InvoiceStatus.PAID, InvoiceStatus.CANCELLED, Pageable.unpaged()).getContent();
+        long pending = eligibleInvoices.size();
         long completed = paymentRepository.countByStatusAndIsDeletedFalse(PaymentStatus.PAID);
-        BigDecimal pendingAmount = paymentRepository.sumAmountByStatusAndIsDeletedFalse(PaymentStatus.PENDING);
+        BigDecimal pendingAmount = eligibleInvoices.stream().map(Invoice::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalPaid = paymentRepository.sumAmountByStatusAndIsDeletedFalse(PaymentStatus.PAID);
 
-        // Also count DELIVERED POs that have no payment yet
-        long deliveredWithoutPayment = purchaseOrderRepository
-                .findByStatusAndIsDeletedFalse(PurchaseOrderStatus.DELIVERED, Pageable.unpaged())
-                .getTotalElements();
-
         return FinanceDashboardResponse.builder()
-                .pendingPayments(pending + deliveredWithoutPayment)
+                .pendingPayments(pending)
                 .completedPayments(completed)
                 .pendingAmount(pendingAmount)
                 .totalAmountPaid(totalPaid)
@@ -124,24 +135,13 @@ public class FinanceServiceImpl implements FinanceService {
     @Override
     @Transactional(readOnly = true)
     public Page<PendingPaymentResponse> getPendingPayments(Pageable pageable) {
-        return purchaseOrderRepository
-                .findByStatusAndIsDeletedFalse(PurchaseOrderStatus.DELIVERED, pageable)
-                .map(po -> {
+        return invoiceRepository.findEligibleForPayment(PurchaseOrderStatus.DELIVERED,
+                        InvoiceStatus.PAID, InvoiceStatus.CANCELLED, pageable)
+                .map(inv -> {
+                    Receipt receipt = inv.getReceipt();
+                    PurchaseOrder po = receipt.getDelivery().getPurchaseOrder();
                     PurchaseRequest pr = po.getPurchaseRequest();
                     Vendor vendor = po.getVendor();
-
-                    // Try to find invoice number via chain
-                    String invoiceNumber = null;
-                    LocalDate deliveryDate = null;
-                    try {
-                        Invoice inv = resolveInvoiceForPO(po.getId());
-                        invoiceNumber = inv.getInvoiceNumber();
-                        Receipt receipt = inv.getReceipt();
-                        deliveryDate = receipt.getDelivery().getDeliveryDate();
-                    } catch (ResourceNotFoundException ignored) {
-                        // Invoice may not exist yet
-                    }
-
                     return PendingPaymentResponse.builder()
                             .purchaseOrderId(po.getId())
                             .purchaseOrderNumber(po.getPurchaseOrderNumber())
@@ -152,11 +152,33 @@ public class FinanceServiceImpl implements FinanceService {
                             .departmentName(pr != null && pr.getDepartment() != null ? pr.getDepartment().getName() : null)
                             .totalAmount(po.getTotalAmount())
                             .expectedDeliveryDate(po.getExpectedDeliveryDate())
-                            .deliveryDate(deliveryDate)
-                            .invoiceNumber(invoiceNumber)
+                            .deliveryDate(receipt.getDelivery().getDeliveryDate())
+                            .invoiceNumber(inv.getInvoiceNumber())
                             .createdAt(po.getCreatedAt())
                             .build();
                 });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FinanceInvoiceResponse> getInvoices(Pageable pageable) {
+        return invoiceRepository.findAllByIsDeletedFalse(pageable).map(this::mapInvoice);
+    }
+
+    private FinanceInvoiceResponse mapInvoice(Invoice invoice) {
+        Payment payment = paymentRepository.findByInvoiceIdAndIsDeletedFalse(invoice.getId()).orElse(null);
+        BigDecimal paidAmount = payment == null ? BigDecimal.ZERO : payment.getAmountPaid();
+        PurchaseOrder po = invoice.getReceipt() != null && invoice.getReceipt().getDelivery() != null
+                ? invoice.getReceipt().getDelivery().getPurchaseOrder() : null;
+        PurchaseRequest pr = po == null ? null : po.getPurchaseRequest();
+        Vendor vendor = invoice.getVendor();
+        return FinanceInvoiceResponse.builder().id(invoice.getId()).invoiceNumber(invoice.getInvoiceNumber())
+                .purchaseOrderNumber(po == null ? null : po.getPurchaseOrderNumber())
+                .purchaseRequestNumber(pr == null ? null : pr.getRequestNumber())
+                .vendorName(vendor == null ? null : vendor.getVendorName())
+                .invoiceDate(invoice.getInvoiceDate()).dueDate(invoice.getDueDate())
+                .totalAmount(invoice.getTotalAmount()).paidAmount(paidAmount)
+                .balanceAmount(invoice.getTotalAmount().subtract(paidAmount)).status(invoice.getStatus()).build();
     }
 
     /* ── payment history ─────────────────────────────────────────── */
@@ -220,7 +242,14 @@ public class FinanceServiceImpl implements FinanceService {
                     "Payment can only be approved for DELIVERED orders. Current status: " + po.getStatus());
         }
 
-        Invoice invoice = resolveInvoiceForPO(purchaseOrderId);
+        Invoice invoice = requirePayableInvoice(po);
+
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new InvalidRequestException("Invoice has already been paid.");
+        }
+        if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
+            throw new InvalidRequestException("Cannot approve payment for a cancelled invoice.");
+        }
 
         if (paymentRepository.existsByInvoiceIdAndIsDeletedFalse(invoice.getId())) {
             throw new InvalidRequestException("Payment already exists for this Purchase Order.");
@@ -244,6 +273,10 @@ public class FinanceServiceImpl implements FinanceService {
 
         Payment saved = paymentRepository.save(payment);
 
+        // A completed payment settles its linked invoice in the same transaction.
+        invoice.setStatus(InvoiceStatus.PAID);
+        invoiceRepository.save(invoice);
+
         // Update PO status → CLOSED
         po.setStatus(PurchaseOrderStatus.CLOSED);
         purchaseOrderRepository.save(po);
@@ -256,6 +289,11 @@ public class FinanceServiceImpl implements FinanceService {
         }
 
         log.info("Payment {} approved for PO {}", paymentReference, po.getPurchaseOrderNumber());
+        auditLogService.record("PAYMENT_APPROVED", "payments", saved.getId(), null, "purchaseOrderId=" + po.getId());
+        if (po.getPurchaseRequest() != null && po.getPurchaseRequest().getRequester() != null) notificationService.createNotification(po.getPurchaseRequest().getRequester(), NotificationType.SYSTEM,
+                "Payment completed", "Payment for purchase order " + po.getPurchaseOrderNumber() + " has been completed.");
+        for (User finance : userRepository.findActiveFinanceOfficers()) notificationService.createNotification(finance, NotificationType.SYSTEM,
+                "Payment completed", "Payment " + paymentReference + " was completed.");
         return mapToPaymentResponse(saved);
     }
 

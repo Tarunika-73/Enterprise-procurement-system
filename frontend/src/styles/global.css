@@ -28,3 +28,16 @@
   --eps-radius:           12px;
   --eps-radius-lg:        18px;
 }
+
+/* Dashboard-only theme tokens. Light remains the default appearance. */
+:root[data-theme='dark'] {
+  --eps-bg: #161923;
+  --eps-bg-soft: #1e2330;
+  --eps-bg-gradient-start: #20263a;
+  --eps-bg-gradient-end: #182b3a;
+  --eps-border: #343c4d;
+  --eps-shadow: 0 4px 16px rgba(0, 0, 0, .28);
+  --eps-shadow-sm: 0 1px 4px rgba(0, 0, 0, .26);
+  --eps-text: #edf0f7;
+  --eps-text-muted: #aeb8ca;
+}

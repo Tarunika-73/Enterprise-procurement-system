@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Role-scoped summary for the Reports page.
@@ -26,5 +27,7 @@ public class ReportSummaryResponse {
     private long activeVendors;
 
     private List<DepartmentSpendResponse> departmentBreakdown;
+    private Map<String, Long> requestStatusBreakdown;
+    private List<MonthlySpendResponse> monthlySpend;
     private List<RecentActivityResponse> recentActivity;
 }

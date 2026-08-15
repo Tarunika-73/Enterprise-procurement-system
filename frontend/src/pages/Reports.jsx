@@ -5,6 +5,7 @@ import { normalizeRole } from "../utils/roleNavigation";
 import { getReportSummary, downloadReport } from "../services/reportService";
 import { formatCurrency, formatDateTime, unwrapApiData } from "../utils/employeeHelpers";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import { Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const ROLE_COPY = {
   [USER_ROLES.EMPLOYEE]: {
@@ -35,6 +36,7 @@ const DEFAULT_COPY = {
 };
 
 const PROGRESS_COLORS = ["bg-success", "bg-info", "bg-warning", "bg-primary", "bg-danger", "bg-secondary"];
+const CHART_COLORS = ['#7C6FD6', '#6EB5FF', '#198754', '#f0ad4e', '#dc3545', '#6c757d'];
 
 export default function Reports() {
   const { userRole } = useAuth();
@@ -79,6 +81,10 @@ export default function Reports() {
 
   const departmentBreakdown = summary?.departmentBreakdown ?? [];
   const recentActivity = summary?.recentActivity ?? [];
+  const statusData = Object.entries(summary?.requestStatusBreakdown ?? {}).map(([name, value]) => ({
+    name: name.replaceAll('_', ' '), value,
+  }));
+  const monthlySpend = summary?.monthlySpend ?? [];
 
   return (
     <div className="container-fluid mt-4">
@@ -156,6 +162,48 @@ export default function Reports() {
           </div>
 
           <div className="row">
+
+            <div className="col-lg-6">
+              <div className="card shadow mb-4 report-chart-card">
+                <div className="card-header bg-primary text-white">Purchase Request Status Distribution</div>
+                <div className="card-body">
+                  {statusData.length === 0 ? <p className="text-muted mb-0">No purchase request activity yet.</p> : (
+                    <div className="report-chart">
+                      <ResponsiveContainer width="100%" height={280}>
+                        <PieChart>
+                          <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                            {statusData.map((entry, index) => <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
+                          </Pie>
+                          <Tooltip formatter={(value) => [value, 'Requests']} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="card shadow mb-4 report-chart-card">
+                <div className="card-header bg-success text-white">Monthly Procurement Spending</div>
+                <div className="card-body">
+                  {monthlySpend.length === 0 ? <p className="text-muted mb-0">No procurement spending data yet.</p> : (
+                    <div className="report-chart">
+                      <ResponsiveContainer width="100%" height={280}>
+                        <LineChart data={monthlySpend} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                          <YAxis tickFormatter={(value) => `₹${Number(value).toLocaleString('en-IN')}`} width={75} tick={{ fontSize: 12 }} />
+                          <Tooltip formatter={(value) => [formatCurrency(value), 'Spend']} />
+                          <Legend />
+                          <Line type="monotone" dataKey="amount" name="Procurement spend" stroke="#7C6FD6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Spend by Department */}
 

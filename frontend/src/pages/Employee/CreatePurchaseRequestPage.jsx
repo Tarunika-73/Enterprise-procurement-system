@@ -6,6 +6,8 @@ import { getEmployeeProductCatalog } from '../../services/productService';
 import {
   createPurchaseRequest,
   getAssignmentPreview,
+  getPurchaseRequestById,
+  updatePurchaseRequest,
 } from '../../services/purchaseRequestService';
 import { getApiErrorMessage } from '../../utils/apiErrors';
 import { unwrapApiData } from '../../utils/employeeHelpers';
@@ -14,9 +16,11 @@ const CreatePurchaseRequestPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialProductId = searchParams.get('productId') || '';
+  const editRequestId = searchParams.get('edit');
 
   const [products, setProducts] = useState([]);
   const [assignmentPreview, setAssignmentPreview] = useState(null);
+  const [initialValues, setInitialValues] = useState(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -27,9 +31,10 @@ const CreatePurchaseRequestPage = () => {
     const loadData = async () => {
       setLoadingProducts(true);
       try {
-        const [catalogResponse, previewResponse] = await Promise.all([
+        const [catalogResponse, previewResponse, requestResponse] = await Promise.all([
           getEmployeeProductCatalog(),
           getAssignmentPreview(),
+          editRequestId ? getPurchaseRequestById(editRequestId) : Promise.resolve(null),
         ]);
         if (!mounted) return;
 
@@ -40,6 +45,16 @@ const CreatePurchaseRequestPage = () => {
         ];
         setProducts(combined);
         setAssignmentPreview(unwrapApiData(previewResponse));
+        if (requestResponse) {
+          const request = unwrapApiData(requestResponse);
+          if (request?.status !== 'PENDING') {
+            throw new Error('Only requests awaiting manager approval can be edited.');
+          }
+          setInitialValues({
+            ...request,
+            expectedDeliveryDate: request.expectedDeliveryDate?.slice(0, 10) || '',
+          });
+        }
       } catch (err) {
         if (mounted) {
           setToast({
@@ -57,15 +72,19 @@ const CreatePurchaseRequestPage = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [editRequestId]);
 
   const handleSubmit = async (payload) => {
     setSubmitting(true);
     try {
-      await createPurchaseRequest(payload);
+      if (editRequestId) {
+        await updatePurchaseRequest(editRequestId, payload);
+      } else {
+        await createPurchaseRequest(payload);
+      }
       setToast({
         show: true,
-        message: 'Purchase request submitted and assigned to your department manager.',
+        message: editRequestId ? 'Purchase request updated successfully.' : 'Purchase request submitted and assigned to your department manager.',
         type: 'success',
       });
       setTimeout(() => {
@@ -74,7 +93,7 @@ const CreatePurchaseRequestPage = () => {
     } catch (err) {
       setToast({
         show: true,
-        message: getApiErrorMessage(err, 'Failed to create purchase request.'),
+        message: getApiErrorMessage(err, editRequestId ? 'Failed to update purchase request.' : 'Failed to create purchase request.'),
         type: 'danger',
       });
     } finally {
@@ -92,7 +111,7 @@ const CreatePurchaseRequestPage = () => {
       />
 
       <div className="dashboard-page-header">
-        <h1>Create Purchase Request</h1>
+          <h1>{editRequestId ? 'Edit Purchase Request' : 'Create Purchase Request'}</h1>
         <p className="text-muted mb-0">
           Your department manager is assigned automatically. You cannot change the manager.
         </p>
@@ -109,7 +128,9 @@ const CreatePurchaseRequestPage = () => {
           products={products}
           initialProductId={initialProductId}
           assignmentPreview={assignmentPreview}
+          initialValues={initialValues}
           submitting={submitting}
+          submitLabel={editRequestId ? 'Save Changes' : 'Submit Request'}
           onSubmit={handleSubmit}
           onCancel={() => navigate(-1)}
         />

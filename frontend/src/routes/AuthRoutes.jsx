@@ -20,6 +20,16 @@ import ProcurementOfficerDashboard from '../pages/Dashboard/ProcurementOfficerDa
 import VendorDashboard from '../pages/Dashboard/VendorDashboard';
 import FinanceDashboard from '../pages/Dashboard/FinanceDashboard';
 import AdminDashboard from '../pages/Dashboard/AdminDashboard';
+import AdminUsersPage from '../pages/Admin/AdminUsersPage';
+import AdminVendorsPage from '../pages/Admin/AdminVendorsPage';
+import AdminDepartmentsPage from '../pages/Admin/AdminDepartmentsPage';
+import AdminProductsPage from '../pages/Admin/AdminProductsPage';
+import AdminPurchaseRequestsPage from '../pages/Admin/AdminPurchaseRequestsPage';
+import AdminPurchaseOrdersPage from '../pages/Admin/AdminPurchaseOrdersPage';
+import AdminInvoicesPage from '../pages/Admin/AdminInvoicesPage';
+import AdminPaymentsPage from '../pages/Admin/AdminPaymentsPage';
+import AdminAuditLogsPage from '../pages/Admin/AdminAuditLogsPage';
+import AdminProfilePage from '../pages/Admin/AdminProfilePage';
 
 import ProductListPage from '../pages/Employee/ProductListPage';
 import CreatePurchaseRequestPage from '../pages/Employee/CreatePurchaseRequestPage';
@@ -31,16 +41,19 @@ import VendorPurchaseOrdersPage from '../pages/Vendor/VendorPurchaseOrdersPage';
 import VendorPurchaseOrderDetailPage from '../pages/Vendor/VendorPurchaseOrderDetailPage';
 import VendorUpdateDeliveryPage from '../pages/Vendor/VendorUpdateDeliveryPage';
 import VendorProfilePage from '../pages/Vendor/VendorProfilePage';
+import VendorInvoicesPage from '../pages/Vendor/VendorInvoicesPage';
 
 import PendingPaymentsPage from '../pages/Finance/PendingPaymentsPage';
 import PaymentDetailsPage from '../pages/Finance/PaymentDetailsPage';
 import PaymentHistoryPage from '../pages/Finance/PaymentHistoryPage';
 import FinanceReportsPage from '../pages/Finance/FinanceReportsPage';
+import FinanceInvoicesPage from '../pages/Finance/FinanceInvoicesPage';
 
 import ApprovalHistory from '../pages/ApprovalHistory';
 import DepartmentRequests from '../pages/DepartmentRequests';
 import PurchaseRequests from '../pages/PurchaseRequests';
 import PurchaseOrders from '../pages/PurchaseOrders';
+import GoodsReceiptsPage from '../pages/Procurement/GoodsReceiptsPage';
 import Suppliers from '../pages/Suppliers';
 import Reports from '../pages/Reports';
 
@@ -133,6 +146,8 @@ const AuthRoutes = () => {
           }
         />
 
+        <Route path="goods-receipts" element={<ProtectedRoute allowedRoles={[USER_ROLES.PROCUREMENT_OFFICER]}><GoodsReceiptsPage /></ProtectedRoute>} />
+
         <Route
           path="vendor-management"
           element={
@@ -173,7 +188,7 @@ const AuthRoutes = () => {
         />
 
         <Route
-          path="department-requests"
+          path="team-requests"
           element={
             <ProtectedRoute allowedRoles={[USER_ROLES.MANAGER]}>
               <DepartmentRequests />
@@ -203,6 +218,29 @@ const AuthRoutes = () => {
           }
         />
 
+      </Route>
+
+      {/* ================= ADMIN ================= */}
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="vendors" element={<AdminVendorsPage />} />
+        <Route path="departments" element={<AdminDepartmentsPage />} />
+        <Route path="products" element={<AdminProductsPage />} />
+        <Route path="purchase-requests" element={<AdminPurchaseRequestsPage />} />
+        <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
+        <Route path="invoices" element={<AdminInvoicesPage />} />
+        <Route path="payments" element={<AdminPaymentsPage />} />
+        <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
       </Route>
 
       {/* ================= EMPLOYEE ================= */}
@@ -272,6 +310,7 @@ const AuthRoutes = () => {
           path="profile"
           element={<VendorProfilePage />}
         />
+        <Route path="invoices" element={<VendorInvoicesPage />} />
       </Route>
 
       {/* ================= FINANCE ================= */}
@@ -288,6 +327,7 @@ const AuthRoutes = () => {
         <Route path="pending-payments" element={<PendingPaymentsPage />} />
         <Route path="payments/:purchaseOrderId" element={<PaymentDetailsPage />} />
         <Route path="payment-history" element={<PaymentHistoryPage />} />
+        <Route path="invoices" element={<FinanceInvoicesPage />} />
         <Route path="reports" element={<FinanceReportsPage />} />
       </Route>
 

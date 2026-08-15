@@ -53,4 +53,74 @@ public class SupplierPerformance {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Explicit accessors to ensure methods are available even if Lombok
+    // annotation processing is not running in the build environment.
+    public Long getId() {
+        return this.id;
+    }
+
+    public Vendor getVendor() {
+        return this.vendor;
+    }
+
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
+    }
+
+    public PurchaseOrder getPurchaseOrder() {
+        return this.purchaseOrder;
+    }
+
+    public void setPurchaseOrder(PurchaseOrder purchaseOrder) {
+        this.purchaseOrder = purchaseOrder;
+    }
+
+    public Integer getQualityRating() {
+        return this.qualityRating;
+    }
+
+    public void setQualityRating(Integer qualityRating) {
+        this.qualityRating = qualityRating;
+    }
+
+    public Integer getDeliveryRating() {
+        return this.deliveryRating;
+    }
+
+    public void setDeliveryRating(Integer deliveryRating) {
+        this.deliveryRating = deliveryRating;
+    }
+
+    public Integer getPricingRating() {
+        return this.pricingRating;
+    }
+
+    public void setPricingRating(Integer pricingRating) {
+        this.pricingRating = pricingRating;
+    }
+
+    public String getComments() {
+        return this.comments;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
+
+    public Boolean getIsDeleted() {
+        return this.isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return this.createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return this.updatedAt;
+    }
 }

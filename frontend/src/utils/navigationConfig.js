@@ -2,7 +2,6 @@ import { USER_ROLES } from './constants';
 import { getDashboardRouteByRole, normalizeRole } from './roleNavigation';
 
 const ALL_INTERNAL = [
-  USER_ROLES.ADMIN,
   USER_ROLES.EMPLOYEE,
   USER_ROLES.MANAGER,
   USER_ROLES.FINANCE,
@@ -14,7 +13,7 @@ export const NAV_ITEMS = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: 'bi-speedometer2',
-    roles: [...ALL_INTERNAL, USER_ROLES.VENDOR],
+    roles: [USER_ROLES.ADMIN, ...ALL_INTERNAL, USER_ROLES.VENDOR],
     resolvePath: (role) => getDashboardRouteByRole(role),
   },
   {
@@ -43,17 +42,27 @@ export const NAV_ITEMS = [
     id: 'purchase-requests',
     label: 'Team Requests',
     icon: 'bi-clipboard-check',
-    path: '/dashboard/manager',
+    path: '/dashboard/team-requests',
     roles: [USER_ROLES.MANAGER],
   },
   {
-    // Admin-level purchase requests view (coming soon).
+    id: 'admin-users', label: 'Users', icon: 'bi-people', path: '/admin/users', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-vendors', label: 'Vendors', icon: 'bi-building', path: '/admin/vendors', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-departments', label: 'Departments', icon: 'bi-diagram-3', path: '/admin/departments', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-products', label: 'Products', icon: 'bi-box-seam', path: '/admin/products', roles: [USER_ROLES.ADMIN],
+  },
+  {
     id: 'admin-purchase-requests',
     label: 'Purchase Requests',
     icon: 'bi-clipboard-check',
-    path: '/dashboard/purchase-requests',
+    path: '/admin/purchase-requests',
     roles: [USER_ROLES.ADMIN],
-    comingSoon: true,
   },
   {
     // Procurement Officer — approved requests to process
@@ -65,6 +74,21 @@ export const NAV_ITEMS = [
     comingSoon: false,
   },
   {
+    id: 'admin-purchase-orders', label: 'Purchase Orders', icon: 'bi-cart-check', path: '/admin/purchase-orders', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-invoices', label: 'Invoices', icon: 'bi-receipt', path: '/admin/invoices', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-payments', label: 'Payments', icon: 'bi-cash-stack', path: '/admin/payments', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-audit-logs', label: 'Audit Logs', icon: 'bi-journal-text', path: '/admin/audit-logs', roles: [USER_ROLES.ADMIN],
+  },
+  {
+    id: 'admin-profile', label: 'Profile', icon: 'bi-person-circle', path: '/admin/profile', roles: [USER_ROLES.ADMIN],
+  },
+  {
     id: 'approval-history',
     label: 'Approval History',
     icon: 'bi-clock-history',
@@ -73,20 +97,16 @@ export const NAV_ITEMS = [
     comingSoon: false,
   },
   {
-    id: 'department-requests',
-    label: 'Department Requests',
-    icon: 'bi-building',
-    path: '/dashboard/department-requests',
-    roles: [USER_ROLES.MANAGER],
-    comingSoon: false,
-  },
-  {
     id: 'purchase-orders',
     label: 'Purchase Orders',
     icon: 'bi-cart-check',
     path: '/dashboard/purchase-orders',
-    roles: [USER_ROLES.MANAGER, USER_ROLES.ADMIN, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [USER_ROLES.PROCUREMENT_OFFICER],
     comingSoon: false,
+  },
+  {
+    id: 'goods-receipts', label: 'Goods Receipts', icon: 'bi-clipboard-check',
+    path: '/dashboard/goods-receipts', roles: [USER_ROLES.PROCUREMENT_OFFICER],
   },
   {
     id: 'vendor-purchase-orders',
@@ -108,7 +128,7 @@ export const NAV_ITEMS = [
     icon: 'bi-receipt',
     path: '/vendor/invoices',
     roles: [USER_ROLES.VENDOR],
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: 'vendor-profile',
@@ -122,15 +142,7 @@ export const NAV_ITEMS = [
     label: 'Vendor Management',
     icon: 'bi-building',
     path: '/dashboard/vendor-management',
-    roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.PROCUREMENT_OFFICER],
-    comingSoon: false,
-  },
-  {
-    id: 'finance',
-    label: 'Finance',
-    icon: 'bi-currency-dollar',
-    path: '/finance',
-    roles: [USER_ROLES.FINANCE, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+    roles: [USER_ROLES.PROCUREMENT_OFFICER],
     comingSoon: false,
   },
   {
@@ -148,11 +160,14 @@ export const NAV_ITEMS = [
     roles: [USER_ROLES.FINANCE],
   },
   {
+    id: 'finance-invoices', label: 'Invoices', icon: 'bi-receipt', path: '/finance/invoices', roles: [USER_ROLES.FINANCE],
+  },
+  {
     id: 'finance-reports',
     label: 'Finance Reports',
     icon: 'bi-bar-chart-line',
     path: '/finance/reports',
-    roles: [USER_ROLES.FINANCE],
+    roles: [],
   },
   {
     id: 'reports',
@@ -174,7 +189,7 @@ export const NAV_ITEMS = [
     label: 'Feedback & Complaints',
     icon: 'bi-chat-left-text',
     path: '/feedback',
-    roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.FINANCE, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [],
     comingSoon: true,
   },
   {
@@ -182,7 +197,7 @@ export const NAV_ITEMS = [
     label: 'Settings',
     icon: 'bi-gear',
     path: '/settings',
-    roles: [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.FINANCE, USER_ROLES.PROCUREMENT_OFFICER],
+    roles: [USER_ROLES.FINANCE],
     comingSoon: true,
   },
 ];

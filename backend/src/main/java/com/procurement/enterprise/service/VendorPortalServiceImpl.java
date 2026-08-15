@@ -38,7 +38,10 @@ public class VendorPortalServiceImpl implements VendorPortalService {
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final ReceiptRepository receiptRepository;
     private final InvoiceRepository invoiceRepository;
+    private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final AuditLogService auditLogService;
 
     /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -313,6 +316,9 @@ public class VendorPortalServiceImpl implements VendorPortalService {
         if (po.getStatus() == PurchaseOrderStatus.SENT || po.getStatus() == PurchaseOrderStatus.CREATED) {
             throw new InvalidRequestException("Order must be accepted before updating delivery");
         }
+        if (po.getStatus() == PurchaseOrderStatus.DELIVERED || po.getStatus() == PurchaseOrderStatus.CLOSED) {
+            throw new InvalidRequestException("Delivery cannot be updated after the purchase order is " + po.getStatus());
+        }
 
         // Validate dispatch number required for non-PENDING statuses
         if (request.getDeliveryStatus() != DeliveryStatus.PENDING
@@ -344,6 +350,14 @@ public class VendorPortalServiceImpl implements VendorPortalService {
                     .build();
         }
 
+        DeliveryStatus currentStatus = delivery.getStatus() == null ? DeliveryStatus.PENDING : delivery.getStatus();
+        if (currentStatus == DeliveryStatus.PENDING && request.getDeliveryStatus() == DeliveryStatus.DELIVERED) {
+            throw new InvalidRequestException("Delivery must be marked IN_TRANSIT before it can be delivered");
+        }
+        if (currentStatus == DeliveryStatus.IN_TRANSIT && request.getDeliveryStatus() == DeliveryStatus.PENDING) {
+            throw new InvalidRequestException("An in-transit delivery cannot return to PENDING");
+        }
+
         delivery.setStatus(request.getDeliveryStatus());
         delivery.setTrackingNumber(request.getDispatchNumber());
         delivery.setDeliveryDate(request.getExpectedDeliveryDate());
@@ -351,6 +365,8 @@ public class VendorPortalServiceImpl implements VendorPortalService {
 
         Delivery saved = deliveryRepository.save(delivery);
         log.info("Vendor {} updated delivery for PO {}", vendor.getId(), po.getPurchaseOrderNumber());
+        auditLogService.record("UPDATE", "deliveries", saved.getId(), "status=" + currentStatus,
+                "status=" + saved.getStatus() + "; purchaseOrderId=" + po.getId());
 
         // When delivery is confirmed, advance the procurement workflow
         if (request.getDeliveryStatus() == DeliveryStatus.DELIVERED) {
@@ -364,15 +380,21 @@ public class VendorPortalServiceImpl implements VendorPortalService {
 
                 log.info("STEP 2 - Purchase Order saved successfully");
 
-                // 2. Create Receipt if absent
-                Receipt receipt = createReceiptIfAbsent(saved, po);
-
-                log.info("STEP 3 - Receipt creation completed");
-
-                // 3. Create Invoice if absent
-                createInvoiceIfAbsent(receipt, po);
-
-                log.info("STEP 4 - Invoice creation completed");
+                // Goods receipt and invoice creation are performed by an authenticated internal receiver.
+                if (po.getPurchaseRequest() != null && po.getPurchaseRequest().getRequester() != null) {
+                    notificationService.createNotification(po.getPurchaseRequest().getRequester(),
+                            com.procurement.enterprise.enums.NotificationType.SYSTEM, "Delivery completed",
+                            "Delivery for purchase order " + po.getPurchaseOrderNumber() + " is ready for goods receipt.");
+                }
+                for (User officer : userRepository.findActiveProcurementOfficers()) {
+                    notificationService.createNotification(officer, com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                            "Goods receipt required", "Delivery for purchase order " + po.getPurchaseOrderNumber() + " requires inspection.",
+                            "GOODS_RECEIPT_DELIVERY", saved.getId());
+                }
+                for (User finance : userRepository.findActiveFinanceOfficers()) {
+                    notificationService.createNotification(finance, com.procurement.enterprise.enums.NotificationType.SYSTEM,
+                            "Delivery completed", "Purchase order " + po.getPurchaseOrderNumber() + " is awaiting goods receipt.");
+                }
             } catch (Exception ex) {
                 log.error("Error during DELIVERED workflow", ex);
                 throw ex;
@@ -409,5 +431,28 @@ public class VendorPortalServiceImpl implements VendorPortalService {
         if (phone != null) vendor.setPhone(phone);
         if (address != null) vendor.setAddress(address);
         return mapVendor(vendorRepository.save(vendor));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VendorInvoiceResponse> getInvoices(String vendorEmail, Pageable pageable) {
+        Vendor vendor = resolveVendor(vendorEmail);
+        return invoiceRepository.findByVendorIdAndIsDeletedFalse(vendor.getId(), pageable)
+                .map(this::mapInvoice);
+    }
+
+    private VendorInvoiceResponse mapInvoice(Invoice invoice) {
+        Payment payment = paymentRepository.findByInvoiceIdAndIsDeletedFalse(invoice.getId()).orElse(null);
+        BigDecimal paidAmount = payment == null ? BigDecimal.ZERO : payment.getAmountPaid();
+        Receipt receipt = invoice.getReceipt();
+        PurchaseOrder po = receipt != null && receipt.getDelivery() != null
+                ? receipt.getDelivery().getPurchaseOrder() : null;
+        return VendorInvoiceResponse.builder()
+                .id(invoice.getId()).invoiceNumber(invoice.getInvoiceNumber())
+                .purchaseOrderNumber(po == null ? null : po.getPurchaseOrderNumber())
+                .invoiceDate(invoice.getInvoiceDate()).dueDate(invoice.getDueDate())
+                .totalAmount(invoice.getTotalAmount()).paidAmount(paidAmount)
+                .balanceAmount(invoice.getTotalAmount().subtract(paidAmount)).status(invoice.getStatus())
+                .build();
     }
 }

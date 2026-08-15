@@ -28,3 +28,9 @@ export const sendPurchaseOrder = (id) =>
 
 export const getActiveVendors = ({ page = 0, size = 50 } = {}) =>
   api.get(`${BASE}/vendors`, { params: { page, size } }).then((r) => r.data);
+
+export const getGoodsReceiptWorkflows = () => api.get('/v1/receipts/workflow').then((r) => r.data);
+export const getGoodsReceiptWorkflow = (deliveryId) => api.get(`/v1/receipts/workflow/${deliveryId}`).then((r) => r.data);
+export const createGoodsReceipt = (payload) => api.post('/v1/receipts', payload).then((r) => r.data);
+export const downloadGoodsReceiptPdf = (receiptId) =>
+  api.get(`/v1/receipts/${receiptId}/pdf`, { responseType: 'blob' }).then((r) => r.data);

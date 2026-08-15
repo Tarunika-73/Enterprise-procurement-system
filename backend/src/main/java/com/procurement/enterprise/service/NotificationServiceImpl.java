@@ -60,7 +60,8 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationResponse markAsRead(Long notificationId) {
         User currentUser = getCurrentUser();
         Notification notification = notificationRepository.findByIdAndIsDeletedFalse(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", notificationId));
+                .orElseThrow(() ->
+                    new ResourceNotFoundException("Notification", notificationId));
 
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedException("You are not authorized to modify this notification.");
@@ -93,8 +94,8 @@ public class NotificationServiceImpl implements NotificationService {
     public void deleteNotification(Long notificationId) {
         User currentUser = getCurrentUser();
         Notification notification = notificationRepository.findByIdAndIsDeletedFalse(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", notificationId));
-
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Notification", notificationId));
         if (!notification.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedException("You are not authorized to delete this notification.");
         }
@@ -107,11 +108,20 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public Notification createNotification(User user, NotificationType type, String subject, String message) {
+        return createNotification(user, type, subject, message, null, null);
+    }
+
+    @Override
+    @Transactional
+    public Notification createNotification(User user, NotificationType type, String subject, String message,
+                                           String referenceType, Long referenceId) {
         Notification notification = Notification.builder()
                 .user(user)
                 .type(type != null ? type : NotificationType.SYSTEM)
                 .subject(subject)
                 .message(message)
+                .referenceType(referenceType)
+                .referenceId(referenceId)
                 .isRead(false)
                 .isDeleted(false)
                 .build();
@@ -136,6 +146,8 @@ public class NotificationServiceImpl implements NotificationService {
                 .type(notification.getType())
                 .subject(notification.getSubject())
                 .message(notification.getMessage())
+                .referenceType(notification.getReferenceType())
+                .referenceId(notification.getReferenceId())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
                 .build();

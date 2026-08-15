@@ -19,6 +19,7 @@ public class CreatePurchaseRequestRequest {
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be greater than 0")
+    @Max(value = 100, message = "Quantity cannot exceed 100")
     private Integer quantity;
 
     @NotNull(message = "Unit price is required")

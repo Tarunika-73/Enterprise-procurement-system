@@ -16,6 +16,8 @@ export const validatePurchaseRequestForm = (values) => {
     errors.quantity = 'Quantity must be greater than 0.';
   } else if (!Number.isInteger(quantity)) {
     errors.quantity = 'Quantity must be a whole number.';
+  } else if (quantity > 100) {
+    errors.quantity = 'Quantity cannot exceed 100.';
   }
 
   if (!values.title?.trim()) {

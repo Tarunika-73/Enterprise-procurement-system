@@ -114,4 +114,12 @@ public class VendorPortalController {
         );
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", data));
     }
+
+    @GetMapping("/invoices")
+    public ResponseEntity<ApiResponse<Page<VendorInvoiceResponse>>> getInvoices(
+            @AuthenticationPrincipal UserDetails principal,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success("Invoices fetched",
+                vendorPortalService.getInvoices(principal.getUsername(), pageable)));
+    }
 }

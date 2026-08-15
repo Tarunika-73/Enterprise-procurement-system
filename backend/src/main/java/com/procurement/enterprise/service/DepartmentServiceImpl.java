@@ -152,6 +152,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Department department = findDepartment(id);
 
+        if (userRepository.existsByDepartmentIdAndIsDeletedFalse(id)) {
+            throw new InvalidRequestException(
+                    "Cannot delete a department while active users are assigned to it.");
+        }
+
         department.setIsDeleted(true);
 
         departmentRepository.save(department);

@@ -64,4 +64,15 @@ public class PurchaseOrder {
     @OneToMany(mappedBy = "purchaseOrder", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     private List<PurchaseOrderItem> items = new ArrayList<>();
+
+    public Long getId() { return this.id; }
+    public String getPurchaseOrderNumber() { return this.purchaseOrderNumber; }
+    public PurchaseRequest getPurchaseRequest() { return this.purchaseRequest; }
+    public Vendor getVendor() { return this.vendor; }
+    public java.math.BigDecimal getTotalAmount() { return this.totalAmount; }
+    public java.time.LocalDate getExpectedDeliveryDate() { return this.expectedDeliveryDate; }
+    public java.time.LocalDateTime getCreatedAt() { return this.createdAt; }
+    public java.time.LocalDateTime getUpdatedAt() { return this.updatedAt; }
+    public com.procurement.enterprise.enums.PurchaseOrderStatus getStatus() { return this.status; }
+    public void setStatus(com.procurement.enterprise.enums.PurchaseOrderStatus status) { this.status = status; }
 }

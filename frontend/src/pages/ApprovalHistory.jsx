@@ -1,68 +1,7 @@
-const history = [
-  {
-    id: "PR001",
-    employee: "Alice",
-    action: "Approved",
-    date: "31 Jul 2026",
-    remarks: "Budget Approved",
-  },
-  {
-    id: "PR002",
-    employee: "Bob",
-    action: "Rejected",
-    date: "30 Jul 2026",
-    remarks: "Insufficient Budget",
-  },
-  {
-    id: "PR003",
-    employee: "Charlie",
-    action: "Approved",
-    date: "29 Jul 2026",
-    remarks: "Urgent Requirement",
-  },
-];
-
-export default function ApprovalHistory() {
-  return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Approval History</h2>
-
-      <table className="table table-striped table-hover shadow">
-        <thead className="table-dark">
-          <tr>
-            <th>Request ID</th>
-            <th>Employee</th>
-            <th>Decision</th>
-            <th>Date</th>
-            <th>Remarks</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {history.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.employee}</td>
-
-              <td>
-                <span
-                  className={`badge ${
-                    item.action === "Approved"
-                      ? "bg-success"
-                      : "bg-danger"
-                  }`}
-                >
-                  {item.action}
-                </span>
-              </td>
-
-              <td>{item.date}</td>
-
-              <td>{item.remarks}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+import { useCallback, useEffect, useState } from 'react';
+import api from '../services/api';
+import { formatDateTime, unwrapApiData } from '../utils/employeeHelpers';
+import { getApiErrorMessage } from '../utils/apiErrors';
+const badgeClass = (action) => ({ APPROVED: 'bg-success', REJECTED: 'bg-danger', RETURNED: 'bg-warning text-dark' }[action] || 'bg-secondary');
+export default function ApprovalHistory() { const [history, setHistory] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const load = useCallback(async () => { setLoading(true); setError(''); try { const response = await api.get('/v1/approval-history/my'); setHistory(unwrapApiData(response.data) || []); } catch (err) { setError(getApiErrorMessage(err, 'Unable to load approval history.')); } finally { setLoading(false); } }, []); // eslint-disable-next-line react-hooks/set-state-in-effect
+useEffect(() => { load(); }, [load]); return <div className="container-fluid mt-4"><div className="d-flex justify-content-between align-items-center mb-4"><div><h2>Approval History</h2><p className="text-muted mb-0">Your completed request decisions.</p></div><button className="btn btn-outline-primary" onClick={load} disabled={loading}>Refresh</button></div>{error && <div className="alert alert-danger">{error}</div>}<div className="card shadow-sm"><div className="table-responsive">{loading ? <div className="text-center py-5"><div className="spinner-border text-primary" /></div> : history.length === 0 ? <div className="text-center text-muted py-5">No approval decisions recorded yet.</div> : <table className="table table-hover align-middle mb-0"><thead className="table-light"><tr><th>Request ID</th><th>Employee</th><th>Decision</th><th>Date &amp; time</th><th>Remarks</th></tr></thead><tbody>{history.map((item) => <tr key={item.historyId}><td><code>{item.requestNumber || `Request #${item.requestId}`}</code></td><td>{item.employeeName || '—'}</td><td><span className={`badge ${badgeClass(item.actionTaken)}`}>{item.actionTaken}</span></td><td>{formatDateTime(item.actionTime)}</td><td>{item.remarks || '—'}</td></tr>)}</tbody></table>}</div></div></div>; }

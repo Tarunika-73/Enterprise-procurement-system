@@ -79,11 +79,14 @@ CREATE TABLE products (
     name VARCHAR(150) NOT NULL,
     description TEXT,
     category_id BIGINT NOT NULL,
+    department_id BIGINT,
+    available_quantity INT DEFAULT 100,
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
 -- 7. vendor_products
@@ -93,6 +96,7 @@ CREATE TABLE vendor_products (
     product_id BIGINT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     lead_time_days INT,
+    available_quantity INT DEFAULT 0,
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -109,14 +113,23 @@ CREATE TABLE purchase_requests (
     request_number VARCHAR(50) NOT NULL UNIQUE,
     requester_id BIGINT NOT NULL,
     department_id BIGINT NOT NULL,
+    title VARCHAR(200),
     justification TEXT NOT NULL,
-    status ENUM('Draft', 'Submitted', 'PENDING', 'APPROVED', 'REJECTED', 'Cancelled', 'Closed') NOT NULL DEFAULT 'Draft',
+    priority ENUM('LOW', 'NORMAL', 'MEDIUM', 'HIGH', 'URGENT') DEFAULT 'NORMAL',
+    expected_delivery_date DATE,
+    status ENUM('DRAFT', 'SUBMITTED', 'PENDING', 'APPROVED', 'REJECTED', 'RETURNED_FOR_MODIFICATION', 'CANCELLED', 'CLOSED') NOT NULL DEFAULT 'DRAFT',
     total_amount DECIMAL(15, 2) DEFAULT 0.00,
+    manager_id BIGINT,
+    current_approver_id BIGINT,
+    manager_remarks TEXT,
+    approval_date TIMESTAMP,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (requester_id) REFERENCES users(id),
-    FOREIGN KEY (department_id) REFERENCES departments(id)
+    FOREIGN KEY (department_id) REFERENCES departments(id),
+    FOREIGN KEY (manager_id) REFERENCES users(id),
+    FOREIGN KEY (current_approver_id) REFERENCES users(id)
 );
 
 -- 9. purchase_request_items
@@ -153,14 +166,17 @@ CREATE TABLE approvals (
 -- 11. approval_history
 CREATE TABLE approval_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    approval_id BIGINT NOT NULL,
+    approval_id BIGINT,
+    purchase_request_id BIGINT,
     action_by_id BIGINT NOT NULL,   
-    action_taken ENUM('APPROVED', 'REJECTED', 'ESCALATED') NOT NULL,
-    comments TEXT,
+    action_taken ENUM('APPROVED', 'REJECTED', 'RETURNED', 'ESCALATED') NOT NULL,
+    approval_level INT NOT NULL DEFAULT 1,
+    remarks TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (approval_id) REFERENCES approvals(id),
+    FOREIGN KEY (purchase_request_id) REFERENCES purchase_requests(id),
     FOREIGN KEY (action_by_id) REFERENCES users(id)
 );
 
@@ -170,7 +186,7 @@ CREATE TABLE purchase_orders (
     purchase_order_number VARCHAR(50) NOT NULL UNIQUE,
     purchase_request_id BIGINT NOT NULL UNIQUE,
     vendor_id BIGINT NOT NULL,
-    status ENUM('Created', 'Sent', 'Accepted', 'REJECTED', 'Delivered', 'Closed', 'Cancelled') NOT NULL DEFAULT 'Created',
+    status ENUM('CREATED', 'SENT', 'ACCEPTED', 'REJECTED', 'DELIVERED', 'CLOSED', 'CANCELLED') NOT NULL DEFAULT 'CREATED',
     total_amount DECIMAL(15, 2) NOT NULL,
     expected_delivery_date DATE,
     is_deleted BOOLEAN DEFAULT FALSE,
@@ -241,6 +257,7 @@ CREATE TABLE receipts (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_receipts_delivery (delivery_id),
     FOREIGN KEY (delivery_id) REFERENCES deliveries(id),
     FOREIGN KEY (receiver_id) REFERENCES users(id)
 );
@@ -286,6 +303,8 @@ CREATE TABLE notifications (
     type ENUM('Email', 'SMS', 'System', 'Push') NOT NULL,
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
+    reference_type VARCHAR(50),
+    reference_id BIGINT,
     is_read BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
+import DashboardAnalytics from '../../components/dashboard/DashboardAnalytics';
 import { getProcurementDashboardStats } from '../../services/procurementService';
 import { getApiErrorMessage } from '../../utils/apiErrors';
 import { getDisplayName } from '../../utils/userDisplay';
@@ -53,6 +54,7 @@ const ProcurementOfficerDashboard = () => {
           </div>
         ))}
       </div>
+      <DashboardAnalytics />
     </>
   );
 };

@@ -146,7 +146,7 @@ JOIN departments d ON pr.department_id = d.id;
 -- 11. Purchase Orders (20)
 INSERT INTO purchase_orders (id, purchase_order_number, purchase_request_id, vendor_id, status, total_amount, expected_delivery_date)
 SELECT 
-    id, CONCAT('PO-', request_number), id, (MOD(id, 10) + 1), 'Delivered', total_amount, DATE_ADD(NOW(), INTERVAL 14 DAY)
+    id, CONCAT('PO-', request_number), id, (MOD(id, 10) + 1), 'DELIVERED', total_amount, DATE_ADD(NOW(), INTERVAL 14 DAY)
 FROM purchase_requests;
 
 -- 12. Purchase Order Items (50)
@@ -205,5 +205,54 @@ SELECT
     (MOD(n, 10) + 1), 'ISO 9001', CONCAT('http://docs.example.com/comp/', n), DATE_ADD(NOW(), INTERVAL 365 DAY), 'Valid'
 FROM (SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
       UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20) AS nums;
+
+-- 21. Vendor Product Available Quantities
+-- The recommendation engine requires available_quantity >= requested quantity.
+-- The SELECT-based inserts above leave available_quantity at the default (0).
+-- Update key products with realistic, varied quantities so the engine has data to work with.
+-- Products 1-3 (Laptops) — multiple vendors supply these; give each a different stock level.
+UPDATE vendor_products SET available_quantity = 45 WHERE product_id = 1 AND vendor_id = (MOD(1, 10) + 1);
+UPDATE vendor_products SET available_quantity = 30 WHERE product_id = 1 AND vendor_id = (MOD(1 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 60 WHERE product_id = 2 AND vendor_id = (MOD(2, 10) + 1);
+UPDATE vendor_products SET available_quantity = 25 WHERE product_id = 2 AND vendor_id = (MOD(2 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 50 WHERE product_id = 3 AND vendor_id = (MOD(3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 35 WHERE product_id = 3 AND vendor_id = (MOD(3 + 3, 10) + 1);
+-- Products 4-6 (Desktops)
+UPDATE vendor_products SET available_quantity = 20 WHERE product_id = 4 AND vendor_id = (MOD(4, 10) + 1);
+UPDATE vendor_products SET available_quantity = 15 WHERE product_id = 4 AND vendor_id = (MOD(4 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 40 WHERE product_id = 5 AND vendor_id = (MOD(5, 10) + 1);
+UPDATE vendor_products SET available_quantity = 18 WHERE product_id = 5 AND vendor_id = (MOD(5 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 55 WHERE product_id = 6 AND vendor_id = (MOD(6, 10) + 1);
+UPDATE vendor_products SET available_quantity = 22 WHERE product_id = 6 AND vendor_id = (MOD(6 + 3, 10) + 1);
+-- Products 7-9 (Furniture)
+UPDATE vendor_products SET available_quantity = 12 WHERE product_id = 7 AND vendor_id = (MOD(7, 10) + 1);
+UPDATE vendor_products SET available_quantity = 8  WHERE product_id = 7 AND vendor_id = (MOD(7 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 10 WHERE product_id = 8 AND vendor_id = (MOD(8, 10) + 1);
+UPDATE vendor_products SET available_quantity = 6  WHERE product_id = 8 AND vendor_id = (MOD(8 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 5  WHERE product_id = 9 AND vendor_id = (MOD(9, 10) + 1);
+UPDATE vendor_products SET available_quantity = 7  WHERE product_id = 9 AND vendor_id = (MOD(9 + 3, 10) + 1);
+-- Products 10-15 (Stationery + Software)
+UPDATE vendor_products SET available_quantity = 200 WHERE product_id = 10 AND vendor_id = (MOD(10, 10) + 1);
+UPDATE vendor_products SET available_quantity = 150 WHERE product_id = 10 AND vendor_id = (MOD(10 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 300 WHERE product_id = 11 AND vendor_id = (MOD(11, 10) + 1);
+UPDATE vendor_products SET available_quantity = 250 WHERE product_id = 11 AND vendor_id = (MOD(11 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 100 WHERE product_id = 12 AND vendor_id = (MOD(12, 10) + 1);
+UPDATE vendor_products SET available_quantity = 80  WHERE product_id = 12 AND vendor_id = (MOD(12 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 75  WHERE product_id = 13 AND vendor_id = (MOD(13, 10) + 1);
+UPDATE vendor_products SET available_quantity = 60  WHERE product_id = 13 AND vendor_id = (MOD(13 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 90  WHERE product_id = 14 AND vendor_id = (MOD(14, 10) + 1);
+UPDATE vendor_products SET available_quantity = 70  WHERE product_id = 14 AND vendor_id = (MOD(14 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 120 WHERE product_id = 15 AND vendor_id = (MOD(15, 10) + 1);
+UPDATE vendor_products SET available_quantity = 95  WHERE product_id = 15 AND vendor_id = (MOD(15 + 3, 10) + 1);
+-- Products 16-20 (Networking + Cleaning)
+UPDATE vendor_products SET available_quantity = 35  WHERE product_id = 16 AND vendor_id = (MOD(16, 10) + 1);
+UPDATE vendor_products SET available_quantity = 28  WHERE product_id = 16 AND vendor_id = (MOD(16 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 15  WHERE product_id = 17 AND vendor_id = (MOD(17, 10) + 1);
+UPDATE vendor_products SET available_quantity = 12  WHERE product_id = 17 AND vendor_id = (MOD(17 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 500 WHERE product_id = 18 AND vendor_id = (MOD(18, 10) + 1);
+UPDATE vendor_products SET available_quantity = 400 WHERE product_id = 18 AND vendor_id = (MOD(18 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 60  WHERE product_id = 19 AND vendor_id = (MOD(19, 10) + 1);
+UPDATE vendor_products SET available_quantity = 45  WHERE product_id = 19 AND vendor_id = (MOD(19 + 3, 10) + 1);
+UPDATE vendor_products SET available_quantity = 80  WHERE product_id = 20 AND vendor_id = (MOD(20, 10) + 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

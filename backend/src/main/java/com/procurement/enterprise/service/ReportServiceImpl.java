@@ -24,10 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -102,6 +106,8 @@ public class ReportServiceImpl implements ReportService {
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(List.of(breakdown))
+                .requestStatusBreakdown(statusBreakdown(ownRequests))
+                .monthlySpend(monthlySpend(ownRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
                 .build();
     }
@@ -149,6 +155,8 @@ public class ReportServiceImpl implements ReportService {
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(List.of(breakdown))
+                .requestStatusBreakdown(statusBreakdown(deptRequests))
+                .monthlySpend(monthlySpend(deptRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
                 .build();
     }
@@ -196,6 +204,8 @@ public class ReportServiceImpl implements ReportService {
         List<PurchaseRequest> recentPRs = purchaseRequestRepository
                 .findAllByIsDeletedFalseOrderByCreatedAtDesc(PageRequest.of(0, ACTIVITY_LIMIT))
                 .getContent();
+        List<PurchaseRequest> organizationRequests = purchaseRequestRepository
+                .findAllByIsDeletedFalse(Pageable.unpaged()).getContent();
         List<PurchaseOrder> recentPOs = purchaseOrderRepository.findTop5ByIsDeletedFalseOrderByCreatedAtDesc();
 
         return ReportSummaryResponse.builder()
@@ -206,6 +216,8 @@ public class ReportServiceImpl implements ReportService {
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(departmentBreakdown)
+                .requestStatusBreakdown(statusBreakdown(organizationRequests))
+                .monthlySpend(monthlySpend(organizationRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
                 .build();
     }
@@ -219,6 +231,8 @@ public class ReportServiceImpl implements ReportService {
                 .purchaseOrders(0)
                 .activeVendors(vendorRepository.countByIsActiveTrueAndIsDeletedFalse())
                 .departmentBreakdown(List.of())
+                .requestStatusBreakdown(Map.of())
+                .monthlySpend(List.of())
                 .recentActivity(List.of())
                 .build();
     }
@@ -226,51 +240,53 @@ public class ReportServiceImpl implements ReportService {
     /* ── CSV export ──────────────────────────────────────────────── */
 
     private String buildCsv(ReportSummaryResponse summary) {
-        StringBuilder csv = new StringBuilder();
         java.time.format.DateTimeFormatter tsFormat =
-                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-        csv.append("Report Scope,").append(csvValue(summary.getScope())).append('\n');
-        csv.append("Scope Name,").append(csvValue(summary.getScopeName())).append('\n');
-        csv.append("Generated At,").append(csvValue(LocalDateTime.now().format(tsFormat))).append('\n');
-        csv.append('\n');
-
-        csv.append("Summary\n");
-        csv.append("Metric,Value\n");
-        csv.append("Total Requests,").append(summary.getTotalRequests()).append('\n');
-        csv.append("Approved Requests,").append(summary.getApprovedRequests()).append('\n');
-        csv.append("Purchase Orders,").append(summary.getPurchaseOrders()).append('\n');
-        csv.append("Active Vendors,").append(summary.getActiveVendors()).append('\n');
-        csv.append('\n');
-
-        csv.append("Department Breakdown\n");
-        csv.append("Department,Request Count,Total Spend,Relative %\n");
+                java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm");
+        StringBuilder html = new StringBuilder("""
+                <html><head><meta charset=\"UTF-8\"><style>
+                body{font-family:Arial,sans-serif;color:#1f2937;padding:22px}table{border-collapse:collapse;width:100%;margin:12px 0 24px}th{background:#5b4fc4;color:#fff;text-align:left;padding:9px;border:1px solid #5b4fc4}td{padding:8px;border:1px solid #d9dce3}.title{font-size:22px;font-weight:bold;color:#5b4fc4}.subtitle{font-size:15px;font-weight:bold;color:#374151}.meta{color:#6b7280}.section{background:#eef0ff;color:#3f3690;font-weight:bold;padding:8px}.number{text-align:right}.footer{margin-top:28px;border-top:1px solid #d9dce3;padding-top:10px;color:#6b7280;font-size:11px}
+                </style></head><body>
+                <div class=\"title\">ENTERPRISE PROCUREMENT SYSTEM</div><div class=\"subtitle\">Procurement / Financial Report</div>
+                <p class=\"meta\">Report scope: <b>""")
+                .append(htmlValue(summary.getScopeName())).append("</b><br>Generated: ")
+                .append(LocalDateTime.now().format(tsFormat)).append("</p>");
+        html.append("<div class=\"section\">SUMMARY</div><table><tr><th>Metric</th><th class=\"number\">Value</th></tr>");
+        html.append(metricRow("Total Requests", String.valueOf(summary.getTotalRequests())));
+        html.append(metricRow("Approved Requests", String.valueOf(summary.getApprovedRequests())));
+        html.append(metricRow("Purchase Orders", String.valueOf(summary.getPurchaseOrders())));
+        html.append(metricRow("Active Vendors", String.valueOf(summary.getActiveVendors())));
+        html.append("</table><div class=\"section\">DEPARTMENT SPEND BREAKDOWN</div><table><tr><th>Department</th><th class=\"number\">Request Count</th><th class=\"number\">Total Spend (INR)</th><th class=\"number\">Relative %</th></tr>");
         List<DepartmentSpendResponse> breakdown = summary.getDepartmentBreakdown();
         if (breakdown == null || breakdown.isEmpty()) {
-            csv.append("No data,,,\n");
+            html.append("<tr><td colspan=\"4\">No data available</td></tr>");
         } else {
             for (DepartmentSpendResponse dept : breakdown) {
-                csv.append(csvValue(dept.getDepartmentName())).append(',')
-                        .append(dept.getRequestCount()).append(',')
-                        .append(dept.getTotalSpend() != null ? dept.getTotalSpend() : BigDecimal.ZERO).append(',')
-                        .append(dept.getRelativePercent()).append('\n');
+                html.append("<tr><td>").append(htmlValue(dept.getDepartmentName())).append("</td><td class=\"number\">")
+                        .append(dept.getRequestCount()).append("</td><td class=\"number\">₹")
+                        .append((dept.getTotalSpend() != null ? dept.getTotalSpend() : BigDecimal.ZERO).setScale(2)).append("</td><td class=\"number\">")
+                        .append(dept.getRelativePercent()).append("%</td></tr>");
             }
         }
-        csv.append('\n');
-
-        csv.append("Recent Activity\n");
-        csv.append("Description,Timestamp\n");
+        html.append("</table><div class=\"section\">RECENT ACTIVITY</div><table><tr><th>Description</th><th>Timestamp</th></tr>");
         List<RecentActivityResponse> activity = summary.getRecentActivity();
         if (activity == null || activity.isEmpty()) {
-            csv.append("No recent activity,\n");
+            html.append("<tr><td colspan=\"2\">No recent activity</td></tr>");
         } else {
             for (RecentActivityResponse item : activity) {
                 String ts = item.getTimestamp() != null ? item.getTimestamp().format(tsFormat) : "";
-                csv.append(csvValue(item.getDescription())).append(',').append(csvValue(ts)).append('\n');
+                html.append("<tr><td>").append(htmlValue(item.getDescription())).append("</td><td>").append(htmlValue(ts)).append("</td></tr>");
             }
         }
+        return html.append("</table><div class=\"footer\">Enterprise Procurement System &nbsp;|&nbsp; Confidential / Internal Use</div></body></html>").toString();
+    }
 
-        return csv.toString();
+    private String metricRow(String metric, String value) {
+        return "<tr><td>" + htmlValue(metric) + "</td><td class=\"number\">" + htmlValue(value) + "</td></tr>";
+    }
+
+    private String htmlValue(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
     /** Quotes a CSV field and escapes embedded quotes, only when needed. */
@@ -300,6 +316,35 @@ public class ReportServiceImpl implements ReportService {
         return value.multiply(BigDecimal.valueOf(100))
                 .divide(max, 0, java.math.RoundingMode.HALF_UP)
                 .intValue();
+    }
+
+    private Map<String, Long> statusBreakdown(List<PurchaseRequest> requests) {
+        Map<String, Long> result = new LinkedHashMap<>();
+        for (PurchaseRequest request : requests) {
+            String status = request.getStatus() != null ? request.getStatus().name() : "UNKNOWN";
+            result.merge(status, 1L, Long::sum);
+        }
+        return result;
+    }
+
+    private List<com.procurement.enterprise.dto.response.MonthlySpendResponse> monthlySpend(List<PurchaseRequest> requests) {
+        Map<YearMonth, BigDecimal> totals = new LinkedHashMap<>();
+        YearMonth current = YearMonth.now();
+        for (int offset = 5; offset >= 0; offset--) {
+            totals.put(current.minusMonths(offset), BigDecimal.ZERO);
+        }
+        for (PurchaseRequest request : requests) {
+            if (request.getCreatedAt() == null) continue;
+            YearMonth month = YearMonth.from(request.getCreatedAt());
+            if (totals.containsKey(month)) {
+                totals.merge(month, request.getTotalAmount() != null ? request.getTotalAmount() : BigDecimal.ZERO, BigDecimal::add);
+            }
+        }
+        DateTimeFormatter label = DateTimeFormatter.ofPattern("MMM yyyy");
+        return totals.entrySet().stream()
+                .map(entry -> com.procurement.enterprise.dto.response.MonthlySpendResponse.builder()
+                        .month(entry.getKey().format(label)).amount(entry.getValue()).build())
+                .toList();
     }
 
     private List<RecentActivityResponse> mergeActivity(List<PurchaseRequest> prs, List<PurchaseOrder> pos) {

@@ -10,6 +10,7 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { user, userRole, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [theme, setTheme] = useState(() => localStorage.getItem('eps-ui-theme') || 'light');
 
   const displayName = getDisplayName(user);
   const initials    = getUserInitials(user);
@@ -17,22 +18,38 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
   const isVendor    = normalizeRole(userRole) === USER_ROLES.VENDOR;
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchUnread = async () => {
-      try {
-        const response = await getUnreadCount();
-        if (isMounted && response?.data?.unreadCount !== undefined) {
-          setUnreadCount(response.data.unreadCount);
-        }
-      } catch (err) {
-        // Silently handle if unauthenticated or error
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('eps-ui-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+  // Vendors do not use the internal notification module
+  if (isVendor) {
+    return;
+  }
+
+  let isMounted = true;
+
+  const fetchUnread = async () => {
+    try {
+      const response = await getUnreadCount();
+
+      if (isMounted && response?.data?.unreadCount !== undefined) {
+        setUnreadCount(response.data.unreadCount);
       }
-    };
-    fetchUnread();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchUnread();
+  const refreshTimer = window.setInterval(fetchUnread, 45000);
+
+  return () => {
+    isMounted = false;
+    window.clearInterval(refreshTimer);
+  };
+}, [isVendor]);
 
   const handleLogout = () => {
     logout();
@@ -59,23 +76,34 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
         </div>
 
         <div className="d-flex align-items-center gap-2 gap-md-3">
+          {!isVendor && (
+  <button
+    type="button"
+    className="dashboard-navbar-btn position-relative"
+    aria-label="Notifications"
+    title="Notifications"
+    onClick={() => navigate('/notifications')}
+  >
+    <i className="bi bi-bell" />
+    {unreadCount > 0 && (
+      <span
+        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        style={{ fontSize: '0.65rem' }}
+      >
+        {unreadCount > 99 ? '99+' : unreadCount}
+      </span>
+    )}
+  </button>
+)}
+
           <button
             type="button"
-            className="dashboard-navbar-btn position-relative"
-            aria-label="Notifications"
-            title="Notifications"
-            onClick={() => navigate('/notifications')}
+            className="dashboard-navbar-btn"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
           >
-            <i className="bi bi-bell" />
-            {unreadCount > 0 && (
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                style={{ fontSize: '0.65rem' }}
-              >
-                {unreadCount > 99 ? '99+' : unreadCount}
-                <span className="visually-hidden">unread notifications</span>
-              </span>
-            )}
+            <i className={`bi bi-${theme === 'dark' ? 'sun' : 'moon-stars'}`} />
           </button>
 
           <div className="dropdown dashboard-user-dropdown">
@@ -90,7 +118,7 @@ const TopNavbar = ({ pageTitle, onToggleSidebar }) => {
                 {initials}
               </span>
               <span className="dashboard-user-info text-start d-none d-md-block">
-                <span className="d-block fw-semibold text-dark small lh-sm">{displayName}</span>
+                <span className="d-block fw-semibold dashboard-user-name small lh-sm">{displayName}</span>
                 <span className="d-block text-muted" style={{ fontSize: '0.75rem' }}>
                   {roleLabel}
                 </span>

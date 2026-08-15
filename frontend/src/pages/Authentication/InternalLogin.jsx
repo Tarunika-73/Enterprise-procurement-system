@@ -61,7 +61,7 @@ const InternalLogin = () => {
   };
 
   return (
-    <AuthLayout variant="internal">
+    <AuthLayout variant="internal" template="reference">
       <AuthCard
         title="Welcome Back"
         subtitle="Sign in to access your procurement workspace"

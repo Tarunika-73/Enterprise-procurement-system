@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repository for {@link PurchaseRequestItem} entity.
@@ -26,4 +28,7 @@ public interface PurchaseRequestItemRepository extends JpaRepository<PurchaseReq
 
     boolean existsByPurchaseRequestIdAndProductIdAndIsDeletedFalse(
             Long purchaseRequestId, Long productId);
+
+    @Query("SELECT DISTINCT pri.product.name FROM PurchaseRequestItem pri WHERE pri.purchaseRequest.requester.id = :userId AND pri.purchaseRequest.isDeleted = false AND pri.isDeleted = false ORDER BY pri.product.name")
+    Page<String> findDistinctProductNamesByRequesterId(@Param("userId") Long userId, Pageable pageable);
 }

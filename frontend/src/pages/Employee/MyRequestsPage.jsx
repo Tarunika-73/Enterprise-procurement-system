@@ -56,6 +56,7 @@ const MyRequestsPage = () => {
         requests={requests}
         loading={loading}
         onViewDetails={(id) => navigate(`/employee/purchase-requests/${id}`)}
+        onEdit={(id) => navigate(`/employee/purchase-requests/create?edit=${id}`)}
       />
 
       <div className="d-flex justify-content-between align-items-center mt-3">

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "receipts")
+@Table(name = "receipts", uniqueConstraints = @UniqueConstraint(name = "uk_receipts_delivery", columnNames = "delivery_id"))
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -48,4 +48,10 @@ public class Receipt {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public Delivery getDelivery() { return this.delivery; }
+    public LocalDate getReceiptDate() { return this.receiptDate; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

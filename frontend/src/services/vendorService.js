@@ -28,3 +28,6 @@ export const getVendorProfile = () =>
 
 export const updateVendorProfile = (payload) =>
   api.put(`${BASE}/profile`, payload).then((r) => r.data);
+
+export const getVendorInvoices = ({ page = 0, size = 10, sort = 'createdAt,desc' } = {}) =>
+  api.get(`${BASE}/invoices`, { params: { page, size, sort } }).then((r) => r.data);

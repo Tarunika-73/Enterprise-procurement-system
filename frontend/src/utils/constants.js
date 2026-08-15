@@ -22,7 +22,6 @@ export const USER_ROLES = {
 
 /** Roles available during self-registration */
 export const REGISTRATION_ROLES = [
-  USER_ROLES.ADMIN,
   USER_ROLES.EMPLOYEE,
   USER_ROLES.MANAGER,
   USER_ROLES.VENDOR,

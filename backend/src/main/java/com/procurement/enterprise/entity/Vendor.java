@@ -62,4 +62,12 @@ public class Vendor {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return this.id; }
+    public String getVendorName() { return this.vendorName; }
+    public String getEmail() { return this.email; }
+    public Boolean getIsActive() { return this.isActive; }
+    public Boolean getIsDeleted() { return this.isDeleted; }
+    public LocalDateTime getCreatedAt() { return this.createdAt; }
+    public LocalDateTime getUpdatedAt() { return this.updatedAt; }
 }

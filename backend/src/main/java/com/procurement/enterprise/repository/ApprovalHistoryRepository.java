@@ -17,6 +17,9 @@ public interface ApprovalHistoryRepository
     List<ApprovalHistory>
     findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(Long approvalId);
 
+    List<ApprovalHistory>
+    findByPurchaseRequestIdAndIsDeletedFalseOrderByCreatedAtDesc(Long purchaseRequestId);
+
     Page<ApprovalHistory>
     findByApprovalIdAndIsDeletedFalseOrderByCreatedAtDesc(
             Long approvalId,

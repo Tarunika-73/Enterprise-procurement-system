@@ -27,11 +27,13 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.48, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const AuthLayout = ({ children, variant = 'internal' }) => {
+const AuthLayout = ({ children, variant = 'internal', template = 'default', copyVariant = 'login' }) => {
   const isVendor = variant === 'vendor';
+  const isReferenceTemplate = template === 'reference';
+  const isRegistration = copyVariant === 'register';
 
   return (
-    <div className="auth-shell">
+    <div className={`auth-shell${isReferenceTemplate ? ' auth-shell-reference' : ''}${isReferenceTemplate && isVendor ? ' auth-shell-reference-vendor' : ''}${isReferenceTemplate && isVendor && isRegistration ? ' auth-shell-reference-vendor-register' : ''}`}>
 
       {/* ── LEFT PANEL 55% ── */}
       <motion.div className="auth-left-panel" initial="hidden" animate="visible" variants={panelV}>
@@ -50,15 +52,67 @@ const AuthLayout = ({ children, variant = 'internal' }) => {
           {/* Heading */}
           <motion.div variants={fadeUp}>
             <h2 className="auth-left-title">
-              Enterprise Procurement<br />
-              <span className="auth-left-accent">System</span>
+              {isReferenceTemplate ? (
+                isVendor
+                  ? isRegistration
+                    ? <>Grow your supplier<br /><span className="auth-left-accent">partnership.</span></>
+                    : <>Vendor<br /><span className="auth-left-accent">Portal.</span></>
+                  : isRegistration
+                  ? <>Build a better<br /><span className="auth-left-accent">procurement workflow.</span></>
+                  : <>Manage procurement<br /><span className="auth-left-accent">the smarter way.</span></>
+              ) : (
+                <>Enterprise Procurement<br /><span className="auth-left-accent">System</span></>
+              )}
             </h2>
             <p className="auth-left-desc">
-              {isVendor
+              {isReferenceTemplate
+                ? isVendor
+                  ? isRegistration
+                    ? 'Create a secure vendor account and collaborate with enterprise procurement teams.'
+                    : 'Manage purchase orders, deliveries and procurement updates from one secure platform.'
+                  : isRegistration
+                  ? 'Connect teams, vendors and approvals in one streamlined enterprise platform.'
+                  : 'Manage purchase requests, approvals, vendors and purchase orders from one secure platform.'
+                : isVendor
                 ? 'Secure vendor portal for purchase orders, invoicing, and supply chain collaboration.'
                 : 'Streamline procurement workflows—from purchase requests to finance approval—in one unified platform.'}
             </p>
           </motion.div>
+
+          {isReferenceTemplate && isVendor && (
+            isRegistration ? (
+              <motion.div className="auth-vendor-registration-visual" variants={fadeUp} aria-hidden="true">
+                <svg viewBox="0 0 260 164" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="24" y="26" width="150" height="112" rx="20" fill="rgba(255,255,255,.55)" />
+                  <rect x="24" y="26" width="150" height="112" rx="20" stroke="rgba(91,70,151,.18)" />
+                  <rect x="45" y="46" width="64" height="74" rx="11" fill="#fff" />
+                  <rect x="58" y="59" width="38" height="7" rx="3.5" fill="#9B87D8" />
+                  <rect x="58" y="73" width="28" height="5" rx="2.5" fill="#D4C5F2" />
+                  <rect x="58" y="84" width="32" height="5" rx="2.5" fill="#D4C5F2" />
+                  <circle cx="67" cy="103" r="8" fill="#8067D8" opacity=".9" />
+                  <path d="m63.5 103 2.5 2.5 4.5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="121" y="61" width="34" height="34" rx="11" fill="#8067D8" />
+                  <path d="M130 72h16l-2 10h-12l-2-14h-3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="134" cy="87" r="2" fill="white" />
+                  <circle cx="142" cy="87" r="2" fill="white" />
+                  <g transform="translate(163 94)">
+                    <rect width="68" height="39" rx="11" fill="#fff" />
+                    <path d="M13 12h26v17H13zM39 18h9l7 7v4H39z" fill="#A18EE3" />
+                    <circle cx="22" cy="31" r="4" fill="#5D4DA1" />
+                    <circle cx="47" cy="31" r="4" fill="#5D4DA1" />
+                  </g>
+                  <rect x="187" y="40" width="42" height="42" rx="13" fill="#F7F3FF" stroke="rgba(91,70,151,.14)" />
+                  <path d="M198 56h20M198 63h14" stroke="#8067D8" strokeWidth="2.4" strokeLinecap="round" />
+                  <circle cx="214" cy="70" r="5" fill="#A18EE3" />
+                </svg>
+              </motion.div>
+            ) : (
+              <motion.div className="auth-vendor-portal-icon" variants={fadeUp} aria-hidden="true">
+                <span className="auth-vendor-icon-main"><i className="bi bi-box-seam-fill" /></span>
+                <span className="auth-vendor-icon-chip"><i className="bi bi-truck" /></span>
+              </motion.div>
+            )
+          )}
 
           {/* Illustration */}
           <motion.div className="auth-illus-wrap" variants={fadeUp} aria-hidden="true">

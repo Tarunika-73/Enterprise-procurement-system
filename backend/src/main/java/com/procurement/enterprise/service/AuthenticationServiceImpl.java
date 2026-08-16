@@ -62,9 +62,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidRequestException("Administrator accounts cannot be created through self-registration.");
         }
 
-        Department department = departmentRepository.findAllByIsDeletedFalse().stream()
-                .findFirst()
-                .orElseThrow(() -> new InvalidRequestException("No departments found. Please contact the administrator."));
+        Department department = departmentRepository.findByIdAndIsDeletedFalse(request.getDepartmentId())
+                .orElseThrow(() -> new InvalidRequestException("Selected department was not found."));
 
         User user = User.builder()
                 .employeeId(generateEmployeeId())

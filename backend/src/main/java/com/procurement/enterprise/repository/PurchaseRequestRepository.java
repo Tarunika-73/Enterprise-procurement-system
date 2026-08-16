@@ -2,6 +2,7 @@ package com.procurement.enterprise.repository;
 
 import com.procurement.enterprise.entity.PurchaseRequest;
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
+import com.procurement.enterprise.enums.RequestPriority;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,6 +60,8 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
 
     long countByManagerIdAndStatusAndIsDeletedFalse(Long managerId, PurchaseRequestStatus status);
 
+    long countByManagerIdAndPriorityAndIsDeletedFalse(Long managerId, RequestPriority priority);
+
     /* ── reporting ───────────────────────────────────────────────── */
 
     long countByIsDeletedFalse();
@@ -106,4 +109,16 @@ public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest
 
     @Query("SELECT YEAR(pr.createdAt), MONTH(pr.createdAt), COUNT(pr) FROM PurchaseRequest pr JOIN PurchaseOrder po ON po.purchaseRequest = pr WHERE po.vendor.id = :vendorId AND pr.createdAt >= :from AND pr.isDeleted = false AND po.isDeleted = false GROUP BY YEAR(pr.createdAt), MONTH(pr.createdAt) ORDER BY YEAR(pr.createdAt), MONTH(pr.createdAt)")
     List<Object[]> monthlyTrendForVendor(@Param("vendorId") Long vendorId, @Param("from") LocalDateTime from);
+
+    @Query("SELECT FUNCTION('DATE', pr.createdAt), COUNT(pr) FROM PurchaseRequest pr WHERE pr.createdAt >= :from AND pr.isDeleted = false GROUP BY FUNCTION('DATE', pr.createdAt) ORDER BY FUNCTION('DATE', pr.createdAt)")
+    List<Object[]> dailyTrendForOrganization(@Param("from") LocalDateTime from);
+
+    @Query("SELECT FUNCTION('DATE', pr.createdAt), COUNT(pr) FROM PurchaseRequest pr WHERE pr.requester.id = :userId AND pr.createdAt >= :from AND pr.isDeleted = false GROUP BY FUNCTION('DATE', pr.createdAt) ORDER BY FUNCTION('DATE', pr.createdAt)")
+    List<Object[]> dailyTrendForRequester(@Param("userId") Long userId, @Param("from") LocalDateTime from);
+
+    @Query("SELECT FUNCTION('DATE', pr.createdAt), COUNT(pr) FROM PurchaseRequest pr WHERE pr.manager.id = :managerId AND pr.createdAt >= :from AND pr.isDeleted = false GROUP BY FUNCTION('DATE', pr.createdAt) ORDER BY FUNCTION('DATE', pr.createdAt)")
+    List<Object[]> dailyTrendForManager(@Param("managerId") Long managerId, @Param("from") LocalDateTime from);
+
+    @Query("SELECT FUNCTION('DATE', pr.createdAt), COUNT(pr) FROM PurchaseRequest pr JOIN PurchaseOrder po ON po.purchaseRequest = pr WHERE po.vendor.id = :vendorId AND pr.createdAt >= :from AND pr.isDeleted = false AND po.isDeleted = false GROUP BY FUNCTION('DATE', pr.createdAt) ORDER BY FUNCTION('DATE', pr.createdAt)")
+    List<Object[]> dailyTrendForVendor(@Param("vendorId") Long vendorId, @Param("from") LocalDateTime from);
 }

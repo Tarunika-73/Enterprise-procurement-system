@@ -69,10 +69,11 @@ public class PurchaseRequestController {
     }
 
     @GetMapping("/assignment-preview")
-    public ResponseEntity<ApiResponse<PurchaseRequestResponse>> getAssignmentPreview() {
+    public ResponseEntity<ApiResponse<PurchaseRequestResponse>> getAssignmentPreview(
+            @RequestParam(required = false) Long productId) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Assignment preview fetched successfully.",
-                purchaseRequestService.getAssignmentPreview()));
+                purchaseRequestService.getAssignmentPreview(productId)));
     }
 
     @GetMapping("/manager/inbox")

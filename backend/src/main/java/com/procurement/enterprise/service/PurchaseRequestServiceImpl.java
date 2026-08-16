@@ -17,6 +17,7 @@ import com.procurement.enterprise.entity.ApprovalHistory;
 import com.procurement.enterprise.enums.ApprovalActionTaken;
 import com.procurement.enterprise.enums.PurchaseOrderStatus;
 import com.procurement.enterprise.enums.PurchaseRequestStatus;
+import com.procurement.enterprise.enums.RequestPriority;
 import com.procurement.enterprise.exception.InvalidRequestException;
 import com.procurement.enterprise.exception.ForbiddenException;
 import com.procurement.enterprise.exception.ResourceNotFoundException;
@@ -70,11 +71,6 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
     @Transactional
     public PurchaseRequestResponse create(CreatePurchaseRequestRequest request) {
         User requester = getCurrentUser();
-        Department department = requester.getDepartment();
-        if (department == null) {
-            throw new InvalidRequestException("Logged-in user has no department assigned.");
-        }
-
         Product product = productRepository.findByIdAndIsDeletedFalse(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product", request.getProductId()));
 
@@ -88,10 +84,13 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                     "Requested quantity exceeds available stock (" + availableQty + ").");
         }
 
+        Department department = product.getDepartment();
+        if (department == null || Boolean.TRUE.equals(department.getIsDeleted())) {
+            throw new InvalidRequestException("Selected product does not have a valid department assigned.");
+        }
         User manager = resolveDepartmentManager(department);
         if (manager == null) {
-            throw new InvalidRequestException(
-                    "No manager is assigned for department: " + department.getName());
+            throw new InvalidRequestException("No manager is assigned to the product's department.");
         }
 
         BigDecimal totalAmount = request.getUnitPrice()
@@ -207,6 +206,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .totalRequests(purchaseRequestRepository.countByRequesterIdAndIsDeletedFalse(userId))
                 .pendingRequests(purchaseRequestRepository
                         .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.PENDING))
+                .closedRequests(purchaseRequestRepository
+                        .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.CLOSED))
                 .approvedRequests(purchaseRequestRepository
                         .countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.APPROVED))
                 .rejectedRequests(purchaseRequestRepository
@@ -247,6 +248,8 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
                 .returnedRequests(purchaseRequestRepository
                         .countByManagerIdAndStatusAndIsDeletedFalse(
                                 managerId, PurchaseRequestStatus.RETURNED_FOR_MODIFICATION))
+                .urgentRequests(purchaseRequestRepository
+                        .countByManagerIdAndPriorityAndIsDeletedFalse(managerId, RequestPriority.URGENT))
                 .recentRequests(recent)
                 .build();
     }
@@ -321,20 +324,31 @@ public class PurchaseRequestServiceImpl implements PurchaseRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public PurchaseRequestResponse getAssignmentPreview() {
+    public PurchaseRequestResponse getAssignmentPreview(Long productId) {
         User employee = getCurrentUser();
-        Department department = employee.getDepartment();
+        Department employeeDepartment = employee.getDepartment();
+        Department department = productId == null ? employeeDepartment : productRepository
+                .findByIdAndIsDeletedFalse(productId)
+                .map(Product::getDepartment)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
         if (department == null) {
-            throw new InvalidRequestException("Logged-in user has no department assigned.");
+            throw new InvalidRequestException(productId == null
+                    ? "Logged-in user has no department assigned."
+                    : "Selected product does not have a valid department assigned.");
         }
         User manager = resolveDepartmentManager(department);
+        if (manager == null) {
+            throw new InvalidRequestException(productId == null
+                    ? "No manager is assigned for your department."
+                    : "No manager is assigned to the product's department.");
+        }
 
         return PurchaseRequestResponse.builder()
                 .requesterId(employee.getId())
                 .requesterName(employee.getFirstName() + " " + employee.getLastName())
                 .employeeCode(employee.getEmployeeId())
-                .departmentId(department.getId())
-                .departmentName(department.getName())
+                .departmentId(employeeDepartment != null ? employeeDepartment.getId() : null)
+                .departmentName(employeeDepartment != null ? employeeDepartment.getName() : "Unassigned")
                 .managerId(manager != null ? manager.getId() : null)
                 .managerName(manager != null ? manager.getFirstName() + " " + manager.getLastName() : null)
                 .currentApproverId(manager != null ? manager.getId() : null)

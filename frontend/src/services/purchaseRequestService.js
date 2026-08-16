@@ -34,8 +34,10 @@ export const getEmployeeDashboardStats = async () => {
   return response.data;
 };
 
-export const getAssignmentPreview = async () => {
-  const response = await api.get('/v1/purchase-requests/assignment-preview');
+export const getAssignmentPreview = async (productId) => {
+  const response = await api.get('/v1/purchase-requests/assignment-preview', {
+    params: productId ? { productId } : undefined,
+  });
   return response.data;
 };
 

@@ -13,6 +13,7 @@ const PurchaseRequestForm = ({
   submitting = false,
   onSubmit,
   onCancel,
+  onProductChange,
 }) => {
   const { user } = useAuth();
   const [values, setValues] = useState({
@@ -65,6 +66,7 @@ const PurchaseRequestForm = ({
       ...prev,
       [name]: name === 'quantity' && Number(value) > 100 ? 'Quantity cannot exceed 100.' : undefined,
     }));
+    if (name === 'productId') onProductChange?.(value);
   };
 
   const handleSubmit = (event) => {

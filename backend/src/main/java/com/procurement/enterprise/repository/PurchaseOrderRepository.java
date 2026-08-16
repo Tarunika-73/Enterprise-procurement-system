@@ -60,6 +60,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     Page<PurchaseOrder> findByPurchaseRequest_Requester_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long requesterId, Pageable pageable);
 
+    Page<PurchaseOrder> findByPurchaseRequest_Department_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long departmentId, Pageable pageable);
+
     @org.springframework.data.jpa.repository.Query("SELECT po.purchaseRequest.department.name, COALESCE(SUM(po.totalAmount), 0) FROM PurchaseOrder po WHERE po.isDeleted = false AND po.purchaseRequest.isDeleted = false GROUP BY po.purchaseRequest.department.name ORDER BY po.purchaseRequest.department.name")
     List<Object[]> spendingByDepartmentForOrganization();
 

@@ -13,5 +13,6 @@ public class ManagerDashboardStatsResponse {
     private long rejectedRequests;
     private long returnedRequests;
     private long totalAssignedRequests;
+    private long urgentRequests;
     private List<PurchaseRequestResponse> recentRequests;
 }

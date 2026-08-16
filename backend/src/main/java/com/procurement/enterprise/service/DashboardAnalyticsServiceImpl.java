@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DashboardAnalyticsServiceImpl implements DashboardAnalyticsService {
-    private static final DateTimeFormatter MONTH_LABEL = DateTimeFormatter.ofPattern("MMM uuuu");
+    private static final DateTimeFormatter DATE_LABEL = DateTimeFormatter.ofPattern("MMM dd");
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final UserRepository userRepository;
@@ -35,7 +35,7 @@ public class DashboardAnalyticsServiceImpl implements DashboardAnalyticsService 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) throw new UnauthorizedException("Authentication required.");
         Scope scope = scope(authentication);
-        LocalDateTime from = YearMonth.now().minusMonths(5).atDay(1).atStartOfDay();
+        LocalDateTime from = LocalDate.now().minusDays(29).atStartOfDay();
         return new DashboardAnalyticsResponse(status(scope), trend(scope, from), spending(scope));
     }
 
@@ -66,16 +66,16 @@ public class DashboardAnalyticsServiceImpl implements DashboardAnalyticsService 
         return rows.stream().map(row -> new DashboardAnalyticsResponse.StatusDistribution(String.valueOf(row[0]), ((Number) row[1]).longValue())).toList();
     }
 
-    private List<DashboardAnalyticsResponse.MonthlyTrendPoint> trend(Scope scope, LocalDateTime from) {
+    private List<DashboardAnalyticsResponse.DailyTrendPoint> trend(Scope scope, LocalDateTime from) {
         List<Object[]> rows = switch (scope.type) {
-            case REQUESTER -> purchaseRequestRepository.monthlyTrendForRequester(scope.id, from);
-            case MANAGER -> purchaseRequestRepository.monthlyTrendForManager(scope.id, from);
-            case VENDOR -> purchaseRequestRepository.monthlyTrendForVendor(scope.id, from);
-            case ORGANIZATION -> purchaseRequestRepository.monthlyTrendForOrganization(from);
+            case REQUESTER -> purchaseRequestRepository.dailyTrendForRequester(scope.id, from);
+            case MANAGER -> purchaseRequestRepository.dailyTrendForManager(scope.id, from);
+            case VENDOR -> purchaseRequestRepository.dailyTrendForVendor(scope.id, from);
+            case ORGANIZATION -> purchaseRequestRepository.dailyTrendForOrganization(from);
         };
-        return rows.stream().map(row -> new DashboardAnalyticsResponse.MonthlyTrendPoint(
-                YearMonth.of(((Number) row[0]).intValue(), ((Number) row[1]).intValue()).format(MONTH_LABEL),
-                ((Number) row[2]).longValue())).toList();
+        return rows.stream().map(row -> new DashboardAnalyticsResponse.DailyTrendPoint(
+                LocalDate.parse(String.valueOf(row[0])).format(DATE_LABEL),
+                ((Number) row[1]).longValue())).toList();
     }
 
     private List<DashboardAnalyticsResponse.DepartmentSpending> spending(Scope scope) {

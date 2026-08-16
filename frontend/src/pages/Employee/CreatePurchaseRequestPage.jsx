@@ -33,7 +33,7 @@ const CreatePurchaseRequestPage = () => {
       try {
         const [catalogResponse, previewResponse, requestResponse] = await Promise.all([
           getEmployeeProductCatalog(),
-          getAssignmentPreview(),
+          getAssignmentPreview(initialProductId || undefined),
           editRequestId ? getPurchaseRequestById(editRequestId) : Promise.resolve(null),
         ]);
         if (!mounted) return;
@@ -72,7 +72,7 @@ const CreatePurchaseRequestPage = () => {
     return () => {
       mounted = false;
     };
-  }, [editRequestId]);
+  }, [editRequestId, initialProductId]);
 
   const handleSubmit = async (payload) => {
     setSubmitting(true);
@@ -101,6 +101,15 @@ const CreatePurchaseRequestPage = () => {
     }
   };
 
+  const handleProductChange = async (productId) => {
+    if (!productId) return;
+    try {
+      setAssignmentPreview(unwrapApiData(await getAssignmentPreview(productId)));
+    } catch (err) {
+      setToast({ show: true, message: getApiErrorMessage(err, 'Unable to resolve the product department manager.'), type: 'danger' });
+    }
+  };
+
   return (
     <>
       <Toast
@@ -113,7 +122,7 @@ const CreatePurchaseRequestPage = () => {
       <div className="dashboard-page-header">
           <h1>{editRequestId ? 'Edit Purchase Request' : 'Create Purchase Request'}</h1>
         <p className="text-muted mb-0">
-          Your department manager is assigned automatically. You cannot change the manager.
+          The selected product's department manager is assigned automatically. You cannot change the manager.
         </p>
       </div>
 
@@ -132,6 +141,7 @@ const CreatePurchaseRequestPage = () => {
           submitting={submitting}
           submitLabel={editRequestId ? 'Save Changes' : 'Submit Request'}
           onSubmit={handleSubmit}
+          onProductChange={handleProductChange}
           onCancel={() => navigate(-1)}
         />
       )}

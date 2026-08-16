@@ -30,5 +30,5 @@ public interface PurchaseRequestService {
 
     PurchaseRequestResponse returnForModification(Long id, ManagerDecisionRequest request);
 
-    PurchaseRequestResponse getAssignmentPreview();
+    PurchaseRequestResponse getAssignmentPreview(Long productId);
 }

@@ -10,6 +10,7 @@ import java.util.List;
 public class EmployeeDashboardStatsResponse {
     private long totalRequests;
     private long pendingRequests;
+    private long closedRequests;
     private long approvedRequests;
     private long rejectedRequests;
     private long unreadNotifications;

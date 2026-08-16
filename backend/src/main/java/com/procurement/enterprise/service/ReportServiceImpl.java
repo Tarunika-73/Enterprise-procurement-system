@@ -3,6 +3,7 @@ package com.procurement.enterprise.service;
 import com.procurement.enterprise.dto.response.DepartmentSpendResponse;
 import com.procurement.enterprise.dto.response.RecentActivityResponse;
 import com.procurement.enterprise.dto.response.ReportSummaryResponse;
+import com.procurement.enterprise.dto.response.ReportTableRow;
 import com.procurement.enterprise.entity.Department;
 import com.procurement.enterprise.entity.PurchaseOrder;
 import com.procurement.enterprise.entity.PurchaseRequest;
@@ -103,12 +104,15 @@ public class ReportServiceImpl implements ReportService {
                 .scopeName(user.getFirstName() + " " + user.getLastName())
                 .totalRequests(totalRequests)
                 .approvedRequests(approvedRequests)
+                .rejectedRequests(purchaseRequestRepository.countByRequesterIdAndStatusAndIsDeletedFalse(userId, PurchaseRequestStatus.REJECTED))
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(List.of(breakdown))
                 .requestStatusBreakdown(statusBreakdown(ownRequests))
                 .monthlySpend(monthlySpend(ownRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
+                .requestRows(requestRows(ownRequests))
+                .purchaseOrderRows(purchaseOrderRows(purchaseOrderRepository.findByPurchaseRequest_Requester_IdAndIsDeletedFalseOrderByCreatedAtDesc(userId, Pageable.unpaged()).getContent()))
                 .build();
     }
 
@@ -152,12 +156,15 @@ public class ReportServiceImpl implements ReportService {
                 .scopeName(deptName)
                 .totalRequests(totalRequests)
                 .approvedRequests(approvedRequests)
+                .rejectedRequests(purchaseRequestRepository.countByDepartmentIdAndStatusAndIsDeletedFalse(deptId, PurchaseRequestStatus.REJECTED))
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(List.of(breakdown))
                 .requestStatusBreakdown(statusBreakdown(deptRequests))
                 .monthlySpend(monthlySpend(deptRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
+                .requestRows(requestRows(deptRequests))
+                .purchaseOrderRows(purchaseOrderRows(purchaseOrderRepository.findByPurchaseRequest_Department_IdAndIsDeletedFalseOrderByCreatedAtDesc(deptId, Pageable.unpaged()).getContent()))
                 .build();
     }
 
@@ -213,12 +220,15 @@ public class ReportServiceImpl implements ReportService {
                 .scopeName("Organization")
                 .totalRequests(totalRequests)
                 .approvedRequests(approvedRequests)
+                .rejectedRequests(purchaseRequestRepository.countByStatusAndIsDeletedFalse(PurchaseRequestStatus.REJECTED))
                 .purchaseOrders(purchaseOrders)
                 .activeVendors(activeVendors)
                 .departmentBreakdown(departmentBreakdown)
                 .requestStatusBreakdown(statusBreakdown(organizationRequests))
                 .monthlySpend(monthlySpend(organizationRequests))
                 .recentActivity(mergeActivity(recentPRs, recentPOs))
+                .requestRows(requestRows(organizationRequests))
+                .purchaseOrderRows(purchaseOrderRows(purchaseOrderRepository.findAllByIsDeletedFalse(Pageable.unpaged()).getContent()))
                 .build();
     }
 
@@ -228,13 +238,28 @@ public class ReportServiceImpl implements ReportService {
                 .scopeName(scopeName)
                 .totalRequests(0)
                 .approvedRequests(0)
+                .rejectedRequests(0)
                 .purchaseOrders(0)
                 .activeVendors(vendorRepository.countByIsActiveTrueAndIsDeletedFalse())
                 .departmentBreakdown(List.of())
                 .requestStatusBreakdown(Map.of())
                 .monthlySpend(List.of())
                 .recentActivity(List.of())
+                .requestRows(List.of())
+                .purchaseOrderRows(List.of())
                 .build();
+    }
+
+    private List<ReportTableRow> requestRows(List<PurchaseRequest> requests) {
+        return requests.stream().sorted(Comparator.comparing(PurchaseRequest::getCreatedAt).reversed()).map(request -> ReportTableRow.builder()
+                .reference(request.getRequestNumber()).title(request.getTitle()).status(String.valueOf(request.getStatus()))
+                .amount(request.getTotalAmount()).createdAt(request.getCreatedAt()).build()).toList();
+    }
+
+    private List<ReportTableRow> purchaseOrderRows(List<PurchaseOrder> orders) {
+        return orders.stream().sorted(Comparator.comparing(PurchaseOrder::getCreatedAt).reversed()).map(order -> ReportTableRow.builder()
+                .reference(order.getPurchaseOrderNumber()).title(order.getPurchaseRequest().getTitle()).status(String.valueOf(order.getStatus()))
+                .amount(order.getTotalAmount()).createdAt(order.getCreatedAt()).build()).toList();
     }
 
     /* ── CSV export ──────────────────────────────────────────────── */

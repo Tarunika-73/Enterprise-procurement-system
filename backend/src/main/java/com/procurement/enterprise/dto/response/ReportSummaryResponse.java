@@ -23,6 +23,7 @@ public class ReportSummaryResponse {
 
     private long totalRequests;
     private long approvedRequests;
+    private long rejectedRequests;
     private long purchaseOrders;
     private long activeVendors;
 
@@ -30,4 +31,6 @@ public class ReportSummaryResponse {
     private Map<String, Long> requestStatusBreakdown;
     private List<MonthlySpendResponse> monthlySpend;
     private List<RecentActivityResponse> recentActivity;
+    private List<ReportTableRow> requestRows;
+    private List<ReportTableRow> purchaseOrderRows;
 }

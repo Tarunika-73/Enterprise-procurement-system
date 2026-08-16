@@ -4,6 +4,7 @@ import { getFinanceDashboard } from '../../services/financeService';
 import { formatCurrency } from '../../utils/employeeHelpers';
 import { getApiErrorMessage } from '../../utils/apiErrors';
 import DashboardAnalytics from '../../components/dashboard/DashboardAnalytics';
+import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -61,22 +62,7 @@ const FinanceDashboard = () => {
       <div className="row g-3 mb-4">
         {cards.map((card) => (
           <div key={card.label} className="col-12 col-sm-6 col-xl-3">
-            <div
-              className="card h-100 border-0 shadow-sm"
-              role="button"
-              style={{ cursor: 'pointer' }}
-              onClick={card.action}
-            >
-              <div className="card-body d-flex align-items-center gap-3">
-                <div className={`rounded-circle bg-${card.variant} bg-opacity-10 p-3`}>
-                  <i className={`bi ${card.icon} fs-4 text-${card.variant}`} />
-                </div>
-                <div>
-                  <div className="fw-bold fs-5">{card.value}</div>
-                  <div className="text-muted small">{card.label}</div>
-                </div>
-              </div>
-            </div>
+            <DashboardStatCard icon={card.icon} iconVariant={card.variant} value={card.value} label={card.label} onClick={card.action} />
           </div>
         ))}
       </div>

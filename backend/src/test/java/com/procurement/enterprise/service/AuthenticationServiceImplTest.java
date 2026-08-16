@@ -54,15 +54,16 @@ class AuthenticationServiceImplTest {
                 .email("manager@example.com")
                 .password("Password123")
                 .role("Manager")
+                .departmentId(2L)
                 .build();
 
         Role managerRole = Role.builder().id(2L).name("Department Manager").build();
-        Department department = Department.builder().id(1L).name("IT").code("IT").build();
+        Department department = Department.builder().id(2L).name("Human Resources").code("HR").build();
 
         when(userRepository.existsByEmailAndIsDeletedFalse("manager@example.com")).thenReturn(false);
         when(roleRepository.findByNameAndIsDeletedFalse("Department Manager")).thenReturn(Optional.empty());
         when(roleRepository.findAllByIsDeletedFalse()).thenReturn(java.util.List.of(managerRole));
-        when(departmentRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(department));
+        when(departmentRepository.findByIdAndIsDeletedFalse(2L)).thenReturn(Optional.of(department));
         when(passwordEncoder.encode("Password123")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -77,5 +78,7 @@ class AuthenticationServiceImplTest {
         assertNotNull(response);
         assertEquals("access-token", response.getAccessToken());
         assertEquals("Department Manager", response.getRole());
+        assertEquals(2L, response.getDepartmentId());
+        assertEquals("Human Resources", response.getDepartmentName());
     }
 }

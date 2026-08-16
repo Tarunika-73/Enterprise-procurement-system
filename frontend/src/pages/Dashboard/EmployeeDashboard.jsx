@@ -56,6 +56,12 @@ const EmployeeDashboard = () => {
       label: 'Pending Requests',
     },
     {
+      icon: 'bi-archive',
+      iconVariant: 'info',
+      value: loading ? 'â€¦' : String(stats?.closedRequests ?? 0),
+      label: 'Closed Requests',
+    },
+    {
       icon: 'bi-check-circle',
       iconVariant: 'success',
       value: loading ? '…' : String(stats?.approvedRequests ?? 0),
@@ -63,7 +69,7 @@ const EmployeeDashboard = () => {
     },
     {
       icon: 'bi-x-circle',
-      iconVariant: 'accent',
+      iconVariant: 'danger',
       value: loading ? '…' : String(stats?.rejectedRequests ?? 0),
       label: 'Rejected Requests',
     },
@@ -74,7 +80,7 @@ const EmployeeDashboard = () => {
       <div className="dashboard-welcome-banner">
         <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
           <div>
-            <h2>Welcome back, {getDisplayName(user)}</h2>
+            <h2>Welcome, {getDisplayName(user)}</h2>
             <p className="text-muted mb-0">
               {user?.departmentName ? (
                 <><i className="bi bi-building me-1" aria-hidden="true" />{user.departmentName} · </>
@@ -103,7 +109,7 @@ const EmployeeDashboard = () => {
 
       <div className="row g-4 mb-4">
         {statCards.map((card) => (
-          <div key={card.label} className="col-sm-6 col-xl-3">
+          <div key={card.label} className="col-sm-6 col-xl">
             <DashboardStatCard {...card} />
           </div>
         ))}

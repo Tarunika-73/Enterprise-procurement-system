@@ -5,6 +5,7 @@ import { normalizeRole } from "../utils/roleNavigation";
 import { getReportSummary, downloadReport } from "../services/reportService";
 import { formatCurrency, formatDateTime, unwrapApiData } from "../utils/employeeHelpers";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import DashboardStatCard from '../components/dashboard/DashboardStatCard';
 import { Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const ROLE_COPY = {
@@ -48,6 +49,7 @@ export default function Reports() {
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
+  const [selectedMetric, setSelectedMetric] = useState('total');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,6 +87,15 @@ export default function Reports() {
     name: name.replaceAll('_', ' '), value,
   }));
   const monthlySpend = summary?.monthlySpend ?? [];
+  const reportRows = selectedMetric === 'orders'
+    ? (summary?.purchaseOrderRows ?? [])
+    : (summary?.requestRows ?? []).filter((row) => selectedMetric === 'total' || row.status === selectedMetric.toUpperCase());
+  const reportCards = [
+    { key: 'total', icon: 'bi-file-earmark-text', iconVariant: 'primary', value: summary?.totalRequests ?? 0, label: 'Total Requests' },
+    { key: 'approved', icon: 'bi-check-circle', iconVariant: 'success', value: summary?.approvedRequests ?? 0, label: 'Approved' },
+    { key: 'orders', icon: 'bi-cart-check', iconVariant: 'info', value: summary?.purchaseOrders ?? 0, label: 'Purchase Orders' },
+    { key: 'rejected', icon: 'bi-x-circle', iconVariant: 'danger', value: summary?.rejectedRequests ?? 0, label: 'Rejected' },
+  ];
 
   return (
     <div className="container-fluid mt-4">
@@ -119,47 +130,9 @@ export default function Reports() {
         </div>
       ) : (
         <>
-          {/* KPI Cards */}
+          <div className="row g-3 mb-4">{reportCards.map((card) => <div className="col-12 col-sm-6 col-xl-3" key={card.key}><DashboardStatCard {...card} active={selectedMetric === card.key} onClick={() => setSelectedMetric(card.key)} /></div>)}</div>
 
-          <div className="row mb-4">
-
-            <div className="col-md-3">
-              <div className="card shadow border-0">
-                <div className="card-body text-center">
-                  <h2>{summary?.totalRequests ?? 0}</h2>
-                  <p>Total Requests</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <div className="card shadow border-0">
-                <div className="card-body text-center">
-                  <h2>{summary?.approvedRequests ?? 0}</h2>
-                  <p>Approved</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <div className="card shadow border-0">
-                <div className="card-body text-center">
-                  <h2>{summary?.purchaseOrders ?? 0}</h2>
-                  <p>Purchase Orders</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <div className="card shadow border-0">
-                <div className="card-body text-center">
-                  <h2>{summary?.activeVendors ?? 0}</h2>
-                  <p>Active Vendors</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
+          <div className="card shadow-sm mb-4"><div className="card-body p-0"><div className="px-3 pt-3"><h3 className="h6 mb-3">{reportCards.find((card) => card.key === selectedMetric)?.label}</h3></div><div className="table-responsive"><table className="table table-hover align-middle mb-0"><thead className="table-light"><tr><th>Reference</th><th>Title</th><th>Status</th><th>Amount</th><th>Created</th></tr></thead><tbody>{reportRows.length === 0 ? <tr><td colSpan="5" className="text-center text-muted py-4">No data available for this selection.</td></tr> : reportRows.map((row) => <tr key={`${row.reference}-${row.createdAt}`}><td><code>{row.reference}</code></td><td>{row.title || '—'}</td><td>{String(row.status).replaceAll('_', ' ')}</td><td>{formatCurrency(row.amount)}</td><td>{formatDateTime(row.createdAt)}</td></tr>)}</tbody></table></div></div></div>
 
           <div className="row">
 

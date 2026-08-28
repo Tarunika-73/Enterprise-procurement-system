@@ -267,10 +267,15 @@ The procurement lifecycle follows a structured workflow:
 ┌──────────────────────┐
 │   Completed Order    │
 └──────────────────────┘
-🏗️ System Architecture
+```
+
+---
+
+# 🏗️ System Architecture
 
 The application follows a full-stack architecture consisting of a React frontend, Spring Boot backend, MySQL database, and supporting external services.
 
+```text
                          ┌─────────────────────┐
                          │        Users        │
                          └──────────┬──────────┘
@@ -302,53 +307,78 @@ The application follows a full-stack architecture consisting of a React frontend
               ┌─────────────────────┼─────────────────────┐
               │                     │                     │
               ▼                     ▼                     ▼
-       ┌─────────────┐      ┌─────────────┐       ┌─────────────┐
-       │    MySQL    │      │ Cloudinary  │       │    Email    │
-       │  Database   │      │   Storage   │       │   Service   │
-       └─────────────┘      └─────────────┘       └─────────────┘
+       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+       │    MySQL    │       │ Cloudinary  │       │    Email    │
+       │  Database   │       │   Storage   │       │   Service   │
+       └─────────────┘       └─────────────┘       └─────────────┘
                                     │
                                     ▼
                          ┌─────────────────────┐
                          │   AI Integration    │
                          │ Supplier Recommend. │
                          └─────────────────────┘
-🛠️ Technology Stack
-🎨 Frontend
-Technology	Purpose
-⚛️ React	User interface
-🟨 JavaScript	Application logic
-🎨 CSS	Styling and responsive layouts
-📊 Chart Components	Procurement analytics
-🌐 REST APIs	Frontend-backend communication
-⚙️ Backend
-Technology	Purpose
-☕ Java	Backend programming
-🌱 Spring Boot	Backend framework
-🌐 REST API	Client-server communication
-🗃️ Spring Data JPA	Database interaction
-🔐 JWT	Authentication and authorization
-📧 Spring Mail	Email notifications
-🤖 AI API	AI-assisted procurement functionality
-🗄️ Database
+```
 
-MySQL is used as the primary relational database.
+
+
+# 🛠️ Technology Stack
+
+## 🎨 Frontend
+
+| Technology | Purpose |
+|---|---|
+| ⚛️ **React** | User interface |
+| 🟨 **JavaScript** | Application logic |
+| 🎨 **CSS** | Styling and responsive layouts |
+| 📊 **Chart Components** | Procurement analytics |
+| 🌐 **REST APIs** | Frontend-backend communication |
+
+---
+
+## ⚙️ Backend
+
+| Technology | Purpose |
+|---|---|
+| ☕ **Java** | Backend programming |
+| 🌱 **Spring Boot** | Backend framework |
+| 🌐 **REST API** | Client-server communication |
+| 🗃️ **Spring Data JPA** | Database interaction |
+| 🔐 **JWT** | Authentication and authorization |
+| 📧 **Spring Mail** | Email notifications |
+| 🤖 **AI API** | AI-assisted procurement functionality |
+
+---
+
+## 🗄️ Database
+
+**MySQL** is used as the primary relational database.
 
 The database stores procurement-related information such as:
 
-👤 Users
-👥 Roles
-📝 Requisitions
-🏢 Suppliers
-📦 Purchase orders
-✅ Approvals
-🚚 Delivery information
-📊 Procurement records
-☁️ Supporting Services
-Service	Purpose
-☁️ Cloudinary	File and document storage
-📧 Gmail SMTP	Email communication
-🤖 AI Service	Supplier recommendation and procurement assistance
-📂 Project Structure
+- 👤 Users
+- 👥 Roles
+- 📝 Requisitions
+- 🏢 Suppliers
+- 📦 Purchase Orders
+- ✅ Approvals
+- 🚚 Delivery Information
+- 📊 Procurement Records
+
+---
+
+## ☁️ Supporting Services
+
+| Service | Purpose |
+|---|---|
+| ☁️ **Cloudinary** | File and document storage |
+| 📧 **Gmail SMTP** | Email communication |
+| 🤖 **AI Service** | Supplier recommendation and procurement assistance |
+
+---
+
+# 📂 Project Structure
+
+```text
 Enterprise-procurement-system/
 │
 ├── 📁 api-test/
@@ -398,244 +428,549 @@ Enterprise-procurement-system/
 ├── 📄 .gitignore
 ├── 📄 LICENSE
 └── 📄 README.md
+```
 
-Note: Generated folders such as node_modules, dist, and Maven target directories should not be committed to the repository.
+> **Note:** Generated folders such as `node_modules`, `dist`, and Maven `target` directories should not be committed to the repository.
 
-📊 Dashboard Modules
+---
+
+# 📊 Dashboard Modules
 
 The system provides dedicated dashboards for different roles.
 
-👨‍💻 Employee Dashboard
+## 👨‍💻 Employee Dashboard
 
 The Employee Dashboard provides:
 
-👋 Personalized welcome message
-📊 KPI cards
-📝 Requisition creation
-📋 Request history
-📈 Request status
-🚨 Request priority
-✏️ Request editing where permitted
-🌓 Light/Dark theme support
-👨‍💼 Manager Dashboard
+- 👋 Personalized welcome message
+- 📊 KPI cards
+- 📝 Requisition creation
+- 📋 Request history
+- 📈 Request status
+- 🚨 Request priority
+- ✏️ Request editing where permitted
+- 🌓 Light/Dark theme support
+
+---
+
+## 👨‍💼 Manager Dashboard
 
 The Manager Dashboard provides:
 
-📊 Procurement KPIs
-⏳ Pending requisitions
-✅ Approved requisitions
-❌ Rejected requisitions
-📈 Requisition status analytics
-🎯 Priority distribution
-🚨 High-priority request alerts
-📋 Requisition tables
-🔎 Filtering and review functionality
-🌓 Light/Dark theme support
-💰 Finance Dashboard
+- 📊 Procurement KPIs
+- ⏳ Pending requisitions
+- ✅ Approved requisitions
+- ❌ Rejected requisitions
+- 📈 Requisition status analytics
+- 🎯 Priority distribution
+- 🚨 High-priority request alerts
+- 📋 Requisition tables
+- 🔎 Filtering and review functionality
+- 🌓 Light/Dark theme support
+
+---
+
+## 💰 Finance Dashboard
 
 The Finance Dashboard provides:
 
-📊 Finance-related KPIs
-⏳ Pending requests
-✅ Approved requests
-❌ Rejected requests
-📈 Procurement analytics
-🎯 Priority distribution
-🚨 High-priority request alerts
-📋 Request management
-🌓 Light/Dark theme support
-🛒 Procurement Officer Dashboard
+- 📊 Finance-related KPIs
+- ⏳ Pending requests
+- ✅ Approved requests
+- ❌ Rejected requests
+- 📈 Procurement analytics
+- 🎯 Priority distribution
+- 🚨 High-priority request alerts
+- 📋 Request management
+- 🌓 Light/Dark theme support
+
+---
+
+## 🛒 Procurement Officer Dashboard
 
 The Procurement Officer Dashboard provides:
 
-📊 Procurement KPIs
-📦 Purchase-order statistics
-🏢 Supplier information
-📋 Approved requisitions
-🤖 AI supplier recommendations
-🚨 High-priority request alerts
-📈 Procurement analytics
-📦 Purchase-order management
-🚚 Delivery tracking
-🌓 Light/Dark theme support
-🤖 AI-Powered Supplier Recommendation
+- 📊 Procurement KPIs
+- 📦 Purchase-order statistics
+- 🏢 Supplier information
+- 📋 Approved requisitions
+- 🤖 AI supplier recommendations
+- 🚨 High-priority request alerts
+- 📈 Procurement analytics
+- 📦 Purchase-order management
+- 🚚 Delivery tracking
+- 🌓 Light/Dark theme support
 
-The system provides AI-assisted supplier recommendation functionality for procurement officers.
+---
+
+# 🤖 AI-Powered Supplier Recommendation
+
+The system provides **AI-assisted supplier recommendation functionality** for procurement officers.
 
 When generating a Purchase Order, the procurement officer can request supplier recommendations.
 
 The system evaluates procurement-related factors such as:
 
-⭐ Supplier rating
-💰 Price competitiveness
-🚚 Delivery performance
-✅ Supplier eligibility
+- ⭐ Supplier rating
+- 💰 Price competitiveness
+- 🚚 Delivery performance
+- ✅ Supplier eligibility
 
-The suppliers are ranked and the top recommendations are displayed.
+The suppliers are ranked and the **top recommendations** are displayed.
 
-Recommendation Flow
-Generate Purchase Order
-          │
-          ▼
-   Request AI Recommendation
-          │
-          ▼
- ┌────────────────────────┐
- │   Supplier Ranking     │
- ├────────────────────────┤
- │ 🥇 Top Recommendation  │
- │ 🥈 Second              │
- │ 🥉 Third               │
- └───────────┬────────────┘
-             │
-             ▼
-    Use AI Recommendation
-             │
-             ▼
-      Supplier Selected
-             │
-             ▼
-    Generate Purchase Order
+## 🔄 Recommendation Flow
+
+```text
+┌────────────────────────────┐
+│    Generate Purchase Order │
+└──────────────┬─────────────┘
+               │
+               ▼
+┌────────────────────────────┐
+│ Request AI Recommendation  │
+└──────────────┬─────────────┘
+               │
+               ▼
+┌────────────────────────────┐
+│      Supplier Ranking      │
+├────────────────────────────┤
+│ 🥇 Top Recommendation      │
+│ 🥈 Second Recommendation   │
+│ 🥉 Third Recommendation    │
+└──────────────┬─────────────┘
+               │
+               ▼
+┌────────────────────────────┐
+│  Use AI Recommendation     │
+└──────────────┬─────────────┘
+               │
+               ▼
+┌────────────────────────────┐
+│    Supplier Selected       │
+└──────────────┬─────────────┘
+               │
+               ▼
+┌────────────────────────────┐
+│ Generate Purchase Order    │
+└────────────────────────────┘
+```
 
 The recommendation feature is designed to reduce manual supplier comparison and assist procurement officers in making informed decisions.
 
-🚨 High-Priority Request Alerts
+---
 
-The system supports priority-based procurement monitoring.
+# 🚨 High-Priority Request Alerts
 
-When a requisition is marked as High Priority, the relevant dashboard displays an alert.
+The system supports **priority-based procurement monitoring**.
+
+When a requisition is marked as **High Priority**, the relevant dashboard displays an alert.
 
 High-priority requests are visually highlighted using:
 
-🔴 Red priority indicators
-🚨 Alert cards
-📊 Priority distribution charts
-📋 Priority columns in request tables
+- 🔴 Red priority indicators
+- 🚨 Alert cards
+- 📊 Priority distribution charts
+- 📋 Priority columns in request tables
 
 The alert is displayed only when relevant high-priority requests require attention.
 
 Users can select the alert to navigate directly to the relevant request view.
 
-🔐 Security
+---
+
+# 📈 Procurement Analytics
+
+The dashboards provide visual analytics to help users understand procurement activity.
+
+Analytics include:
+
+- 📊 Requisition status distribution
+- 🎯 Priority distribution
+- ⏳ Pending requisitions
+- ✅ Approved requisitions
+- ❌ Rejected requisitions
+- 📦 Purchase-order statistics
+- 🚚 Delivery progress
+
+These visualizations help users quickly understand the current state of procurement operations.
+
+---
+
+# 🔎 Filtering and Monitoring
+
+Users can filter procurement information based on relevant criteria.
+
+Examples include:
+
+- 📋 Requisition status
+- 🚨 Priority
+- 👥 Department
+- 📦 Purchase-order status
+- 🚚 Delivery status
+
+Filtering helps users quickly locate and review relevant procurement records.
+
+---
+
+# 🌓 Theme Support
+
+The dashboard interface supports:
+
+- ☀️ **Light Theme**
+- 🌙 **Dark Theme**
+
+Users can switch between themes according to their preference while maintaining a consistent dashboard experience.
+
+---
+
+# 🔔 Notifications and Alerts
+
+The system provides notifications for important procurement activities.
+
+These may include:
+
+- 🔔 New requisition notifications
+- 🚨 High-priority request alerts
+- ✅ Approval notifications
+- ❌ Rejection notifications
+- 📦 Purchase-order updates
+- 🚚 Delivery-related updates
+- 📧 Email notifications
+
+This helps users stay informed about important procurement events.
+
+---
+
+# 📄 Documentation
+
+The repository contains project documentation required for development and evaluation.
+
+The documentation includes:
+
+- 📊 Agile Documentation
+- 🎨 Design Documentation
+- 🧪 User Test Plan (UTP)
+- 🐞 Defect Tracking
+- 🖥️ Project Presentation
+- 📚 API Testing Resources
+
+---
+
+# 🧪 API Testing
+
+API testing resources are maintained in the:
+
+```text
+api-test/
+```
+
+directory.
+
+The resources can be used to validate backend REST API functionality and verify request/response behavior.
+
+---
+
+# 🔐 Security
+
+The application implements authentication and authorization mechanisms to protect procurement operations.
+
+Security features include:
+
+- 🔐 JWT-based authentication
+- 👥 Role-based authorization
+- 🛡️ Protected application routes
+- 🔒 Secure backend API access
+- 👤 Role-specific dashboard access
+
+Different users receive access according to their assigned responsibilities.
+
+---
+
+# 🚀 Getting Started
+
+## 📋 Prerequisites
+
+Before running the project, make sure the following are installed:
+
+- ☕ Java 17 or later
+- 🟢 Node.js and npm
+- 🗄️ MySQL
+- 📦 Maven
+- 🔧 Git
+
+---
+
+## 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Tarunika-73/Enterprise-procurement-system.git
+```
+
+```bash
+cd Enterprise-procurement-system
+```
+
+---
+
+## 2️⃣ Configure the Database
+
+Create the required MySQL database and configure the database connection in the backend configuration.
+
+Example:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/procurement_db
+spring.datasource.username=root
+spring.datasource.password=YOUR_PASSWORD
+```
+
+> ⚠️ Do not commit real database passwords, API keys, JWT secrets, or other credentials to GitHub.
+
+---
+
+## 3️⃣ Run the Backend
+
+Navigate to the backend directory:
+
+```bash
+cd backend
+```
+
+Run the Spring Boot application using Maven:
+
+```bash
+mvn spring-boot:run
+```
+
+---
+
+## 4️⃣ Run the Frontend
+
+Open another terminal and navigate to the frontend:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+---
+
+# ⚙️ Environment Configuration
+
+Sensitive configuration values should be stored using environment variables or local configuration files.
+
+Typical sensitive values include:
+
+```text
+Database credentials
+JWT secret
+Email credentials
+Cloudinary credentials
+AI API keys
+```
+
+These values should **never be committed to the public repository**.
+
+Use `.env.example` or equivalent configuration templates to document required variables without exposing their actual values.
+
+---
+
+# 🏆 Project Outcome
+
+The **Enterprise Procurement System** provides a centralized platform for managing enterprise procurement operations.
+
+The system brings together:
+
+- 📝 Requisition management
+- 👨‍💼 Approval workflows
+- 💰 Finance processing
+- 🏢 Supplier management
+- 🤖 AI-assisted supplier selection
+- 📦 Purchase-order generation
+- 🚚 Delivery tracking
+- 📊 Procurement analytics
+- 🔔 Notifications
+- 🔐 Role-based security
+
+The platform improves procurement visibility, reduces manual processes, and provides users with a structured and efficient procurement workflow.
+
+---
+
+# 🙏 Acknowledgements
+
+This project was developed as part of the:
+
+**Infosys Springboard Virtual Internship 7.0**
+
+Special thanks to the mentors, coordinators, and team members who supported the development and completion of the project.
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**.
+
+See the [`LICENSE`](LICENSE) file for details.
+
+# 🔐 Security
 
 Security is an important part of the application.
 
 The system uses:
 
-🔑 Authentication
-🎫 JWT-based authorization
-👥 Role-based access control
-🔒 Protected API endpoints
-🛡️ Environment-based configuration
-🚫 Role-specific access restrictions
-Security Best Practice
+- 🔑 **Authentication**
+- 🎫 **JWT-based authorization**
+- 👥 **Role-based access control**
+- 🔒 **Protected API endpoints**
+- 🛡️ **Environment-based configuration**
+- 🚫 **Role-specific access restrictions**
+
+## 🔐 Security Best Practices
 
 Sensitive information such as:
 
-Database passwords
-API keys
-JWT secrets
-Email credentials
-Cloud service secrets
+- 🔑 Database passwords
+- 🤖 API keys
+- 🎫 JWT secrets
+- 📧 Email credentials
+- ☁️ Cloud service secrets
 
-should be stored using environment variables or secure configuration and must not be committed to GitHub.
+should be stored using environment variables or secure configuration and **must not be committed to GitHub**.
 
-📧 Notifications
+---
+
+# 📧 Notifications
 
 The application supports notification mechanisms for important procurement events.
 
 Notifications can be associated with:
 
-🔔 New requisitions
-✅ Approvals
-❌ Rejections
-🚨 High-priority requests
-📦 Purchase-order activities
-🚚 Delivery-related activities
+- 🔔 New requisitions
+- ✅ Approvals
+- ❌ Rejections
+- 🚨 High-priority requests
+- 📦 Purchase-order activities
+- 🚚 Delivery-related activities
 
 Email functionality is integrated using SMTP configuration.
 
-☁️ Cloud Storage
+---
 
-The application supports cloud-based document and file storage using Cloudinary.
+# ☁️ Cloud Storage
+
+The application supports cloud-based document and file storage using **Cloudinary**.
 
 Typical use cases include:
 
-📄 Procurement documents
-📎 Supporting attachments
-🧾 Supplier documents
-📁 Other procurement-related files
-🗄️ Database
+- 📄 Procurement documents
+- 📎 Supporting attachments
+- 🧾 Supplier documents
+- 📁 Other procurement-related files
 
-The project uses MySQL as its relational database.
+---
+
+# 🗄️ Database
+
+The project uses **MySQL** as its relational database.
 
 The repository contains database resources for:
 
-🏗️ Database schema
-📊 Sample data
-🔧 Functions
-⚙️ Stored procedures
-🔔 Triggers
-👁️ Database views
-🚀 Indexes
-🤖 Supplier recommendation data
-🔄 Database migrations
+- 🏗️ Database schema
+- 📊 Sample data
+- 🔧 Functions
+- ⚙️ Stored procedures
+- 🔔 Triggers
+- 👁️ Database views
+- 🚀 Indexes
+- 🤖 Supplier recommendation data
+- 🔄 Database migrations
 
-Example database configuration:
+## ⚙️ Example Database Configuration
 
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/procurement_db
 spring.datasource.username=YOUR_DATABASE_USERNAME
 spring.datasource.password=YOUR_DATABASE_PASSWORD
+```
 
-⚠️ Never commit real database passwords to the repository.
+> ⚠️ **Never commit real database passwords to the repository.**
 
-🚀 Getting Started
+---
+
+# 🚀 Getting Started
 
 Follow the steps below to run the project locally.
 
-1️⃣ Prerequisites
+## 1️⃣ Prerequisites
 
 Install the following:
 
-☕ Java 17 or later
-🟢 Node.js
-📦 npm
-🗄️ MySQL
-🔧 Maven
-🐙 Git
-2️⃣ Clone the Repository
+- ☕ Java 17 or later
+- 🟢 Node.js
+- 📦 npm
+- 🗄️ MySQL
+- 🔧 Maven
+- 🐙 Git
+
+---
+
+## 2️⃣ Clone the Repository
+
+```bash
 git clone https://github.com/Tarunika-73/Enterprise-procurement-system.git
+```
 
 Move into the project:
 
+```bash
 cd Enterprise-procurement-system
-🗄️ 3️⃣ Setup MySQL
+```
+
+---
+
+## 3️⃣ 🗄️ Setup MySQL
 
 Make sure MySQL is installed and running.
 
 Create the database:
 
+```sql
 CREATE DATABASE procurement_db;
+```
 
-Execute the required SQL scripts from the database/ directory according to the project setup.
+Execute the required SQL scripts from the `database/` directory according to the project setup.
 
-⚙️ 4️⃣ Configure Backend
+---
+
+## 4️⃣ ⚙️ Configure Backend
 
 Navigate to the backend:
 
+```bash
 cd backend
+```
 
 Configure your local database and service credentials.
 
 Example:
 
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/procurement_db
 spring.datasource.username=YOUR_DATABASE_USERNAME
 spring.datasource.password=YOUR_DATABASE_PASSWORD
 
 jwt.secret_key=YOUR_JWT_SECRET
-
-Configure external services where required:
 
 spring.mail.username=YOUR_EMAIL
 spring.mail.password=YOUR_EMAIL_APP_PASSWORD
@@ -645,46 +980,77 @@ cloudinary.api_key=YOUR_CLOUDINARY_API_KEY
 cloudinary.api_secret=YOUR_CLOUDINARY_API_SECRET
 
 groq.api.key=YOUR_AI_API_KEY
-▶️ 5️⃣ Run Backend
+```
+
+---
+
+## 5️⃣ ▶️ Run Backend
 
 From the backend directory:
 
+```bash
 mvn spring-boot:run
+```
 
 The backend will start on the configured Spring Boot port.
 
-🎨 6️⃣ Run Frontend
+---
+
+## 6️⃣ 🎨 Run Frontend
 
 Open another terminal and navigate to the frontend:
 
+```bash
 cd frontend
+```
 
 Install dependencies:
 
+```bash
 npm install
+```
 
 Start the development server:
 
+```bash
 npm run dev
+```
 
 The frontend will be available at the URL displayed in the terminal.
 
-🧪 7️⃣ Build and Test
-Frontend Build
+---
+
+## 7️⃣ 🧪 Build and Test
+
+### Frontend Build
+
+```bash
 npm run build
-Frontend Lint
+```
+
+### Frontend Lint
+
+```bash
 npm run lint
-Backend Tests
+```
+
+### Backend Tests
 
 From the backend directory:
 
+```bash
 mvn clean test
-⚙️ Environment Configuration
+```
+
+---
+
+# ⚙️ Environment Configuration
 
 Sensitive configuration should be maintained outside the source code.
 
 Example environment configuration:
 
+```env
 DATABASE_USERNAME=your_database_username
 DATABASE_PASSWORD=your_database_password
 
@@ -698,17 +1064,21 @@ CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 AI_API_KEY=your_ai_api_key
+```
 
 Use a local environment/configuration file for actual values.
 
-🔐 Never commit real credentials or API keys to GitHub.
+> 🔐 **Never commit real credentials or API keys to GitHub.**
 
-🧪 API Testing
+---
 
-The repository contains an api-test/ directory for API testing resources.
+# 🧪 API Testing
+
+The repository contains an `api-test/` directory for API testing resources.
 
 The application exposes REST APIs for major procurement operations such as:
 
+```text
 Authentication
       │
       ▼
@@ -728,68 +1098,81 @@ Purchase Orders
       │
       ▼
   Delivery
+```
 
 API testing can be performed using tools such as:
 
-🟠 Postman
-🔵 REST clients
-🌐 API testing tools
-📚 Documentation
+- 🟠 **Postman**
+- 🔵 **REST clients**
+- 🌐 **API testing tools**
 
-Project documentation is maintained inside the documentation/ directory.
+---
+
+# 📚 Documentation
+
+Project documentation is maintained inside the `documentation/` directory.
 
 The documentation covers project development and testing activities such as:
 
-📋 Agile documentation
-📝 User stories
-📅 Sprint planning
-🔄 Sprint retrospectives
-🧪 Unit Test Plan
-🐞 Defect tracking
-🏗️ Design documentation
-📊 Project planning
-🎨 UI/UX
+- 📋 Agile documentation
+- 📝 User stories
+- 📅 Sprint planning
+- 🔄 Sprint retrospectives
+- 🧪 Unit Test Plan
+- 🐞 Defect tracking
+- 🏗️ Design documentation
+- 📊 Project planning
+
+---
+
+# 🎨 UI/UX
 
 The application follows a modern enterprise dashboard design.
 
 The interface includes:
 
-🎨 Consistent visual design
-📊 KPI cards
-📈 Analytics charts
-🌓 Light/Dark theme
-📱 Responsive layouts
-🔔 Notification indicators
-🚨 Priority alerts
-🧭 Role-specific navigation
-📋 Structured tables
-✏️ Request editing
-🤖 AI recommendation interface
+- 🎨 Consistent visual design
+- 📊 KPI cards
+- 📈 Analytics charts
+- 🌓 Light/Dark theme
+- 📱 Responsive layouts
+- 🔔 Notification indicators
+- 🚨 Priority alerts
+- 🧭 Role-specific navigation
+- 📋 Structured tables
+- ✏️ Request editing
+- 🤖 AI recommendation interface
 
-The ui-design/ directory contains relevant UI/UX resources.
+The `ui-design/` directory contains relevant UI/UX resources.
 
-📈 Future Enhancements
+---
+
+# 📈 Future Enhancements
 
 Potential future improvements include:
 
-📱 Mobile application
-📊 Advanced procurement analytics
-🤖 More intelligent supplier scoring
-📈 Procurement forecasting
-💰 Advanced spend analysis
-📦 Inventory integration
-🔗 ERP integration
-🔔 Real-time push notifications
-📄 Automated procurement document generation
-🧠 Advanced AI procurement assistance
-☁️ Cloud deployment
-🔄 CI/CD automation
-🧑‍💻 Development Practices
+- 📱 Mobile application
+- 📊 Advanced procurement analytics
+- 🤖 More intelligent supplier scoring
+- 📈 Procurement forecasting
+- 💰 Advanced spend analysis
+- 📦 Inventory integration
+- 🔗 ERP integration
+- 🔔 Real-time push notifications
+- 📄 Automated procurement document generation
+- 🧠 Advanced AI procurement assistance
+- ☁️ Cloud deployment
+- 🔄 CI/CD automation
+
+---
+
+# 🧑‍💻 Development Practices
 
 The project follows collaborative Git-based development practices.
 
 The general development workflow is:
 
+```text
        Create Feature
              │
              ▼
@@ -815,54 +1198,68 @@ The general development workflow is:
              │
              ▼
            Merge
+```
 
 Agile practices are used for planning, sprint execution, tracking, and retrospectives.
 
-📌 Project Highlights
-Area	Implementation
-🖥️ Frontend	React-based enterprise dashboard
-⚙️ Backend	Spring Boot REST API
-🗄️ Database	MySQL
-🔐 Security	JWT + Role-Based Access
-🤖 AI	AI-assisted supplier recommendation
-☁️ Storage	Cloudinary integration
-📧 Communication	Email notifications
-📊 Analytics	KPIs and procurement charts
-🚨 Priority	High-priority request monitoring
-📦 Procurement	Purchase-order generation
-🚚 Delivery	Delivery tracking
-🌓 UI	Light/Dark theme support
-📁 Repository Organization
+---
+
+# 📌 Project Highlights
+
+| Area | Implementation |
+|---|---|
+| 🖥️ **Frontend** | React-based enterprise dashboard |
+| ⚙️ **Backend** | Spring Boot REST API |
+| 🗄️ **Database** | MySQL |
+| 🔐 **Security** | JWT + Role-Based Access |
+| 🤖 **AI** | AI-assisted supplier recommendation |
+| ☁️ **Storage** | Cloudinary integration |
+| 📧 **Communication** | Email notifications |
+| 📊 **Analytics** | KPIs and procurement charts |
+| 🚨 **Priority** | High-priority request monitoring |
+| 📦 **Procurement** | Purchase-order generation |
+| 🚚 **Delivery** | Delivery tracking |
+| 🌓 **UI** | Light/Dark theme support |
+
+---
+
+# 📁 Repository Organization
 
 The repository is organized into separate areas for application development, database management, testing, documentation, and UI resources.
 
+```text
 Enterprise-procurement-system/
 │
-├── backend/          → Spring Boot backend
+├── 📁 backend/          → Spring Boot backend
 │
-├── frontend/         → React frontend
+├── 📁 frontend/         → React frontend
 │
-├── database/         → MySQL scripts and database resources
+├── 📁 database/         → MySQL scripts and database resources
 │
-├── documentation/    → Agile, UTP, Design and Defect documents
+├── 📁 documentation/    → Agile, UTP, Design and Defect documents
 │
-├── api-test/         → API testing resources
+├── 📁 api-test/         → API testing resources
 │
-├── ui-design/        → UI/UX resources
+├── 📁 ui-design/        → UI/UX resources
 │
-├── assets/           → Project assets
+├── 📁 assets/           → Project assets
 │
-├── LICENSE           → MIT License
+├── 📄 LICENSE           → MIT License
 │
-├── .gitignore        → Git ignored files
+├── 📄 .gitignore        → Git ignored files
 │
-└── README.md         → Project documentation
-🏆 Project Outcome
+└── 📄 README.md         → Project documentation
+```
 
-The Enterprise Procurement System provides a centralized platform for managing procurement activities across multiple organizational roles.
+---
+
+# 🏆 Project Outcome
+
+The **Enterprise Procurement System** provides a centralized platform for managing procurement activities across multiple organizational roles.
 
 The system brings together:
 
+```text
 Requisition
      ↓
 Approval
@@ -876,46 +1273,67 @@ Purchase Order
 Delivery
      ↓
 Completion
+```
 
 into an integrated procurement workflow.
 
 The project focuses on improving:
 
-Efficiency • Transparency • Automation • Control • Decision Making
+**⚡ Efficiency • 🔍 Transparency • 🤖 Automation • 🛡️ Control • 🧠 Decision Making**
 
-👨‍💻 Team
-Enterprise Procurement System
+---
+
+# 👨‍💻 Team
+
+## Enterprise Procurement System
 
 Developed as part of the:
 
-🎓 Infosys Springboard Virtual Internship 7.0
+### 🎓 Infosys Springboard Virtual Internship 7.0
 
 The project was collaboratively developed using:
 
-⚛️ React
-☕ Java
-🌱 Spring Boot
-🗄️ MySQL
-🔐 JWT
-🌐 REST APIs
-🤖 AI Integration
-🐙 Git & GitHub
-📋 Agile Methodology
-📄 License
+- ⚛️ React
+- ☕ Java
+- 🌱 Spring Boot
+- 🗄️ MySQL
+- 🔐 JWT
+- 🌐 REST APIs
+- 🤖 AI Integration
+- 🐙 Git & GitHub
+- 📋 Agile Methodology
 
-This project is licensed under the MIT License.
+---
 
-See the LICENSE file for details.
+# 📄 License
 
-🙏 Acknowledgements
+This project is licensed under the **MIT License**.
+
+See the [`LICENSE`](LICENSE) file for details.
+
+---
+
+# 🙏 Acknowledgements
 
 Special thanks to:
 
-🎓 Infosys Springboard
-🏢 Infosys Springboard Internship Program
-👨‍🏫 Project mentors and coordinators
-👥 Team members and contributors
+- 🎓 **Infosys Springboard**
+- 🏢 **Infosys Springboard Internship Program**
+- 👨‍🏫 **Project mentors and coordinators**
+- 👥 **Team members and contributors**
 
-for providing the opportunity, guidance, and support to develop this Enterprise Procurement System.
+for providing the opportunity, guidance, and support to develop this **Enterprise Procurement System**.
+
+---
 
 <div align="center">
+
+## 🚀 Enterprise Procurement System
+
+### Smart • Secure • Automated • Role-Based Procurement Management
+
+**Developed as part of the Infosys Springboard Virtual Internship 7.0**
+
+Made with ❤️ by the Enterprise Procurement System Team
+
+</div>
